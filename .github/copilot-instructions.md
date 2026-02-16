@@ -1,0 +1,9 @@
+- This is a Next.js App Router project with TypeScript, Tailwind CSS v4, and Framer Motion.
+- Use `"use client"` directive for all interactive components.
+- Follow the Cyber-Luxury design system defined in `globals.css`.
+- Use Framer Motion for all animations — prefer spring physics.
+- Team colors: Red (`#FF416C` → `#FF4B2B`), Blue (`#00B4DB` → `#0083B0`).
+- Typography: Syne for display headings, Inter for body/UI.
+- All interactive elements should scale to `0.95` on press with spring easing.
+- Target 60fps for all animations. Prefer CSS + Framer Motion over canvas/particles.
+- TV-first design: large text, generous spacing, readable at 10-12ft distance.
