@@ -7,23 +7,14 @@ import { useParams } from "next/navigation";
 import Board from "@/components/Board";
 import TurnIndicator from "@/components/TurnIndicator";
 import { generateBoard, type GameCard, type Difficulty } from "@/lib/codenames";
-import { slugToSeed, seededRandom } from "@/lib/gamecodes";
+import { lookupSlug, seededRandom } from "@/lib/gamecodes";
 
 function parseCode(code: string) {
-  const parts = code.split("-");
-  if (parts.length < 4) return null;
+  const entry = lookupSlug(code);
+  if (!entry) return null;
 
-  const difficulty = parts[0] as Difficulty;
-  const language = parts[1];
-  const slug = parts.slice(2).join("-");
-
-  if (!["easy", "medium", "hard"].includes(difficulty) || language !== "en") return null;
-
-  const seed = slugToSeed(slug);
-  if (seed === null) return null;
-
-  const random = seededRandom(seed);
-  return generateBoard(difficulty, random);
+  const random = seededRandom(entry.seed);
+  return generateBoard(entry.difficulty as Difficulty, random);
 }
 
 export default function CodenamesGamePage() {
@@ -146,19 +137,14 @@ export default function CodenamesGamePage() {
           ← The Arena
         </Link>
 
-        <div className="flex flex-col items-center">
-          <h1
-            className="text-xs font-bold uppercase tracking-[0.35em] text-white/50 sm:text-sm"
-            style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
-          >
-            Codenames
-          </h1>
-          <p className="mt-0.5 font-mono text-[9px] tracking-wider text-white/20 sm:text-[10px]">
-            /{code}
-          </p>
-        </div>
+        <h1
+          className="text-xs font-bold uppercase tracking-[0.35em] text-white/50 sm:text-sm"
+          style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
+        >
+          Codenames
+        </h1>
 
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <motion.button
             onClick={() => setIsSpymaster((s) => !s)}
             whileHover={{ scale: 1.05 }}

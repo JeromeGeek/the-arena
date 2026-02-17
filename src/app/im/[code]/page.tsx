@@ -11,15 +11,15 @@ type GamePhase = "reveal" | "discussion" | "voting" | "result";
 
 function parseCode(code: string, namesList?: string[]) {
   const parts = code.split("-");
-  if (parts.length < 5) return null;
+  if (parts.length < 4) return null;
 
   const playerCount = parseInt(parts[0], 10);
   const imposterCount = parseInt(parts[1], 10);
 
-  // Game slug is always the last 2 dash-separated parts (e.g. "skill-issue")
-  const slug = parts.slice(-2).join("-");
+  // Game slug is always the last part
+  const slug = parts[parts.length - 1];
   // Category is everything between imposterCount and game slug
-  const category = parts.slice(2, -2).join("-");
+  const category = parts.slice(2, -1).join("-");
 
   if (isNaN(playerCount) || playerCount < 3 || playerCount > 15) return null;
   if (isNaN(imposterCount) || imposterCount < 1 || imposterCount > Math.min(5, playerCount - 2)) return null;
@@ -28,7 +28,6 @@ function parseCode(code: string, namesList?: string[]) {
   if (seed === null) return null;
 
   const random = seededRandom(seed);
-  // Use real names from query param if available, otherwise fall back to generic
   const playerNames = namesList && namesList.length === playerCount
     ? namesList
     : Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`);
@@ -91,11 +90,10 @@ export default function ImposterGamePage() {
   const totalImposters = players.filter((p) => p.isImposter).length;
   const crewWins = impostersEliminated === totalImposters && totalImposters > 0;
 
-  // Pick a random non-imposter player to start the discussion
   const discussionStarter = useMemo(() => {
     const nonImposters = players.filter((p) => !p.isImposter && !p.eliminated);
     if (nonImposters.length === 0) return null;
-    const seed = slugToSeed(code.split("-").slice(-2).join("-"));
+    const seed = slugToSeed(code.split("-").slice(-1)[0]);
     const pick = seed !== null ? (seed % nonImposters.length) : 0;
     return nonImposters[pick];
   }, [players, code]);
@@ -143,15 +141,17 @@ export default function ImposterGamePage() {
             Imposter
           </h1>
           <p className="mt-0.5 font-mono text-[10px] tracking-wider text-white/20">
-            /{code}
+            /im/{code}
           </p>
         </div>
-        <Link
-          href="/imposter"
-          className="rounded-xl border border-white/8 bg-white/[0.02] px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/40 transition-colors hover:border-white/15 hover:text-white/60"
-        >
-          New Game
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/imposter"
+            className="rounded-xl border border-white/8 bg-white/[0.02] px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/40 transition-colors hover:border-white/15 hover:text-white/60"
+          >
+            New Game
+          </Link>
+        </div>
       </header>
 
       <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-1 items-center justify-center px-6 pb-12">

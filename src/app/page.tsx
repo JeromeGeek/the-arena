@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState, useRef, MouseEvent } from "react";
 import Link from "next/link";
+import InfoModal from "@/components/InfoModal";
 
 /* ─── Motion Variants ─── */
 const fadeUp = {
@@ -21,7 +22,7 @@ const games = [
     title: "CODENAMES",
     subtitle: "Tactical Word Espionage",
     description: "2 Teams · 20 Cards · 1 Assassin. Give one-word clues. Guess your agents. Avoid the kill shot.",
-    href: "/codenames",
+    href: "/cn",
     accentFrom: "#FF416C",
     accentTo: "#FF4B2B",
     glowColor: "rgba(255, 65, 108, 0.35)",
@@ -32,7 +33,7 @@ const games = [
     title: "IMPOSTER",
     subtitle: "Social Deception Engine",
     description: "3–15 Players · 1+ Imposters · 1 Secret Word. Describe, deduce, and vote out the fake.",
-    href: "/imposter",
+    href: "/im",
     accentFrom: "#00B4DB",
     accentTo: "#0083B0",
     glowColor: "rgba(0, 180, 219, 0.35)",
@@ -106,6 +107,11 @@ function GameCard({
                 : "scanline-effect noise-bg"
             }`}
           >
+            {/* Info Button — top-right corner */}
+            <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
+              <InfoModal game={game.variant} size="sm" />
+            </div>
+
             {/* Accent Line */}
             <div
               className="mb-3 h-1 w-12 rounded-full sm:mb-4 sm:w-16 lg:mb-6"

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import type { Difficulty } from "@/lib/codenames";
-import { generateSeed, seedToSlug } from "@/lib/gamecodes";
+import { getRandomSlug, type SlugDifficulty } from "@/lib/gamecodes";
+import { QRCodeSVG } from "qrcode.react";
+
+const VERCEL_URL = "https://the-arena-mu.vercel.app";
 
 interface SetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStart?: (difficulty: Difficulty) => void;
 }
 
 const difficulties: { value: Difficulty; label: string; color: string; glow: string }[] = [
@@ -18,25 +19,27 @@ const difficulties: { value: Difficulty; label: string; color: string; glow: str
   { value: "hard", label: "HARD", color: "#ef4444", glow: "rgba(239,68,68,0.4)" },
 ];
 
-export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps) {
+export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [gameCode, setGameCode] = useState<string | null>(null);
-  const router = useRouter();
+  const [gameSlug, setGameSlug] = useState<string | null>(null);
 
-  function handleGenerate() {
-    const seed = generateSeed();
-    const slug = seedToSlug(seed);
-    const code = `${difficulty}-en-${slug}`;
-    setGameCode(code);
-  }
+  const handleGenerate = useCallback(() => {
+    const slug = getRandomSlug(difficulty as SlugDifficulty);
+    setGameSlug(slug);
+  }, [difficulty]);
+
+  const handleRegenerate = useCallback(() => {
+    const slug = getRandomSlug(difficulty as SlugDifficulty);
+    setGameSlug(slug);
+  }, [difficulty]);
 
   function handleLaunch() {
-    if (gameCode) {
-      router.push(`/codenames/${gameCode}`);
-    } else if (onStart) {
-      onStart(difficulty);
+    if (gameSlug) {
+      window.location.href = `/cn/${gameSlug}`;
     }
   }
+
+  const gameUrl = gameSlug ? `${VERCEL_URL}/cn/${gameSlug}` : null;
 
   return (
     <AnimatePresence>
@@ -59,7 +62,7 @@ export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <div className="glass-panel relative w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <div className="glass-panel relative w-full max-w-md rounded-3xl p-6 shadow-2xl sm:p-8">
               {/* Close Button */}
               <button
                 onClick={onClose}
@@ -69,18 +72,20 @@ export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps
               </button>
 
               {/* Title */}
-              <h2
-                className="mb-2 text-2xl font-bold uppercase tracking-[0.25em] text-white/90"
-                style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
-              >
-                Mission Config
-              </h2>
-              <p className="mb-8 text-sm text-white/30">
-                Configure your operation parameters
-              </p>
+              <div className="mb-6 sm:mb-8">
+                <h2
+                  className="mb-2 text-2xl font-bold uppercase tracking-[0.25em] text-white/90"
+                  style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
+                >
+                  Mission Config
+                </h2>
+                <p className="text-sm text-white/30">
+                  Configure your operation parameters
+                </p>
+              </div>
 
               {/* Difficulty Selection */}
-              <div className="mb-10">
+              <div className="mb-8 sm:mb-10">
                 <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
                   Difficulty
                 </label>
@@ -88,7 +93,10 @@ export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps
                   {difficulties.map((d) => (
                     <motion.button
                       key={d.value}
-                      onClick={() => setDifficulty(d.value)}
+                      onClick={() => {
+                        setDifficulty(d.value);
+                        setGameSlug(null);
+                      }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="relative flex-1 rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all"
@@ -109,7 +117,7 @@ export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps
               </div>
 
               {/* Game Code Section */}
-              {!gameCode ? (
+              {!gameSlug ? (
                 <motion.button
                   onClick={handleGenerate}
                   whileHover={{ scale: 1.02 }}
@@ -124,19 +132,33 @@ export default function SetupModal({ isOpen, onClose, onStart }: SetupModalProps
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4"
                 >
-                  {/* Display game code */}
+                  {/* QR Code + URL Display */}
                   <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-                      Share this URL on the TV
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+                      📱 Open this URL on your phone
                     </p>
-                    <p className="font-mono text-lg font-bold tracking-wider text-white/80">
-                      /codenames/{gameCode}
+
+                    {/* QR Code */}
+                    <div className="mx-auto mb-3 flex w-fit items-center justify-center rounded-xl bg-white p-2.5 sm:p-3">
+                      <QRCodeSVG
+                        value={gameUrl!}
+                        size={140}
+                        bgColor="#ffffff"
+                        fgColor="#0B0E14"
+                        level="M"
+                        className="h-[120px] w-[120px] sm:h-[140px] sm:w-[140px]"
+                      />
+                    </div>
+
+                    {/* Full URL */}
+                    <p className="overflow-x-auto whitespace-nowrap font-mono text-[10px] font-bold tracking-wider text-[#FF416C]/80 sm:text-xs">
+                      {gameUrl}
                     </p>
                   </div>
 
                   <div className="flex gap-3">
                     <motion.button
-                      onClick={() => setGameCode(null)}
+                      onClick={handleRegenerate}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.95 }}
                       className="flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold uppercase tracking-widest text-white/40 transition-colors hover:border-white/20 hover:text-white/60"

@@ -33,6 +33,10 @@ export const categories: ImposterCategory[] = [
     name: "Music & Bands",
     words: ["The Beatles", "BTS", "Nirvana", "Coldplay", "Eminem", "Daft Punk", "Arctic Monkeys", "Kanye West", "ABBA", "Travis Scott", "Queen", "Linkin Park", "Bad Bunny", "Doja Cat", "Kendrick Lamar"],
   },
+  {
+    name: "Bollywood",
+    words: ["Shah Rukh Khan", "Amitabh Bachchan", "Alia Bhatt", "Ranveer Singh", "Deepika Padukone", "Salman Khan", "Hrithik Roshan", "Kareena Kapoor", "Ranbir Kapoor", "Akshay Kumar", "Priyanka Chopra", "Arijit Singh", "Katrina Kaif", "Virat Kohli", "Aamir Khan"],
+  },
 ];
 
 export interface ImposterPlayer {

@@ -15,6 +15,7 @@ const categoryEmojis: Record<string, string> = {
   "Movies & TV Shows": "\u{1F3AC}",
   "Internet Culture": "\u{1F480}",
   "Music & Bands": "\u{1F3B5}",
+  "Bollywood": "\u{1F1EE}\u{1F1F3}",
 };
 
 // URL-safe slug for category names
@@ -74,7 +75,7 @@ export default function ImposterPage() {
     const cat = selectedCategory === "random" ? "random" : selectedCategory;
     const code = `${playerNames.length}-${imposterCount}-${cat}-${slug}`;
     const names = encodeURIComponent(playerNames.join(","));
-    router.push(`/imposter/${code}?names=${names}`);
+    router.push(`/im/${code}?names=${names}`);
   }
 
   return (
@@ -99,7 +100,7 @@ export default function ImposterPage() {
         >
           Imposter
         </h1>
-        <div className="w-20" />
+        <div className="w-9" />
       </header>
 
       <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6">
@@ -135,9 +136,6 @@ export default function ImposterPage() {
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
                   Players ({playerNames.length}/15)
                 </label>
-                <span className="text-xs text-white/20">
-                  {playerNames.length < 3 ? "Need at least 3" : "Ready to play"}
-                </span>
               </div>
 
               <div className="space-y-2">
@@ -258,7 +256,7 @@ export default function ImposterPage() {
                     onClick={() => setSelectedCategory(cat.value)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-[calc(33.333%-0.375rem)] rounded-lg px-2 py-2.5 text-center transition-all sm:w-[calc(25%-0.5625rem)] sm:rounded-xl sm:px-3 sm:py-3"
+                    className="w-[calc(33.333%-0.375rem)] rounded-lg px-2 py-2.5 text-center transition-all sm:w-[calc(20%-0.6rem)] sm:rounded-xl sm:px-3 sm:py-3"
                     style={{
                       background:
                         selectedCategory === cat.value
