@@ -24,24 +24,22 @@ export default function TurnIndicator({ team, redRemaining, blueRemaining }: Tur
           ? "0 0 40px rgba(255,65,108,0.15), 0 0 80px rgba(255,65,108,0.05)"
           : "0 0 40px rgba(0,180,219,0.15), 0 0 80px rgba(0,180,219,0.05)",
       }}
-      animate={{
-        boxShadow: isRed
-          ? [
-              "0 0 30px rgba(255,65,108,0.1), 0 0 60px rgba(255,65,108,0.03)",
-              "0 0 50px rgba(255,65,108,0.2), 0 0 100px rgba(255,65,108,0.06)",
-              "0 0 30px rgba(255,65,108,0.1), 0 0 60px rgba(255,65,108,0.03)",
-            ]
-          : [
-              "0 0 30px rgba(0,180,219,0.1), 0 0 60px rgba(0,180,219,0.03)",
-              "0 0 50px rgba(0,180,219,0.2), 0 0 100px rgba(0,180,219,0.06)",
-              "0 0 30px rgba(0,180,219,0.1), 0 0 60px rgba(0,180,219,0.03)",
-            ],
-      }}
       transition={{
-        boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
         layout: { type: "spring", stiffness: 300, damping: 25 },
       }}
     >
+      {/* Animated glow overlay — uses opacity (GPU-composited) instead of box-shadow */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 rounded-2xl"
+        style={{
+          boxShadow: isRed
+            ? "0 0 50px rgba(255,65,108,0.2), 0 0 100px rgba(255,65,108,0.06)"
+            : "0 0 50px rgba(0,180,219,0.2), 0 0 100px rgba(0,180,219,0.06)",
+          willChange: "opacity",
+        }}
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
       {/* Pulse Dot */}
       <motion.div
         className="h-3 w-3 rounded-full"

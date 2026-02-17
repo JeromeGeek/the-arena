@@ -122,7 +122,7 @@ export default function ImposterGamePage() {
     <main className="relative flex h-screen flex-col overflow-hidden">
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.03)] blur-[120px]" />
+        <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.04)] blur-[80px]" />
       </div>
 
       {/* Header */}

@@ -82,8 +82,8 @@ export default function ImposterPage() {
     <main className="relative min-h-screen overflow-hidden pb-12">
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.03)] blur-[120px]" />
-        <div className="absolute right-1/4 top-2/3 h-[400px] w-[400px] rounded-full bg-[rgba(255,65,108,0.02)] blur-[100px]" />
+        <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.04)] blur-[80px]" />
+        <div className="absolute right-1/4 top-2/3 h-[300px] w-[300px] rounded-full bg-[rgba(255,65,108,0.03)] blur-[60px]" />
       </div>
 
       {/* Header */}

@@ -24,8 +24,8 @@ body {
 .glass-panel {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .gradient-red {
@@ -56,6 +56,7 @@ body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: shimmer 4s linear infinite;
+  will-change: background-position;
 }
 
 @keyframes sheen-sweep {
@@ -74,6 +75,7 @@ body {
   transform: translateX(-100%) rotate(15deg);
   animation: sheen-sweep 6s ease-in-out infinite;
   pointer-events: none;
+  will-change: transform;
 }
 
 @keyframes smoke-drift {
@@ -90,6 +92,7 @@ body {
   animation: smoke-drift 8s ease-in-out infinite;
   pointer-events: none;
   border-radius: inherit;
+  will-change: transform, opacity;
 }
 
 .tactical-grid::after {
@@ -124,6 +127,7 @@ body {
   animation: scanline 3s linear infinite;
   pointer-events: none;
   z-index: 2;
+  will-change: top;
 }
 
 .noise-bg::after {
@@ -193,4 +197,23 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.2);
+}
+
+/* GPU layer promotion for animated elements */
+.smoke-ambient::before,
+.scanline-effect::before,
+.sheen-sweep::after {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer,
+  .smoke-ambient::before,
+  .scanline-effect::before,
+  .sheen-sweep::after,
+  .pulse-glow {
+    animation: none !important;
+  }
 }

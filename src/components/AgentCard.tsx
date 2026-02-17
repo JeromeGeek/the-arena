@@ -74,12 +74,13 @@ export default function AgentCard({
   return (
     <motion.div
       className="perspective-1000 w-full"
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.02, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
+      transition={{ delay: index * 0.015, duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
     >
       <motion.div
         className="preserve-3d relative h-full w-full cursor-pointer"
+        style={{ willChange: isRevealed || isFlipping ? "transform" : "auto" }}
         animate={{ rotateY: isRevealed || isFlipping ? 180 : 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         onClick={handleClick}

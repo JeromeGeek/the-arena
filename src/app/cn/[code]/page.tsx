@@ -202,7 +202,7 @@ export default function CodenamesGamePage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="mx-auto mb-4 flex max-w-md flex-col items-center gap-3 rounded-2xl border p-4 text-center backdrop-blur-xl"
+                className="mx-auto mb-4 flex max-w-md flex-col items-center gap-3 rounded-2xl border p-4 text-center backdrop-blur-md"
                 style={{
                   borderColor: winner === "red" ? "rgba(255,65,108,0.3)" : "rgba(0,180,219,0.3)",
                   background: winner === "red" ? "rgba(255,65,108,0.08)" : "rgba(0,180,219,0.08)",
@@ -250,7 +250,7 @@ export default function CodenamesGamePage() {
                 onClick={() => setCurrentTeam((t) => (t === "red" ? "blue" : "red"))}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="rounded-lg border border-white/10 bg-white/[0.03] px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/50 backdrop-blur-xl transition-all hover:border-white/20 hover:text-white/70 sm:rounded-xl sm:px-8 sm:py-2.5 sm:text-sm"
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/50 backdrop-blur-sm transition-all hover:border-white/20 hover:text-white/70 sm:rounded-xl sm:px-8 sm:py-2.5 sm:text-sm"
               >
                 End Turn
               </motion.button>

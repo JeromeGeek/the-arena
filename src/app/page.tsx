@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useRef, MouseEvent } from "react";
+import { useState, useRef, MouseEvent, useCallback } from "react";
 import Link from "next/link";
 import InfoModal from "@/components/InfoModal";
 
@@ -52,19 +52,25 @@ function GameCard({
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const rafRef = useRef<number>(0);
 
-  function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
+  const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ x: y * -12, y: x * 12 });
-  }
+    // Throttle to one update per animation frame
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const rect = ref.current!.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      setTilt({ x: y * -12, y: x * 12 });
+    });
+  }, []);
 
-  function handleMouseLeave() {
+  const handleMouseLeave = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
     setTilt({ x: 0, y: 0 });
     setIsHovered(false);
-  }
+  }, []);
 
   return (
     <motion.div
@@ -88,7 +94,7 @@ function GameCard({
           }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
           whileTap={{ scale: 0.97 }}
-          style={{ perspective: 1000, transformStyle: "preserve-3d" }}
+          style={{ perspective: 1000, transformStyle: "preserve-3d", willChange: "transform" }}
           className="group relative h-full cursor-pointer"
         >
           {/* Glow Layer */}
@@ -101,7 +107,7 @@ function GameCard({
 
           {/* Card Body */}
           <div
-            className={`relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition-colors duration-300 group-hover:border-white/20 sm:p-6 lg:p-8 ${
+            className={`relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-colors duration-300 group-hover:border-white/20 sm:p-6 lg:p-8 ${
               game.variant === "codenames"
                 ? "smoke-ambient tactical-grid"
                 : "scanline-effect noise-bg"
@@ -177,8 +183,8 @@ export default function HomePage() {
     <main className="relative flex h-screen max-h-screen flex-col items-center justify-between px-4 py-4 overflow-hidden sm:px-6 sm:py-6 md:py-8 lg:py-10">
       {/* Ambient Background Radials */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/4 top-1/4 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(255,65,108,0.04)] blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 h-[600px] w-[600px] translate-x-1/2 translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.04)] blur-[120px]" />
+        <div className="absolute left-1/4 top-1/4 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(255,65,108,0.05)] blur-[80px]" />
+        <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] translate-x-1/2 translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.05)] blur-[80px]" />
       </div>
 
       {/* Top Spacer */}
