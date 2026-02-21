@@ -45,7 +45,7 @@ export function createInkSocket(
   const socket = new PartySocket({
     host,
     room: `ink-arena-${roomCode.toUpperCase()}`,
-    party: "default",
+    party: "main",
   });
 
   socket.addEventListener("message", (event) => {
