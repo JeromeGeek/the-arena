@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "PartyKit Dev",
+			"type": "shell",
+			"command": "npx partykit dev",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

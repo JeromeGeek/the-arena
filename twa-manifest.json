@@ -1,0 +1,37 @@
+{
+  "host": "the-arena.vercel.app",
+  "name": "The Arena",
+  "display": "standalone",
+  "themeColor": "#0B0E14",
+  "navigationColor": "#0B0E14",
+  "backgroundColor": "#0B0E14",
+  "enableNotifications": false,
+  "isChromeOSOnly": false,
+  "launcherName": "The Arena",
+  "shortcuts": [
+    {
+      "name": "Codenames",
+      "shortName": "Codenames",
+      "url": "/codenames",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Truth or Dare",
+      "shortName": "TruthOrDare",
+      "url": "/truthordare",
+      "chosenIconUrl": "/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://the-arena.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "signingKey": {
+    "path": "./arena-keystore.jks",
+    "alias": "arena"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "splashScreenFadeOutDuration": 300,
+  "enableSiteSettingsShortcut": true
+}

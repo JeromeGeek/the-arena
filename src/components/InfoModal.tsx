@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
+type GameType = "codenames" | "imposter" | "truthordare" | "neverhaveiever" | "charades" | "mafia" | "inkarena";
+
 interface InfoModalProps {
-  game: "codenames" | "imposter";
+  game: GameType;
   size?: "sm" | "md";
 }
 
-const instructions = {
+const instructions: Record<GameType, { title: string; steps: string[] }> = {
   codenames: {
     title: "How to Play",
     steps: [
@@ -33,18 +35,79 @@ const instructions = {
       "Crew wins if the Imposter is caught!",
     ],
   },
+  truthordare: {
+    title: "How to Play",
+    steps: [
+      "Players take turns — pick Truth or Dare",
+      "Truth: Answer honestly — no chickening out",
+      "Dare: Complete the challenge — no backing down",
+      "Choose your intensity: Mild, Spicy, or Extreme",
+      "The group decides if you passed or failed",
+      "Keep going until everyone's had enough! 🔥",
+    ],
+  },
+  neverhaveiever: {
+    title: "How to Play",
+    steps: [
+      "A statement appears — \"Never have I ever...\"",
+      "If you've done it — tap your name to confess",
+      "Track who's done the most wild stuff",
+      "Choose intensity: Wild 🐺, Spicy 🌶️, or Chaos ☠️",
+      "Most confessions = most experienced player 😏",
+      "The leaderboard reveals all at the end!",
+    ],
+  },
+  charades: {
+    title: "How to Play",
+    steps: [
+      "One player acts — everyone else guesses",
+      "No talking, no pointing at objects!",
+      "Use body language and gestures only",
+      "Tap ✓ for correct, ✕ to skip a word",
+      "Score as many as you can before time runs out",
+      "Most points at the end wins! 🏆",
+    ],
+  },
+  mafia: {
+    title: "How to Play",
+    steps: [
+      "Each player secretly receives a role",
+      "Roles: Mafia 🔪, Doctor 💉, Detective 🔍, Villager 🏘️",
+      "Night: Mafia picks a victim, Doctor protects, Detective investigates",
+      "Day: The town discusses & votes someone out",
+      "Village wins if all Mafia are eliminated",
+      "Mafia wins if they equal or outnumber the Village!",
+    ],
+  },
+  inkarena: {
+    title: "How to Play",
+    steps: [
+      "2 Teams take turns drawing a secret word",
+      "The drawer sketches live on their phone — streams to TV",
+      "Your team shouts or types guesses from the TV",
+      "Correct guess under 15s = +150 pts 🔥",
+      "⚡ Steal Mode: Opposing team can steal 50% points!",
+      "💥 Sabotage: Shrink, shake, or flip the canvas",
+      "First team to 1000 points wins the Arena!",
+    ],
+  },
 };
 
 export default function InfoModal({ game, size = "md" }: InfoModalProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== "undefined");
   const info = instructions[game];
-  const accent = game === "codenames" ? "#FF416C" : "#00B4DB";
+  const accentMap: Record<GameType, string> = {
+    codenames: "#FF416C",
+    imposter: "#00B4DB",
+    truthordare: "#A855F7",
+    neverhaveiever: "#22C55E",
+    charades: "#F97316",
+    mafia: "#E11D48",
+    inkarena: "#FF416C",
+  };
+  const accent = accentMap[game];
   const isSmall = size === "sm";
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleOpen = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

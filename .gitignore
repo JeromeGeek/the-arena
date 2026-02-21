@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/blob-report
 
 # next.js
 /.next/
@@ -38,4 +41,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# TWA / Android
+*.jks
+*.keystore
+/android/
 next-env.d.ts

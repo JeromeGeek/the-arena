@@ -62,8 +62,8 @@ export default function AgentCard({
   function handleClick() {
     if (disabled || card.revealed || isSpymaster || isFlipping) return;
     setIsFlipping(true);
+    onReveal(index);
     setTimeout(() => {
-      onReveal(index);
       setIsFlipping(false);
     }, 450);
   }

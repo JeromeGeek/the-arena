@@ -79,7 +79,7 @@ export default function ImposterPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden pb-12">
+    <main className="relative min-h-[100dvh] overflow-hidden pb-12">
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.04)] blur-[80px]" />
@@ -87,15 +87,15 @@ export default function ImposterPage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-5">
+      <header className="relative z-10 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5">
         <Link
           href="/"
-          className="text-xs font-bold uppercase tracking-[0.3em] text-white/30 transition-colors hover:text-white/60"
+          className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 transition-colors hover:text-white/60 sm:text-xs sm:tracking-[0.3em]"
         >
           ← The Arena
         </Link>
         <h1
-          className="text-sm font-bold uppercase tracking-[0.35em] text-white/50"
+          className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-sm sm:tracking-[0.35em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
         >
           Imposter
@@ -109,9 +109,9 @@ export default function ImposterPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="glass-panel rounded-2xl p-5 sm:rounded-3xl sm:p-8">
+          <div className="glass-panel rounded-2xl p-3 sm:rounded-3xl sm:p-8">
             {/* Title */}
-            <div className="mb-5 text-center sm:mb-8">
+            <div className="mb-4 text-center sm:mb-8">
               <motion.div
                 className="mb-2 text-3xl sm:mb-3 sm:text-4xl"
                 animate={{ rotateY: [0, 360] }}
@@ -120,7 +120,7 @@ export default function ImposterPage() {
                 🎭
               </motion.div>
               <h2
-                className="mb-2 text-2xl font-bold uppercase tracking-[0.25em] text-white/90"
+                className="mb-2 text-xl font-bold uppercase tracking-[0.15em] text-white/90 sm:text-2xl sm:tracking-[0.25em]"
                 style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
               >
                 Crew Assembly
@@ -168,7 +168,7 @@ export default function ImposterPage() {
                         onClick={() => handleRemovePlayer(i)}
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
-                        className="text-white/15 transition-colors hover:text-red-400"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs text-white/15 transition-colors hover:bg-white/[0.05] hover:text-red-400"
                       >
                         ✕
                       </motion.button>
@@ -290,7 +290,7 @@ export default function ImposterPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.95 }}
               disabled={playerNames.length < 3}
-              className="w-full rounded-lg bg-gradient-to-r from-[#00B4DB] to-[#0083B0] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.15em] text-white shadow-lg transition-shadow hover:shadow-[0_0_30px_rgba(0,180,219,0.3)] disabled:cursor-not-allowed disabled:opacity-40 sm:rounded-xl sm:px-6 sm:py-4 sm:text-sm sm:tracking-[0.2em]"
+              className="w-full rounded-lg bg-gradient-to-r from-[#00B4DB] to-[#0083B0] px-3 py-3.5 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-lg transition-shadow hover:shadow-[0_0_30px_rgba(0,180,219,0.3)] disabled:cursor-not-allowed disabled:opacity-40 sm:rounded-xl sm:px-6 sm:py-4 sm:text-sm sm:tracking-[0.2em]"
             >
               Start Game • {playerNames.length} Players • {imposterCount} Imposter{imposterCount > 1 ? "s" : ""}
             </motion.button>
