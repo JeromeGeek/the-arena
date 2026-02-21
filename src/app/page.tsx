@@ -97,7 +97,7 @@ const games = [
   },
   {
     id: "inkarena",
-    title: "INK ARENA",
+    title: "PICTIONARY",
     subtitle: "Draw · Steal · Dominate",
     description: "2 Teams · Live Drawing · Steal Points. One phone draws live to the TV. Guess fast. Sabotage harder.",
     href: "/ia",
@@ -275,8 +275,7 @@ function GameCard({
           }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
           whileTap={{ scale: 0.97 }}
-          style={{ perspective: 1000, transformStyle: "preserve-3d", willChange: "transform" }}
-          className="group relative h-full cursor-pointer"
+          style={{ perspective: 1000, transformStyle: "preserve-3d", willChange: "transform" }}          className="group relative h-full cursor-pointer"
         >
           {/* Glow Layer */}
           <motion.div

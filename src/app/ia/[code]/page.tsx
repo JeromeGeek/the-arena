@@ -18,7 +18,6 @@ import {
 import {
   createInkSocket,
   sendMessage,
-  isPartyKitConfigured,
 } from "@/lib/partykit";
 import type PartySocket from "partysocket";
 
@@ -81,8 +80,6 @@ export default function InkArenaTVPage() {
   const [sabotageEffect, setSabotageEffect] = useState<"shake" | "flip" | "shrink" | null>(null);
   const [connectedCount, setConnectedCount] = useState(0);
   const [origin, setOrigin] = useState("");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const scoresRef = useRef(scores);
   useEffect(() => { scoresRef.current = scores; }, [scores]);
@@ -239,9 +236,10 @@ export default function InkArenaTVPage() {
     <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]">
 
       {/* LOBBY */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {phase === "lobby" && (
           <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">
             {/* Title */}
             <div className="text-center">
@@ -283,9 +281,9 @@ export default function InkArenaTVPage() {
       </AnimatePresence>
 
       {/* TEAM REVEAL */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {phase === "team_reveal" && (
-          <motion.div key="reveal" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+          <motion.div key="reveal" initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.4 }} className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }} className="text-center">
@@ -306,18 +304,20 @@ export default function InkArenaTVPage() {
       </AnimatePresence>
 
       {/* DRAWING + ROUND OVER — fills entire screen, no scroll */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {(phase === "drawing" || phase === "round_over") && (
           <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="absolute inset-0 flex flex-col">
             {/* Scoreboard — compact single row */}
             <div className="shrink-0 flex items-center justify-between border-b border-white/8 px-4 py-2 sm:px-8">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full" style={{ background: teamGradient("red"), boxShadow: "0 0 8px rgba(255,65,108,0.6)" }} />
                 <span className="text-xs uppercase tracking-widest text-white/40">Red</span>
-                <motion.span key={scores.red} initial={{ scale: 1.4 }} animate={{ scale: 1 }}
+                <motion.span key={scores.red} initial={{ scale: 1.3, color: "#FFFFFF" }} animate={{ scale: 1, color: "#FF416C" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="text-2xl font-black sm:text-3xl"
-                  style={{ fontFamily: "var(--font-syne),var(--font-display)", color: "#FF416C" }}>
+                  style={{ fontFamily: "var(--font-syne),var(--font-display)" }}>
                   {scores.red}
                 </motion.span>
               </div>
@@ -329,9 +329,10 @@ export default function InkArenaTVPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <motion.span key={scores.blue} initial={{ scale: 1.4 }} animate={{ scale: 1 }}
+                <motion.span key={scores.blue} initial={{ scale: 1.3, color: "#FFFFFF" }} animate={{ scale: 1, color: "#00B4DB" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="text-2xl font-black sm:text-3xl"
-                  style={{ fontFamily: "var(--font-syne),var(--font-display)", color: "#00B4DB" }}>
+                  style={{ fontFamily: "var(--font-syne),var(--font-display)" }}>
                   {scores.blue}
                 </motion.span>
                 <span className="text-xs uppercase tracking-widest text-white/40">Blue</span>
@@ -400,9 +401,10 @@ export default function InkArenaTVPage() {
       </AnimatePresence>
 
       {/* ROUND OVER OVERLAY */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {phase === "round_over" && roundResult && (
           <motion.div key="round_over" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-[rgba(11,14,20,0.88)] backdrop-blur-sm">
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 18 }} className="text-center">

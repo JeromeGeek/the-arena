@@ -3,16 +3,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
-import { createInkSocket, sendMessage, isPartyKitConfigured } from "@/lib/partykit";
+import { createInkSocket, sendMessage } from "@/lib/partykit";
 import type PartySocket from "partysocket";
+import { ROUND_SECONDS } from "@/lib/inkarena";
 
 export default function GuesserPage() {
   const params = useParams();
   const code = params.code as string;
   const socketRef = useRef<PartySocket | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const [team, setTeam] = useState<"red" | "blue" | null>(null);
   const [playerName, setPlayerName] = useState("");
@@ -115,9 +114,6 @@ export default function GuesserPage() {
     if (!guess.trim() || !roundActive) return;
     setGuessCount((n) => n + 1);
 
-    // Broadcast guess to TV + drawer
-    const isSteal = drawingTeam === team; // player's team is the same as drawing team — no that's wrong
-    // A "steal" occurs when the OPPOSING team guesses correctly during the drawing team's turn
     const isOpposingTeam = drawingTeam !== team;
 
     sendMessage(socketRef.current, {
@@ -128,8 +124,6 @@ export default function GuesserPage() {
       steal: isOpposingTeam,
     });
 
-    // Optimistically show result — TV validates and broadcasts correct_guess
-    // Here we just show the guess was sent
     setGuess("");
     inputRef.current?.focus();
   }, [guess, roundActive, drawingTeam, team, playerName]);
@@ -168,15 +162,9 @@ export default function GuesserPage() {
               backgroundClip: "text",
             }}
           >
-            INK ARENA
+            Pictionary
           </h1>
         </div>
-
-        {mounted && !isPartyKitConfigured && (
-          <div className="w-full max-w-sm rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-xs text-yellow-400/80">
-            ⚠️ PartyKit not configured — guesses won&apos;t sync. Run <code className="rounded bg-white/10 px-1">npx partykit dev</code>.
-          </div>
-        )}
 
         {/* Name input */}
         <div className="w-full max-w-sm space-y-3">
@@ -421,7 +409,7 @@ export default function GuesserPage() {
           <div className="overflow-hidden rounded-full bg-white/[0.06]" style={{ height: "6px" }}>
             <motion.div
               className="h-full rounded-full"
-              animate={{ width: `${(timeLeft / 45) * 100}%` }}
+              animate={{ width: `${(timeLeft / ROUND_SECONDS) * 100}%` }}
               transition={{ duration: 0.9, ease: "linear" }}
               style={{ backgroundImage: timeLeft <= 10 ? "linear-gradient(90deg,#FF416C,#FF4B2B)" : teamGradient }}
             />

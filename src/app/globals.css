@@ -4,8 +4,8 @@
   --color-obsidian: #0B0E14;
   --color-obsidian-light: #111520;
   --color-obsidian-lighter: #1a1f2e;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Syne", "Montserrat", system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-syne), "Montserrat", system-ui, sans-serif;
 }
 
 html {
@@ -19,6 +19,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
   /* PWA safe areas */
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
@@ -129,6 +130,12 @@ body::after {
   -webkit-text-fill-color: transparent;
   animation: shimmer 4s linear infinite;
   will-change: background-position;
+}
+
+/* Smooth canvas rendering */
+canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 @keyframes sheen-sweep {
@@ -474,23 +481,6 @@ body::after {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.2);
-}
-
-/* GPU layer promotion for animated elements */
-.smoke-ambient::before,
-.scanline-effect::before,
-.noise-bg::after,
-.sheen-sweep::after,
-.ember-flicker::before,
-.ember-flicker::after,
-.ripple-pulse::before,
-.ripple-pulse::after,
-.spotlight-sweep::before,
-.spotlight-sweep::after,
-.blood-vignette::before,
-.blood-vignette::after {
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 /* ── Ink Arena: Ink splatter — paint blobs bursting from center ── */
