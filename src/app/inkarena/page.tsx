@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { generateRoomCode } from "@/lib/inkarena";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { isPartyKitConfigured } from "@/lib/partykit";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -82,8 +82,8 @@ export default function InkArenaPage() {
           <p className="mt-2 text-sm text-white/40">Team Clash · Draw · Steal · Dominate</p>
         </motion.div>
 
-        {/* Supabase warning */}
-        {!isSupabaseConfigured && (
+        {/* PartyKit warning — only shown client-side to avoid hydration mismatch */}
+        {typeof window !== "undefined" && !isPartyKitConfigured && (
           <motion.div
             custom={1.5}
             variants={fadeUp}
@@ -92,18 +92,9 @@ export default function InkArenaPage() {
             className="mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3"
           >
             <p className="text-xs text-yellow-400/80">
-              ⚠️ <strong>Real-time drawing requires Supabase.</strong> Add{" "}
-              <code className="rounded bg-white/10 px-1 text-yellow-300">NEXT_PUBLIC_SUPABASE_URL</code> &amp;{" "}
-              <code className="rounded bg-white/10 px-1 text-yellow-300">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to{" "}
-              <code className="rounded bg-white/10 px-1 text-yellow-300">.env.local</code>.{" "}
-              <a
-                href="https://supabase.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-yellow-300"
-              >
-                Get a free project →
-              </a>
+              ⚠️ <strong>Real-time drawing requires PartyKit.</strong> Run{" "}
+              <code className="rounded bg-white/10 px-1 text-yellow-300">npx partykit dev</code> locally, or set{" "}
+              <code className="rounded bg-white/10 px-1 text-yellow-300">NEXT_PUBLIC_PARTYKIT_HOST</code> in production.
             </p>
           </motion.div>
         )}
