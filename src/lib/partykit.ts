@@ -56,8 +56,20 @@ export function createInkSocket(
 
 /**
  * Send a typed message over an existing socket.
+ * If the socket is still connecting, queues the message until it opens.
  */
 export function sendMessage(socket: PartySocket | null, payload: unknown) {
-  if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  socket.send(JSON.stringify(payload));
+  if (!socket) return;
+  const json = JSON.stringify(payload);
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(json);
+  } else if (socket.readyState === WebSocket.CONNECTING) {
+    // Queue until open
+    const handler = () => {
+      socket.send(json);
+      socket.removeEventListener("open", handler);
+    };
+    socket.addEventListener("open", handler);
+  }
+  // CLOSING / CLOSED — drop silently
 }

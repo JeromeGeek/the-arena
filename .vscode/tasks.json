@@ -2,11 +2,28 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "PartyKit Dev",
+			"label": "PartyKit Dev (local only)",
 			"type": "shell",
-			"command": "npx partykit dev",
+			"command": "npm run party",
 			"isBackground": true,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "dev"
+			}
+		},
+		{
+			"label": "Next.js Dev",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "dev"
+			}
 		}
 	]
 }

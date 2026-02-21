@@ -6,9 +6,58 @@ The Arena is deployed as a **PWA (Progressive Web App)** that works:
 - **iOS** → Safari "Add to Home Screen" (website)
 - **Web** → Any browser at your deployed URL
 
+> ⚠️ **Never run `npx partykit deploy` locally.** All deployments are
+> handled automatically by GitHub Actions on every push to `main`.
+> For local dev use `npm run party` (starts PartyKit on `localhost:1999`).
+
 ---
 
-## 1. Deploy the Website (Required First)
+## Automated CI/CD (GitHub Actions)
+
+Every push to `main` triggers `.github/workflows/deploy.yml` which:
+1. Deploys the **PartyKit server** → `https://the-arena-ink.jeromegeek.partykit.dev`
+2. Deploys the **Next.js app** → Vercel (after PartyKit is live)
+
+### Required GitHub Secrets
+Go to **GitHub → Settings → Secrets and variables → Actions** and add:
+
+| Secret | How to get it |
+|--------|--------------|
+| `PARTYKIT_TOKEN` | Run `npx partykit login` locally once, then find the token in `~/.partykit/config.json` → `access_token` |
+| `VERCEL_TOKEN` | Vercel Dashboard → Settings → Tokens → Create |
+| `VERCEL_ORG_ID` | Run `vercel link` locally once → `.vercel/project.json` → `orgId` |
+| `VERCEL_PROJECT_ID` | Same file → `projectId` |
+
+### Required Vercel Environment Variable
+In Vercel Dashboard → Project → Settings → Environment Variables:
+
+| Variable | Value |
+|----------|-------|
+| `NEXT_PUBLIC_PARTYKIT_HOST` | `the-arena-ink.jeromegeek.partykit.dev` |
+
+---
+
+## Local Development
+
+```bash
+# Terminal 1 — PartyKit real-time server (localhost:1999)
+npm run party
+
+# Terminal 2 — Next.js app (localhost:3000)
+npm run dev
+```
+
+Your `.env.local` (gitignored) should contain:
+```
+NEXT_PUBLIC_PARTYKIT_HOST=the-arena-ink.jeromegeek.partykit.dev
+```
+This makes your local Next.js app talk to the **deployed** PartyKit
+server, so you can test against real infrastructure without running
+PartyKit locally. To test fully offline, leave the variable unset and
+run `npm run party` instead.
+
+---
+
 
 ### Vercel (Recommended)
 ```bash

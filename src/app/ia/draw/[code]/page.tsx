@@ -48,8 +48,8 @@ export default function DrawerPage() {
   useEffect(() => {
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
-      if (msg.type === "round_start") {
-        const payload = msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number };
+
+      const handleRoundBegin = (payload: { word: string; drawingTeam: "red" | "blue"; roundNumber: number }) => {
         setCurrentWord(payload.word);
         setDrawingTeam(payload.drawingTeam);
         setRoundNumber(payload.roundNumber);
@@ -59,7 +59,37 @@ export default function DrawerPage() {
           const ctx = canvas.getContext("2d");
           ctx?.clearRect(0, 0, canvas.width, canvas.height);
         }
+      };
+
+      if (msg.type === "round_start") {
+        handleRoundBegin(msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number });
       }
+
+      // Late-joiner catchup from server
+      if (msg.type === "round_catchup") {
+        handleRoundBegin(msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number });
+      }
+
+      if (msg.type === "correct_guess" || msg.type === "time_up" || msg.type === "round_over") {
+        setWaitingForRound(true);
+        setCurrentWord(null);
+        isDrawingRef.current = false;
+        lastPointRef.current = null;
+      }
+
+      if (msg.type === "lobby_reset") {
+        setWaitingForRound(true);
+        setCurrentWord(null);
+        setRoundNumber(0);
+        isDrawingRef.current = false;
+        lastPointRef.current = null;
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          ctx?.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
       if (msg.type === "sabotage") {
         setSabotageEffect(msg.effect as "shrink" | "shake" | "flip");
         setTimeout(() => setSabotageEffect(null), 1500);

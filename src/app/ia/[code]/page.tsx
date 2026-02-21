@@ -214,7 +214,8 @@ export default function InkArenaTVPage() {
       setPhase("drawing");
       phaseRef.current = "drawing";
       startTimer(word, team);
-      sendMessage(socketRef.current, { type: "round_start", word, drawingTeam: team, roundNumber: roundNum });
+      // Include timeLeft so server can track elapsed for late joiners
+      sendMessage(socketRef.current, { type: "round_start", word, drawingTeam: team, roundNumber: roundNum, timeLeft: ROUND_SECONDS });
     }, 2800);
   }, [usedWords, startTimer]);
 
@@ -278,9 +279,10 @@ export default function InkArenaTVPage() {
             </div>
             <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => startRound("red", 1)}
-              className="rounded-2xl px-12 py-4 text-base font-black uppercase tracking-[0.2em] text-white"
-              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: "0 0 40px rgba(255,65,108,0.4)" }}>
-              🎨 Start Game
+              disabled={connectedCount < 1}
+              className="rounded-2xl px-12 py-4 text-base font-black uppercase tracking-[0.2em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: connectedCount >= 1 ? "0 0 40px rgba(255,65,108,0.4)" : "none" }}>
+              {connectedCount < 1 ? "⏳ Waiting for players…" : "🎨 Start Game"}
             </motion.button>
             <Link href="/" className="text-xs text-white/20 transition-colors hover:text-white/40">← Back to Arena</Link>
           </motion.div>
@@ -475,7 +477,7 @@ export default function InkArenaTVPage() {
             </div>
             <div className="flex gap-4">
               <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                onClick={() => { setPhase("lobby"); setScores({ red: 0, blue: 0 }); setRound(0); setUsedWords([]); setWinner(null); }}
+                onClick={() => { setPhase("lobby"); setScores({ red: 0, blue: 0 }); setRound(0); setUsedWords([]); setWinner(null); sendMessage(socketRef.current, { type: "lobby_reset" }); }}
                 className="rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-3 text-sm font-bold uppercase tracking-widest text-white/70 transition-colors hover:bg-white/[0.08]">
                 Play Again
               </motion.button>

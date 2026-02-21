@@ -42,10 +42,24 @@ export default function GuesserPage() {
   // Join channel — always connect, host resolved at runtime
   useEffect(() => {
     if (!joined) return;
+
+    const startRoundTimer = (seconds: number) => {
+      clearTimer();
+      setTimeLeft(seconds);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((t) => {
+          if (t <= 1) { clearTimer(); setRoundActive(false); return 0; }
+          return t - 1;
+        });
+      }, 1000);
+    };
+
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
+
+      // Fresh round started
       if (msg.type === "round_start") {
-        const payload = msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number };
+        const payload = msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number; timeLeft?: number };
         setRoundActive(true);
         setGuess("");
         setLastResult(null);
@@ -53,18 +67,37 @@ export default function GuesserPage() {
         setDrawingTeam(payload.drawingTeam);
         setWordLength(payload.word.length);
         setWordFirstLetter(payload.word[0]);
-        setTimeLeft(45);
-        clearTimer();
-        timerRef.current = setInterval(() => {
-          setTimeLeft((t) => {
-            if (t <= 1) { clearTimer(); setRoundActive(false); return 0; }
-            return t - 1;
-          });
-        }, 1000);
+        startRoundTimer(payload.timeLeft ?? 45);
       }
-      if (msg.type === "correct_guess") {
+
+      // Late-joiner catchup — server sends remaining time
+      if (msg.type === "round_catchup") {
+        const payload = msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number; timeLeft: number };
+        if (payload.timeLeft > 0) {
+          setRoundActive(true);
+          setGuess("");
+          setLastResult(null);
+          setGuessCount(0);
+          setDrawingTeam(payload.drawingTeam);
+          setWordLength(payload.word.length);
+          setWordFirstLetter(payload.word[0]);
+          startRoundTimer(payload.timeLeft);
+        }
+      }
+
+      if (msg.type === "correct_guess" || msg.type === "time_up") {
         clearTimer();
         setRoundActive(false);
+        // If we didn't send this, clear last result so UI shows "next round" state
+        setLastResult((prev) => prev ?? null);
+      }
+
+      if (msg.type === "lobby_reset") {
+        clearTimer();
+        setRoundActive(false);
+        setLastResult(null);
+        setGuessCount(0);
+        setGuess("");
       }
     });
     socketRef.current = socket;
