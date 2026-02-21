@@ -39,9 +39,9 @@ export default function GuesserPage() {
     if (timerRef.current) clearInterval(timerRef.current);
   }, []);
 
-  // Join channel
+  // Join channel — always connect, host resolved at runtime
   useEffect(() => {
-    if (!joined || !isPartyKitConfigured) return;
+    if (!joined) return;
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
       if (msg.type === "round_start") {

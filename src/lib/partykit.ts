@@ -11,13 +11,18 @@
 
 import PartySocket from "partysocket";
 
-export const PARTYKIT_HOST =
-  process.env.NEXT_PUBLIC_PARTYKIT_HOST ??
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "localhost:1999"
-    : "");
+export function getPartyKitHost(): string {
+  // Always read at call-time so it works both SSR and client
+  if (typeof window === "undefined") return "";
+  const envHost = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
+  if (envHost) return envHost;
+  if (window.location.hostname === "localhost") return "localhost:1999";
+  return "";
+}
 
-export const isPartyKitConfigured = Boolean(PARTYKIT_HOST);
+export const isPartyKitConfigured =
+  Boolean(process.env.NEXT_PUBLIC_PARTYKIT_HOST) ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost");
 
 export type MessageHandler = (data: unknown) => void;
 
@@ -30,8 +35,9 @@ export function createInkSocket(
   roomCode: string,
   onMessage: MessageHandler,
 ): PartySocket {
+  const host = getPartyKitHost();
   const socket = new PartySocket({
-    host: PARTYKIT_HOST,
+    host,
     room: `ink-arena-${roomCode.toUpperCase()}`,
     party: "default",
   });

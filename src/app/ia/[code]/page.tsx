@@ -108,7 +108,7 @@ export default function InkArenaTVPage() {
   }, []);
 
   useEffect(() => {
-    if (!isPartyKitConfigured) return;
+    // Always connect — host resolved at runtime in browser
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
 

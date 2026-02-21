@@ -44,9 +44,8 @@ export default function DrawerPage() {
   const activeColor = isEraser ? "#FFFFFF" : color;
   const activeBrush = isEraser ? 24 : brushSize;
 
-  // Connect to PartyKit
+  // Connect to PartyKit — always connect, host resolved at runtime in browser
   useEffect(() => {
-    if (!isPartyKitConfigured) return;
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
       if (msg.type === "round_start") {
@@ -67,7 +66,7 @@ export default function DrawerPage() {
       }
     });
     socketRef.current = socket;
-    sendMessage(socket, { type: "player_join", name: playerName, team: "red", role: "drawer" });
+    sendMessage(socket, { type: "player_join", name: playerName, team: "drawer", role: "drawer" });
     return () => { socket.close(); };
   }, [code, playerName]);
 
