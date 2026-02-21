@@ -53,9 +53,11 @@ export default class InkArenaServer implements Party.Server {
   onConnect(conn: Party.Connection) {
     const allConns = [...this.room.getConnections()];
     const count = allConns.length;
+    const countMsg = JSON.stringify({ type: "connection_count", count });
 
-    // Tell everyone the new connection count
-    this.room.broadcast(JSON.stringify({ type: "connection_count", count }));
+    // Tell everyone the new connection count (including the new connection itself)
+    this.room.broadcast(countMsg);
+    conn.send(countMsg);
 
     // Send late-joiner the current round state so they don't miss anything
     if (this.round && this.round.phase === "drawing") {

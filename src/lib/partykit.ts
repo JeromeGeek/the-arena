@@ -24,6 +24,12 @@ export const isPartyKitConfigured =
   Boolean(process.env.NEXT_PUBLIC_PARTYKIT_HOST) ||
   (typeof window !== "undefined" && window.location.hostname === "localhost");
 
+/** Runtime check — safe to call from useEffect/client code */
+export function checkPartyKitConfigured(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(process.env.NEXT_PUBLIC_PARTYKIT_HOST) || window.location.hostname === "localhost";
+}
+
 export type MessageHandler = (data: unknown) => void;
 
 /**

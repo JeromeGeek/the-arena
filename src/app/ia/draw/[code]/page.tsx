@@ -7,18 +7,15 @@ import {
   useCallback,
   type PointerEvent,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
-import { createInkSocket, sendMessage, isPartyKitConfigured } from "@/lib/partykit";
+import { createInkSocket, sendMessage } from "@/lib/partykit";
 import type PartySocket from "partysocket";
 import type { DrawStroke } from "@/lib/inkarena";
 
-const COLORS = [
-  "#000000", "#FFFFFF", "#FF416C", "#FF4B2B",
-  "#00B4DB", "#0083B0", "#A855F7", "#22C55E",
-  "#F97316", "#EAB308", "#EC4899", "#06B6D4",
-];
-const BRUSH_SIZES = [3, 6, 12, 20];
+// Essential colours only
+const COLORS = ["#000000", "#FFFFFF", "#FF416C", "#00B4DB", "#22C55E", "#F97316"];
+const BRUSH_SIZES = [4, 10, 20];
 
 export default function DrawerPage() {
   const params = useParams();
@@ -28,11 +25,8 @@ export default function DrawerPage() {
   const lastSendRef = useRef(0);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const isDrawingRef = useRef(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   const [color, setColor] = useState("#000000");
-  const [brushSize, setBrushSize] = useState(6);
+  const [brushSize, setBrushSize] = useState(10);
   const [isEraser, setIsEraser] = useState(false);
   const [currentWord, setCurrentWord] = useState<string | null>(null);
   const [drawingTeam, setDrawingTeam] = useState<"red" | "blue" | null>(null);
@@ -198,27 +192,27 @@ export default function DrawerPage() {
 
   return (
     <main
-      className="flex min-h-[100dvh] flex-col bg-[#0B0E14] select-none"
+      className="flex h-[100dvh] flex-col bg-[#0B0E14] select-none overflow-hidden"
       style={{ touchAction: "none", userSelect: "none" }}
     >
-      {/* Header */}
+      {/* Header — compact single line */}
       <div
-        className="flex items-center justify-between border-b border-white/8 px-4 py-2.5"
+        className="flex shrink-0 items-center justify-between px-4 py-2"
         style={{ borderBottom: `1px solid ${teamColor}22` }}
       >
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-white/30">
-            Round {roundNumber} · Drawing
-          </p>
+        <div className="flex items-center gap-3">
           {currentWord && !waitingForRound ? (
-            <p
-              className="text-lg font-black uppercase tracking-wider"
-              style={{ color: teamColor, fontFamily: "var(--font-syne), var(--font-display)" }}
-            >
-              {currentWord}
-            </p>
+            <>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">Draw:</span>
+              <span
+                className="text-base font-black uppercase tracking-wider"
+                style={{ color: teamColor, fontFamily: "var(--font-syne), var(--font-display)" }}
+              >
+                {currentWord}
+              </span>
+            </>
           ) : (
-            <p className="text-sm text-white/40">Waiting for round…</p>
+            <span className="text-sm text-white/40">Waiting for your turn…</span>
           )}
         </div>
         <motion.button
@@ -231,56 +225,49 @@ export default function DrawerPage() {
         </motion.button>
       </div>
 
-      {mounted && !isPartyKitConfigured && (
-        <div className="border-b border-yellow-500/20 bg-yellow-500/5 px-4 py-2 text-center text-xs text-yellow-400/80">
-          ⚠️ PartyKit not configured — drawing won&apos;t sync to TV. Run <code className="rounded bg-white/10 px-1">npx partykit dev</code>.
-        </div>
-      )}
-
-      {/* Canvas */}
-      <div className="relative flex-1 flex items-center justify-center p-2">
+      {/* Canvas — fills all remaining space */}
+      <div className="relative flex-1 overflow-hidden">
         <motion.div
-          className="relative w-full"
-          style={{ maxWidth: "480px" }}
+          className="absolute inset-0"
           animate={
             sabotageEffect === "shake"
               ? { x: [0, -8, 8, -6, 6, 0] }
               : sabotageEffect === "flip"
               ? { scaleX: -1 }
               : sabotageEffect === "shrink"
-              ? { scale: 0.5 }
+              ? { scale: 0.85 }
               : { x: 0, scaleX: 1, scale: 1 }
           }
           transition={{ duration: 0.3 }}
         >
           {waitingForRound && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-[rgba(11,14,20,0.9)]">
-              <p className="text-2xl">✏️</p>
-              <p className="mt-2 text-sm text-white/50">Waiting for your turn…</p>
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[rgba(11,14,20,0.92)]">
+              <p className="text-4xl">✏️</p>
+              <p className="mt-3 text-sm text-white/50">Waiting for your turn…</p>
             </div>
           )}
           <canvas
             ref={canvasRef}
-            width={480}
-            height={360}
+            width={800}
+            height={600}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="w-full rounded-2xl border border-white/10 bg-white cursor-crosshair"
+            className="h-full w-full bg-white cursor-crosshair"
             style={{
-              aspectRatio: "4/3",
               touchAction: "none",
-              boxShadow: waitingForRound ? "none" : `0 0 30px ${teamColor}33`,
+              boxShadow: waitingForRound ? "none" : `0 0 40px ${teamColor}44`,
+              display: "block",
             }}
           />
         </motion.div>
       </div>
 
-      {/* Toolbar */}
-      <div className="space-y-3 border-t border-white/8 px-4 py-3">
-        {/* Color Palette */}
-        <div className="flex flex-wrap gap-2 justify-center">
+      {/* Toolbar — compact, always visible at bottom */}
+      <div className="shrink-0 border-t border-white/8 bg-[#0B0E14] px-4 py-2.5 space-y-2">
+        {/* Colours + eraser */}
+        <div className="flex items-center justify-center gap-2.5">
           {COLORS.map((c) => (
             <motion.button
               key={c}
@@ -289,68 +276,46 @@ export default function DrawerPage() {
               onClick={() => { setColor(c); setIsEraser(false); }}
               className="rounded-full border-2 transition-all"
               style={{
-                width: "28px",
-                height: "28px",
+                width: "34px", height: "34px",
                 background: c,
-                borderColor: !isEraser && color === c ? "white" : "transparent",
-                boxShadow: !isEraser && color === c ? `0 0 8px ${c}` : "none",
+                borderColor: !isEraser && color === c ? "white" : c === "#FFFFFF" ? "rgba(255,255,255,0.3)" : "transparent",
+                boxShadow: !isEraser && color === c ? `0 0 10px ${c}88` : "none",
               }}
             />
           ))}
-          {/* Eraser */}
           <motion.button
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={() => setIsEraser((e) => !e)}
-            className="flex h-7 w-7 items-center justify-center rounded-full border-2 text-sm transition-all"
+            className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-2 text-base transition-all"
             style={{
-              background: "rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.06)",
               borderColor: isEraser ? "white" : "rgba(255,255,255,0.15)",
-              boxShadow: isEraser ? "0 0 8px rgba(255,255,255,0.4)" : "none",
+              boxShadow: isEraser ? "0 0 10px rgba(255,255,255,0.4)" : "none",
             }}
           >
             🧹
           </motion.button>
         </div>
 
-        {/* Brush Sizes */}
-        <div className="flex items-center justify-center gap-3">
+        {/* Brush sizes */}
+        <div className="flex items-center justify-center gap-6">
           {BRUSH_SIZES.map((size) => (
             <motion.button
               key={size}
               whileTap={{ scale: 0.85 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
               onClick={() => { setBrushSize(size); setIsEraser(false); }}
-              className="flex items-center justify-center"
-              style={{ width: "36px", height: "36px" }}
+              className="flex h-9 w-9 items-center justify-center"
             >
               <div
                 className="rounded-full transition-all"
                 style={{
-                  width: `${Math.min(size * 1.5, 28)}px`,
-                  height: `${Math.min(size * 1.5, 28)}px`,
-                  background: !isEraser && brushSize === size ? color : "rgba(255,255,255,0.3)",
-                  boxShadow: !isEraser && brushSize === size ? `0 0 6px ${color}` : "none",
+                  width: `${size + 4}px`, height: `${size + 4}px`,
+                  background: !isEraser && brushSize === size ? activeColor : "rgba(255,255,255,0.25)",
+                  boxShadow: !isEraser && brushSize === size ? `0 0 8px ${activeColor}` : "none",
                 }}
               />
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Sabotage buttons */}
-        <div className="flex justify-center gap-2 pt-1">
-          <p className="self-center text-[10px] uppercase tracking-widest text-white/20 mr-1">⚡ Sabotage</p>
-          {(["shrink", "shake", "flip"] as const).map((effect) => (
-            <motion.button
-              key={effect}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              onClick={() => {
-                sendMessage(socketRef.current, { type: "sabotage", effect });
-              }}
-              className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/40 hover:border-white/20 hover:text-white/60 transition-colors"
-            >
-              {effect === "shrink" ? "🔬" : effect === "shake" ? "💥" : "🔄"} {effect}
             </motion.button>
           ))}
         </div>

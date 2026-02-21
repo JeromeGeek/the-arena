@@ -168,10 +168,7 @@ export default function InkArenaTVPage() {
         setTimeout(() => setSabotageEffect(null), 1500);
         return;
       }
-      if (msg.type === "player_join") {
-        setConnectedCount((n) => n + 1);
-        return;
-      }
+      // player_join is informational only — count is authoritative from connection_count
     });
     socketRef.current = socket;
     return () => { socket.close(); };
@@ -239,44 +236,40 @@ export default function InkArenaTVPage() {
   const joinUrl = origin ? `${origin}/ia/join/${code}` : "";
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]">
+    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]">
 
       {/* LOBBY */}
       <AnimatePresence>
         {phase === "lobby" && (
           <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-10">
+            className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">
+            {/* Title */}
             <div className="text-center">
-              <p className="mb-2 text-xs uppercase tracking-[0.4em] text-white/30">Room · {code}</p>
-              <h1 className="text-5xl font-black uppercase tracking-[0.15em] sm:text-7xl lg:text-8xl"
+              <p className="mb-1 text-[11px] uppercase tracking-[0.4em] text-white/30">Room · {code}</p>
+              <h1 className="text-5xl font-black uppercase tracking-[0.12em] sm:text-6xl lg:text-7xl"
                 style={{ fontFamily: "var(--font-syne),var(--font-display)" }}>
                 <span style={{ backgroundImage: "linear-gradient(135deg,#FF416C,#00B4DB)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  INK ARENA
+                  Pictionary
                 </span>
               </h1>
-              <p className="mt-2 text-base text-white/40">
+              <p className="mt-1 text-sm text-white/40">
                 {connectedCount > 0 ? `${connectedCount} player${connectedCount !== 1 ? "s" : ""} connected` : "Waiting for players…"}
               </p>
             </div>
-            {mounted && !isPartyKitConfigured && (
-              <div className="max-w-md rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-center text-xs text-yellow-400/80">
-                ⚠️ Set <code className="rounded bg-white/10 px-1">NEXT_PUBLIC_PARTYKIT_HOST</code> in{" "}
-                <code className="rounded bg-white/10 px-1">.env.local</code>. Run{" "}
-                <code className="rounded bg-white/10 px-1">npx partykit dev</code> locally.
+            {/* QR codes — compact side by side */}
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">✏️ Drawer</p>
+                {drawUrl && <div className="rounded-lg bg-white p-1.5"><QRCodeSVG value={drawUrl} size={100} /></div>}
+                <p className="break-all text-center text-[9px] text-white/25 leading-tight">{drawUrl || "Loading…"}</p>
               </div>
-            )}
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-white/40">✏️ Drawer Phone</p>
-                {drawUrl && <div className="rounded-xl bg-white p-2"><QRCodeSVG value={drawUrl} size={140} /></div>}
-                <p className="max-w-[180px] break-all text-center text-[11px] text-white/30">{drawUrl || "Loading…"}</p>
-              </div>
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-white/40">🎯 Guesser Phone</p>
-                {joinUrl && <div className="rounded-xl bg-white p-2"><QRCodeSVG value={joinUrl} size={140} /></div>}
-                <p className="max-w-[180px] break-all text-center text-[11px] text-white/30">{joinUrl || "Loading…"}</p>
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">🎯 Guesser</p>
+                {joinUrl && <div className="rounded-lg bg-white p-1.5"><QRCodeSVG value={joinUrl} size={100} /></div>}
+                <p className="break-all text-center text-[9px] text-white/25 leading-tight">{joinUrl || "Loading…"}</p>
               </div>
             </div>
+            {/* Start button */}
             <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => startRound("red", 1)}
               disabled={connectedCount < 1}
@@ -293,7 +286,7 @@ export default function InkArenaTVPage() {
       <AnimatePresence>
         {phase === "team_reveal" && (
           <motion.div key="reveal" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.4 }} className="flex flex-1 flex-col items-center justify-center gap-4">
+            transition={{ duration: 0.4 }} className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }} className="text-center">
               <p className="mb-2 text-sm uppercase tracking-[0.4em] text-white/40">Round {round}</p>
@@ -312,60 +305,64 @@ export default function InkArenaTVPage() {
         )}
       </AnimatePresence>
 
-      {/* DRAWING + ROUND OVER */}
+      {/* DRAWING + ROUND OVER — fills entire screen, no scroll */}
       <AnimatePresence>
         {(phase === "drawing" || phase === "round_over") && (
-          <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col">
-            {/* Scoreboard */}
-            <div className="flex items-center justify-between border-b border-white/8 px-4 py-2 sm:px-8 sm:py-3">
-              <div className="flex items-center gap-3">
-                <div className="h-2.5 w-2.5 rounded-full" style={{ background: teamGradient("red"), boxShadow: "0 0 8px rgba(255,65,108,0.6)" }} />
-                <span className="text-xs uppercase tracking-widest text-white/40 sm:text-sm">{config?.redName ?? "Red"}</span>
+          <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col">
+            {/* Scoreboard — compact single row */}
+            <div className="shrink-0 flex items-center justify-between border-b border-white/8 px-4 py-2 sm:px-8">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full" style={{ background: teamGradient("red"), boxShadow: "0 0 8px rgba(255,65,108,0.6)" }} />
+                <span className="text-xs uppercase tracking-widest text-white/40">Red</span>
                 <motion.span key={scores.red} initial={{ scale: 1.4 }} animate={{ scale: 1 }}
-                  className="text-2xl font-black sm:text-4xl lg:text-5xl"
+                  className="text-2xl font-black sm:text-3xl"
                   style={{ fontFamily: "var(--font-syne),var(--font-display)", color: "#FF416C" }}>
                   {scores.red}
                 </motion.span>
               </div>
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-[9px] uppercase tracking-[0.3em] text-white/20 sm:text-[11px]">Round {round}</span>
-                <div className="rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-white sm:px-3 sm:text-sm"
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] uppercase tracking-[0.3em] text-white/20">Round {round}</span>
+                <div className="rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-white"
                   style={{ backgroundImage: teamGradient(drawingTeam) }}>
                   {teamName(drawingTeam)} draws
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <motion.span key={scores.blue} initial={{ scale: 1.4 }} animate={{ scale: 1 }}
-                  className="text-2xl font-black sm:text-4xl lg:text-5xl"
+                  className="text-2xl font-black sm:text-3xl"
                   style={{ fontFamily: "var(--font-syne),var(--font-display)", color: "#00B4DB" }}>
                   {scores.blue}
                 </motion.span>
-                <span className="text-xs uppercase tracking-widest text-white/40 sm:text-sm">{config?.blueName ?? "Blue"}</span>
-                <div className="h-2.5 w-2.5 rounded-full" style={{ background: teamGradient("blue"), boxShadow: "0 0 8px rgba(0,180,219,0.6)" }} />
+                <span className="text-xs uppercase tracking-widest text-white/40">Blue</span>
+                <div className="h-2 w-2 rounded-full" style={{ background: teamGradient("blue"), boxShadow: "0 0 8px rgba(0,180,219,0.6)" }} />
               </div>
             </div>
 
-            {/* Canvas */}
-            <div className="relative flex flex-1 items-center justify-center p-2 sm:p-4">
-              <motion.div style={{ width: "100%", maxWidth: "700px" }}
-                animate={sabotageEffect === "shake" ? { x: [0, -8, 8, -6, 6, 0] } : sabotageEffect === "flip" ? { scaleX: -1 } : sabotageEffect === "shrink" ? { scale: 0.6 } : { x: 0, scaleX: 1, scale: 1 }}
+            {/* Canvas — fills remaining space */}
+            <div className="relative flex-1 overflow-hidden">
+              <motion.div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3"
+                animate={sabotageEffect === "shake" ? { x: [0, -8, 8, -6, 6, 0] } : sabotageEffect === "flip" ? { scaleX: -1 } : sabotageEffect === "shrink" ? { scale: 0.7 } : { x: 0, scaleX: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}>
-                <canvas ref={canvasRef} width={700} height={480}
-                  className="w-full rounded-2xl border border-white/10 bg-white"
-                  style={{ aspectRatio: "700/480", boxShadow: `0 0 60px ${teamColor(drawingTeam)}22` }} />
-                {phase === "drawing" && (
-                  <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                    {currentWord.split("").map((char, i) =>
-                      char === " " ? <span key={i} className="w-4" /> : (
-                        <span key={i} className="flex h-7 w-7 items-center justify-center rounded border border-white/10 text-xs font-bold text-white/30 sm:h-8 sm:w-8 sm:text-sm"
-                          style={{ background: "rgba(255,255,255,0.03)" }}>
-                          {i === 0 ? char.toUpperCase() : ""}
-                        </span>
-                      )
-                    )}
-                    <span className="ml-1 self-center text-[10px] text-white/20">({currentWord.length} letters)</span>
-                  </div>
-                )}
+                <div className="relative h-full w-full" style={{ maxWidth: "min(100%, calc((100dvh - 140px) * 1.46))" }}>
+                  <canvas ref={canvasRef} width={700} height={480}
+                    className="h-full w-full rounded-xl border border-white/10 bg-white"
+                    style={{ boxShadow: `0 0 60px ${teamColor(drawingTeam)}22` }} />
+                  {/* Word hint bar — overlaid at bottom of canvas */}
+                  {phase === "drawing" && (
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 rounded-b-xl bg-black/40 py-1.5 backdrop-blur-sm">
+                      {currentWord.split("").map((char, i) =>
+                        char === " " ? <span key={i} className="w-3" /> : (
+                          <span key={i} className="flex h-6 w-6 items-center justify-center rounded border border-white/15 text-xs font-bold text-white/40"
+                            style={{ background: "rgba(255,255,255,0.05)" }}>
+                            {i === 0 ? char.toUpperCase() : ""}
+                          </span>
+                        )
+                      )}
+                      <span className="ml-1 text-[10px] text-white/25">({currentWord.length})</span>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             </div>
 
@@ -373,7 +370,7 @@ export default function InkArenaTVPage() {
             <AnimatePresence>
               {lastGuess && (
                 <motion.div initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
-                  className="absolute right-4 top-20 sm:right-8">
+                  className="absolute right-4 top-16 sm:right-8">
                   <div className="rounded-xl border px-4 py-2 text-sm font-semibold"
                     style={{ borderColor: `${teamColor(lastGuess.team)}44`, backgroundColor: `${teamColor(lastGuess.team)}11`, color: teamColor(lastGuess.team) }}>
                     <span className="text-white/50">{lastGuess.name}: </span>{lastGuess.text}
@@ -382,15 +379,15 @@ export default function InkArenaTVPage() {
               )}
             </AnimatePresence>
 
-            {/* Timer */}
+            {/* Timer — compact bottom bar */}
             {phase === "drawing" && (
-              <div className="border-t border-white/8 px-4 py-3 sm:px-8">
-                <div className="flex items-center gap-4">
-                  <span className="w-12 text-center text-2xl font-black tabular-nums sm:text-3xl"
+              <div className="shrink-0 border-t border-white/8 px-4 py-2 sm:px-8">
+                <div className="flex items-center gap-3">
+                  <span className="w-10 text-center text-xl font-black tabular-nums"
                     style={{ fontFamily: "var(--font-syne),var(--font-display)", color: timeLeft <= 10 ? "#FF416C" : timeLeft <= 20 ? "#F97316" : "white" }}>
                     {timeLeft}
                   </span>
-                  <div className="relative flex-1 overflow-hidden rounded-full bg-white/[0.06]" style={{ height: "8px" }}>
+                  <div className="relative flex-1 overflow-hidden rounded-full bg-white/[0.06]" style={{ height: "6px" }}>
                     <motion.div className="absolute inset-y-0 left-0 rounded-full"
                       animate={{ width: `${timerPct * 100}%` }} transition={{ duration: 0.9, ease: "linear" }}
                       style={{ backgroundImage: timeLeft <= 10 ? "linear-gradient(90deg,#FF416C,#FF4B2B)" : teamGradient(drawingTeam), boxShadow: timeLeft <= 10 ? "0 0 12px rgba(255,65,108,0.6)" : "0 0 8px rgba(0,180,219,0.4)" }} />
@@ -406,7 +403,7 @@ export default function InkArenaTVPage() {
       <AnimatePresence>
         {phase === "round_over" && roundResult && (
           <motion.div key="round_over" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-[rgba(11,14,20,0.88)] backdrop-blur-sm">
+            className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-[rgba(11,14,20,0.88)] backdrop-blur-sm">
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 18 }} className="text-center">
               <p className="mb-1 text-5xl">{roundResult.correct ? (roundResult.stolen ? "⚡" : "✅") : "⏱"}</p>
@@ -431,12 +428,12 @@ export default function InkArenaTVPage() {
             </motion.div>
             <div className="flex items-center gap-8">
               <div className="text-center">
-                <p className="text-xs uppercase tracking-widest text-white/30">{config?.redName ?? "Red"}</p>
+                <p className="text-xs uppercase tracking-widest text-white/30">Red</p>
                 <p className="text-3xl font-black" style={{ color: "#FF416C" }}>{scores.red}</p>
               </div>
               <div className="h-8 w-px bg-white/10" />
               <div className="text-center">
-                <p className="text-xs uppercase tracking-widest text-white/30">{config?.blueName ?? "Blue"}</p>
+                <p className="text-xs uppercase tracking-widest text-white/30">Blue</p>
                 <p className="text-3xl font-black" style={{ color: "#00B4DB" }}>{scores.blue}</p>
               </div>
             </div>
@@ -454,7 +451,7 @@ export default function InkArenaTVPage() {
       <AnimatePresence>
         {phase === "game_over" && winner && (
           <motion.div key="gameover" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
+            className="absolute inset-0 flex flex-col items-center justify-center gap-7 px-6">
             <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 160, damping: 20 }} className="text-center">
               <p className="mb-3 text-3xl">🏆</p>
@@ -462,16 +459,16 @@ export default function InkArenaTVPage() {
                 style={{ fontFamily: "var(--font-syne),var(--font-display)", backgroundImage: teamGradient(winner), WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 {teamName(winner)}
               </h2>
-              <p className="mt-2 text-xl uppercase tracking-[0.3em] text-white/50">Wins the Arena!</p>
+              <p className="mt-2 text-xl uppercase tracking-[0.3em] text-white/50">Wins!</p>
             </motion.div>
             <div className="flex items-center gap-10">
               <div className="text-center">
-                <p className="text-sm uppercase tracking-widest text-white/30">{config?.redName ?? "Red"}</p>
+                <p className="text-sm uppercase tracking-widest text-white/30">Red</p>
                 <p className="text-5xl font-black" style={{ color: "#FF416C" }}>{scores.red}</p>
               </div>
               <div className="h-12 w-px bg-white/10" />
               <div className="text-center">
-                <p className="text-sm uppercase tracking-widest text-white/30">{config?.blueName ?? "Blue"}</p>
+                <p className="text-sm uppercase tracking-widest text-white/30">Blue</p>
                 <p className="text-5xl font-black" style={{ color: "#00B4DB" }}>{scores.blue}</p>
               </div>
             </div>
@@ -484,7 +481,7 @@ export default function InkArenaTVPage() {
               <Link href="/">
                 <motion.div whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   className="cursor-pointer rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-3 text-sm font-bold uppercase tracking-widest text-white/70 transition-colors hover:bg-white/[0.08]">
-                  Exit Arena
+                  Exit
                 </motion.div>
               </Link>
             </div>
