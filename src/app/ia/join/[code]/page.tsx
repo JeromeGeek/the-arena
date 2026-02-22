@@ -21,6 +21,7 @@ export default function GuesserPage() {
   const [guess, setGuess] = useState("");
   const [lastResult, setLastResult] = useState<"correct" | "wrong" | "stolen" | null>(null);
   const [roundActive, setRoundActive] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(45);
   const [drawingTeam, setDrawingTeam] = useState<"red" | "blue" | null>(null);
   const [wordLength, setWordLength] = useState(0);
@@ -87,8 +88,24 @@ export default function GuesserPage() {
       if (msg.type === "correct_guess" || msg.type === "time_up") {
         clearTimer();
         setRoundActive(false);
-        // If we didn't send this, clear last result so UI shows "next round" state
         setLastResult((prev) => prev ?? null);
+      }
+
+      if (msg.type === "game_paused") {
+        clearTimer();
+        setPaused(true);
+      }
+      if (msg.type === "game_resumed") {
+        setPaused(false);
+        // resume countdown from remaining time
+        if (roundActive) {
+          timerRef.current = setInterval(() => {
+            setTimeLeft((t) => {
+              if (t <= 1) { clearTimer(); setRoundActive(false); return 0; }
+              return t - 1;
+            });
+          }, 1000);
+        }
       }
 
       if (msg.type === "lobby_reset") {
@@ -114,34 +131,30 @@ export default function GuesserPage() {
     if (!guess.trim() || !roundActive) return;
     setGuessCount((n) => n + 1);
 
-    const isOpposingTeam = drawingTeam !== team;
-
     sendMessage(socketRef.current, {
       type: "guess",
       team,
       guess: guess.trim(),
       playerName,
-      steal: isOpposingTeam,
     });
 
     setGuess("");
     inputRef.current?.focus();
-  }, [guess, roundActive, drawingTeam, team, playerName]);
+  }, [guess, roundActive, team, playerName]);
 
   const handleCorrect = useCallback(() => {
     if (!roundActive) return;
-    const isOpposingTeam = drawingTeam !== team;
 
     sendMessage(socketRef.current, {
       type: "correct_guess",
       guessingTeam: team,
       drawingTeam,
       timeLeft,
-      stolen: isOpposingTeam,
+      stolen: false,
       word: "",
     });
 
-    setLastResult(isOpposingTeam ? "stolen" : "correct");
+    setLastResult("correct");
     setRoundActive(false);
     clearTimer();
   }, [roundActive, drawingTeam, team, timeLeft, clearTimer]);
@@ -228,7 +241,7 @@ export default function GuesserPage() {
 
   // ── Guessing screen ──
   return (
-    <main className="flex min-h-[100dvh] flex-col bg-[#0B0E14]">
+    <main className="relative flex min-h-[100dvh] flex-col bg-[#0B0E14]">
       {/* Header */}
       <div
         className="flex items-center justify-between border-b px-4 py-3"
@@ -308,7 +321,7 @@ export default function GuesserPage() {
               {/* Word clue */}
               <div className="text-center">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/30 mb-2">
-                  {drawingTeam === team ? "Your team is drawing" : "⚡ Steal mode active"}
+                  {drawingTeam === team ? "Your team is drawing" : "Other team is drawing — guess too!"}
                 </p>
                 <div className="flex justify-center gap-1.5 flex-wrap">
                   {Array.from({ length: wordLength }).map((_, i) => (
@@ -376,32 +389,30 @@ export default function GuesserPage() {
               >
                 ✅ We got it!
               </motion.button>
-
-              {/* Sabotage */}
-              {drawingTeam !== team && (
-                <div className="border-t border-white/8 pt-3">
-                  <p className="text-center text-[10px] uppercase tracking-widest text-white/20 mb-2">⚡ Sabotage their drawer</p>
-                  <div className="flex gap-2 justify-center">
-                    {(["shrink", "shake", "flip"] as const).map((effect) => (
-                      <motion.button
-                        key={effect}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        onClick={() => {
-                          sendMessage(socketRef.current, { type: "sabotage", effect, fromTeam: team });
-                        }}
-                        className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 hover:border-white/20 hover:text-white/60 transition-colors"
-                      >
-                        {effect === "shrink" ? "🔬" : effect === "shake" ? "💥" : "🔄"} {effect}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pause overlay */}
+      <AnimatePresence>
+        {paused && (
+          <motion.div
+            key="paused"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-[rgba(11,14,20,0.92)] backdrop-blur-sm"
+          >
+            <p className="text-5xl">⏸</p>
+            <p className="text-xl font-black uppercase tracking-wider text-white/80"
+              style={{ fontFamily: "var(--font-syne), var(--font-display)" }}>
+              Game Paused
+            </p>
+            <p className="text-sm text-white/40">Waiting for everyone to reconnect…</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Timer bar */}
       {roundActive && (

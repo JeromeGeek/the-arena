@@ -59,17 +59,21 @@ export default class InkArenaServer implements Party.Server {
     this.room.broadcast(countMsg);
     conn.send(countMsg);
 
+    // If a round was paused, resume it now that someone reconnected
+    if (this.round && this.round.phase === "drawing") {
+      this.round.startedAt = Date.now(); // reset elapsed clock
+      this.room.broadcast(JSON.stringify({ type: "game_resumed" }));
+    }
+
     // Send late-joiner the current round state so they don't miss anything
     if (this.round && this.round.phase === "drawing") {
-      const elapsed = Math.floor((Date.now() - this.round.startedAt) / 1000);
-      const remaining = Math.max(0, this.round.timeLeft - elapsed);
       conn.send(
         JSON.stringify({
           type: "round_catchup",
           word: this.round.word,
           drawingTeam: this.round.drawingTeam,
           roundNumber: this.round.roundNumber,
-          timeLeft: remaining,
+          timeLeft: this.round.timeLeft,
         }),
       );
     }
@@ -80,6 +84,19 @@ export default class InkArenaServer implements Party.Server {
     this.room.broadcast(
       JSON.stringify({ type: "connection_count", count }),
     );
+    // Pause the game if someone disconnects while a round is active
+    if (this.round && this.round.phase === "drawing") {
+      this.round.timeLeft = Math.max(
+        0,
+        this.round.timeLeft - Math.floor((Date.now() - this.round.startedAt) / 1000),
+      );
+      this.round.startedAt = Date.now();
+      this.room.broadcast(JSON.stringify({ type: "game_paused" }));
+    }
+  }
+
+  onError(conn: Party.Connection, err: Error) {
+    console.error(`Connection error for ${conn.id}:`, err);
   }
 }
 

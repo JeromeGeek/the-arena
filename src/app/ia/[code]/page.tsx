@@ -11,7 +11,6 @@ import {
   POINTS_CORRECT_GUESS,
   POINTS_FAST_BONUS,
   POINTS_TO_WIN,
-  POINTS_STEAL_PENALTY,
   getRandomWord,
   type DrawStroke,
 } from "@/lib/inkarena";
@@ -81,7 +80,10 @@ export default function InkArenaTVPage() {
     pointsAwarded: number;
     stolen: boolean;
   } | null>(null);
-  const [sabotageEffect, setSabotageEffect] = useState<"shake" | "flip" | "shrink" | null>(null);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  const timeLeftRef = useRef(ROUND_SECONDS);
+  const startTimerFromRef = useRef<(seconds: number) => void>(() => {});
   const [connectedCount, setConnectedCount] = useState(0);
   const [origin, setOrigin] = useState("");
 
@@ -141,32 +143,38 @@ export default function InkArenaTVPage() {
         if (phaseRef.current !== "drawing") return;
         clearTimer();
         const guessingTeam = msg.guessingTeam as "red" | "blue";
-        const drawTeam = msg.drawingTeam as "red" | "blue";
         const tLeft = msg.timeLeft as number;
-        const stolen = msg.stolen as boolean;
         const word = (msg.word as string) || currentWordRef.current;
         let pts = POINTS_CORRECT_GUESS;
         if (tLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
         setScores((prev) => {
           const next = { ...prev };
-          if (stolen) {
-            const steal = Math.round(prev[drawTeam] * 0.5);
-            next[guessingTeam] = prev[guessingTeam] + steal;
-            next[drawTeam] = Math.max(0, prev[drawTeam] - POINTS_STEAL_PENALTY);
-            setRoundResult({ correct: true, guessingTeam, word, pointsAwarded: steal, stolen: true });
-          } else {
-            next[guessingTeam] = prev[guessingTeam] + pts;
-            setRoundResult({ correct: true, guessingTeam, word, pointsAwarded: pts, stolen: false });
-          }
+          next[guessingTeam] = prev[guessingTeam] + pts;
+          setRoundResult({ correct: true, guessingTeam, word, pointsAwarded: pts, stolen: false });
           return next;
         });
         setPhase("round_over");
         phaseRef.current = "round_over";
         return;
       }
+      if (msg.type === "game_paused") {
+        setPaused(true);
+        pausedRef.current = true;
+        clearTimer();
+        return;
+      }
+      if (msg.type === "game_resumed") {
+        if (!pausedRef.current) return;
+        setPaused(false);
+        pausedRef.current = false;
+        // Restart timer from remaining time
+        if (phaseRef.current === "drawing") {
+          startTimerFromRef.current(timeLeftRef.current);
+        }
+        return;
+      }
       if (msg.type === "sabotage") {
-        setSabotageEffect(msg.effect as "shake" | "flip" | "shrink");
-        setTimeout(() => setSabotageEffect(null), 1500);
+        // sabotage removed — ignore
         return;
       }
       // player_join is informational only — count is authoritative from connection_count
@@ -178,14 +186,16 @@ export default function InkArenaTVPage() {
 
   useEffect(() => () => clearTimer(), [clearTimer]);
 
-  const startTimer = useCallback((word: string, team: "red" | "blue") => {
+  const startTimerFrom = useCallback((seconds: number) => {
     clearTimer();
-    setTimeLeft(ROUND_SECONDS);
+    setTimeLeft(seconds);
+    timeLeftRef.current = seconds;
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
+        timeLeftRef.current = t - 1;
         if (t <= 1) {
           clearTimer();
-          setRoundResult({ correct: false, guessingTeam: team === "red" ? "blue" : "red", word, pointsAwarded: 0, stolen: false });
+          setRoundResult({ correct: false, guessingTeam: drawingTeamRef.current === "red" ? "blue" : "red", word: currentWordRef.current, pointsAwarded: 0, stolen: false });
           setPhase("round_over");
           phaseRef.current = "round_over";
           return 0;
@@ -194,6 +204,12 @@ export default function InkArenaTVPage() {
       });
     }, 1000);
   }, [clearTimer]);
+  useEffect(() => { startTimerFromRef.current = startTimerFrom; }, [startTimerFrom]);
+
+  const startTimer = useCallback((word: string, team: "red" | "blue") => {
+    void word; void team; // word/team tracked in refs
+    startTimerFrom(ROUND_SECONDS);
+  }, [startTimerFrom]);
 
   const startRound = useCallback((team: "red" | "blue", roundNum: number) => {
     const word = getRandomWord(usedWords);
@@ -346,9 +362,7 @@ export default function InkArenaTVPage() {
 
             {/* Canvas — fills remaining space */}
             <div className="relative flex-1 overflow-hidden">
-              <motion.div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3"
-                animate={sabotageEffect === "shake" ? { x: [0, -8, 8, -6, 6, 0] } : sabotageEffect === "flip" ? { scaleX: -1 } : sabotageEffect === "shrink" ? { scale: 0.7 } : { x: 0, scaleX: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}>
+              <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3">
                 <div className="relative h-full w-full" style={{ maxWidth: "min(100%, calc((100dvh - 140px) * 1.46))" }}>
                   <canvas ref={canvasRef} width={700} height={480}
                     className="h-full w-full rounded-xl border border-white/10 bg-white"
@@ -368,7 +382,7 @@ export default function InkArenaTVPage() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Live guess toast */}
@@ -491,6 +505,41 @@ export default function InkArenaTVPage() {
                 </motion.div>
               </Link>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PAUSE OVERLAY */}
+      <AnimatePresence>
+        {paused && (
+          <motion.div
+            key="paused"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[rgba(11,14,20,0.92)] backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="text-center"
+            >
+              <p className="mb-3 text-6xl">⏸</p>
+              <h2
+                className="text-5xl font-black uppercase tracking-[0.12em] sm:text-7xl"
+                style={{
+                  fontFamily: "var(--font-syne),var(--font-display)",
+                  color: "rgba(255,255,255,0.85)",
+                }}
+              >
+                Game Paused
+              </h2>
+              <p className="mt-3 text-lg text-white/40">
+                A player disconnected — waiting for them to reconnect…
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

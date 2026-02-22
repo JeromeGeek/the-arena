@@ -30,7 +30,7 @@ export default function DrawerPage() {
   const [currentWord, setCurrentWord] = useState<string | null>(null);
   const [drawingTeam, setDrawingTeam] = useState<"red" | "blue" | null>(null);
   const [roundNumber, setRoundNumber] = useState(0);
-  const [sabotageEffect, setSabotageEffect] = useState<"shrink" | "shake" | "flip" | null>(null);
+  const [paused, setPaused] = useState(false);
   const [waitingForRound, setWaitingForRound] = useState(true);
   const [playerName] = useState(() => `Drawer-${Math.floor(Math.random() * 1000)}`);
 
@@ -83,9 +83,11 @@ export default function DrawerPage() {
         }
       }
 
-      if (msg.type === "sabotage") {
-        setSabotageEffect(msg.effect as "shrink" | "shake" | "flip");
-        setTimeout(() => setSabotageEffect(null), 1500);
+      if (msg.type === "game_paused") {
+        setPaused(true);
+      }
+      if (msg.type === "game_resumed") {
+        setPaused(false);
       }
     });
     socketRef.current = socket;
@@ -236,23 +238,18 @@ export default function DrawerPage() {
 
       {/* Canvas — fills all remaining space */}
       <div className="relative flex-1 overflow-hidden">
-        <motion.div
-          className="absolute inset-0"
-          animate={
-            sabotageEffect === "shake"
-              ? { x: [0, -8, 8, -6, 6, 0] }
-              : sabotageEffect === "flip"
-              ? { scaleX: -1 }
-              : sabotageEffect === "shrink"
-              ? { scale: 0.85 }
-              : { x: 0, scaleX: 1, scale: 1 }
-          }
-          transition={{ duration: 0.3 }}
-        >
+        <div className="absolute inset-0">
           {waitingForRound && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[rgba(11,14,20,0.92)]">
               <p className="text-4xl">✏️</p>
               <p className="mt-3 text-sm text-white/50">Waiting for your turn…</p>
+            </div>
+          )}
+          {paused && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[rgba(11,14,20,0.92)]">
+              <p className="text-4xl">⏸</p>
+              <p className="mt-3 text-sm font-semibold text-white/70">Game Paused</p>
+              <p className="mt-1 text-xs text-white/30">Waiting for everyone to reconnect…</p>
             </div>
           )}
           <canvas
@@ -270,7 +267,7 @@ export default function DrawerPage() {
               display: "block",
             }}
           />
-        </motion.div>
+        </div>
       </div>
 
       {/* Toolbar — compact, always visible at bottom */}
