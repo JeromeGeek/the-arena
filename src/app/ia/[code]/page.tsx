@@ -35,20 +35,24 @@ function renderStroke(ctx: CanvasRenderingContext2D, stroke: DrawStroke) {
     return;
   }
   if (stroke.type !== "stroke") return;
-  if (stroke.isStart || stroke.px == null || stroke.py == null) {
-    ctx.beginPath();
-    ctx.arc(stroke.x!, stroke.y!, stroke.brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = stroke.color;
-    ctx.fill();
-  } else {
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  if (!stroke.isStart && stroke.px != null && stroke.py != null) {
+    // Connected line segment — the normal case for smooth drawing
     ctx.beginPath();
     ctx.moveTo(stroke.px, stroke.py);
     ctx.lineTo(stroke.x!, stroke.y!);
     ctx.strokeStyle = stroke.color;
     ctx.lineWidth = stroke.brushSize;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
     ctx.stroke();
+  } else {
+    // Start of a new stroke — draw a dot so single taps render
+    ctx.beginPath();
+    ctx.arc(stroke.x!, stroke.y!, stroke.brushSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = stroke.color;
+    ctx.fill();
   }
 }
 

@@ -22,7 +22,6 @@ export default function DrawerPage() {
   const code = params.code as string;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<PartySocket | null>(null);
-  const lastSendRef = useRef(0);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const isDrawingRef = useRef(false);
   const [color, setColor] = useState("#000000");
@@ -106,9 +105,19 @@ export default function DrawerPage() {
     };
   }, []);
 
+  const lastSentPointRef = useRef<{ x: number; y: number } | null>(null);
+
   const broadcastStroke = useCallback((stroke: DrawStroke) => {
-    if (Date.now() - lastSendRef.current < 30) return;
-    lastSendRef.current = Date.now();
+    // For move strokes, skip only if moved < 2px (keeps lines smooth, cuts redundant sends)
+    if (!stroke.isStart && stroke.x != null && stroke.y != null && lastSentPointRef.current) {
+      const dx = stroke.x - lastSentPointRef.current.x;
+      const dy = stroke.y - lastSentPointRef.current.y;
+      if (dx * dx + dy * dy < 4) return; // < 2px distance
+    }
+    if (stroke.x != null && stroke.y != null) {
+      lastSentPointRef.current = { x: stroke.x, y: stroke.y };
+    }
+    if (stroke.type === 'clear') lastSentPointRef.current = null;
     sendMessage(socketRef.current, { type: "stroke", stroke });
   }, []);
 
@@ -118,12 +127,7 @@ export default function DrawerPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    if (stroke.isStart || stroke.px === undefined || stroke.py === undefined) {
-      ctx.beginPath();
-      ctx.arc(stroke.x!, stroke.y!, stroke.brushSize / 2, 0, Math.PI * 2);
-      ctx.fillStyle = stroke.color;
-      ctx.fill();
-    } else {
+    if (!stroke.isStart && stroke.px !== undefined && stroke.py !== undefined) {
       ctx.beginPath();
       ctx.moveTo(stroke.px, stroke.py);
       ctx.lineTo(stroke.x!, stroke.y!);
@@ -132,6 +136,11 @@ export default function DrawerPage() {
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(stroke.x!, stroke.y!, stroke.brushSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = stroke.color;
+      ctx.fill();
     }
   }, []);
 
