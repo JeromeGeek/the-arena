@@ -530,7 +530,7 @@ export function stopSpeaking() {
 /** Narrate night announcement with dark ambient drone */
 export async function narrateNightAnnounce(onDone: () => void) {
   startHeavenlyPad();
-  await speak("The city sleeps. Close your eyes. The night... belongs to the family.");
+  await speak("Night falls upon the town. Everyone, close your eyes. Do not open them until you are called.");
   await new Promise((r) => setTimeout(r, 1200));
   stopHeavenlyPad();
   onDone();
@@ -543,9 +543,9 @@ export async function narratePrivacyWall(
 ) {
   startHeavenlyPad();
   const lines: Record<string, string> = {
-    mafia: "The family awakens. Open your eyes. It's time... to make someone disappear.",
-    doctor: "Doctor. Open your eyes. One life hangs in the balance. Choose... wisely.",
-    detective: "Detective. Open your eyes. The truth is out there. Pick your suspect.",
+    mafia: "Mafia... open your eyes. Look around. Silently... agree on your target for tonight.",
+    doctor: "Doctor... open your eyes. Someone in this town needs your protection. Choose... carefully.",
+    detective: "Detective... open your eyes. You may investigate one player tonight. Trust your instincts.",
   };
   await speak(lines[role]);
   await new Promise((r) => setTimeout(r, 500));
@@ -555,9 +555,13 @@ export async function narratePrivacyWall(
 
 /** Narrate "close your eyes" after a night action */
 export async function narrateNightDone(role: "mafia" | "doctor" | "detective") {
-  const label = role === "mafia" ? "The family" : role === "doctor" ? "Doctor" : "Detective";
   startHeavenlyPad();
-  await speak(`${label}... close your eyes. Your work is done.`);
+  const lines: Record<string, string> = {
+    mafia: "Mafia... close your eyes. Return to the darkness. Your deed is done.",
+    doctor: "Doctor... close your eyes. You have done what you can. Rest now.",
+    detective: "Detective... close your eyes. Hold that knowledge close. Tell no one.",
+  };
+  await speak(lines[role]);
   await new Promise((r) => setTimeout(r, 600));
   stopHeavenlyPad();
 }
@@ -565,7 +569,7 @@ export async function narrateNightDone(role: "mafia" | "doctor" | "detective") {
 /** Narrate "everyone open your eyes" */
 export async function narrateWakeUp() {
   startHeavenlyPad();
-  await speak("Dawn breaks over the city. Everyone... open your eyes. Let's see who survived the night.");
+  await speak("Everyone... open your eyes. A new day has come to the town. But not everyone made it through the night.");
   await new Promise((r) => setTimeout(r, 400));
   stopHeavenlyPad();
 }

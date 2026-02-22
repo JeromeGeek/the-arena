@@ -358,16 +358,34 @@ export default function MafiaGamePage() {
     }
   }, [nightRole, players]);
 
+  // Track confirm countdown
+  const [confirmCountdown, setConfirmCountdown] = useState<number | null>(null);
+
   const confirmNightAction = useCallback(() => {
-    if (soundEnabled) {
-      narrateNightDone(nightRole);
-    }
-    advanceNightRole(nightRole);
+    // 3-second delay: the player puts the phone down face-down before
+    // the God narrates the "close your eyes" — so nearby players
+    // can't identify the role from the audio starting instantly.
+    setConfirmCountdown(3);
+    let count = 3;
+    const tick = setInterval(() => {
+      count -= 1;
+      if (count <= 0) {
+        clearInterval(tick);
+        setConfirmCountdown(null);
+        if (soundEnabled) {
+          narrateNightDone(nightRole);
+        }
+        advanceNightRole(nightRole);
+      } else {
+        setConfirmCountdown(count);
+      }
+    }, 1000);
   }, [advanceNightRole, nightRole, soundEnabled]);
 
   // ── Resolve Night ──
   const resolveNight = useCallback(() => {
     let msg = "";
+    let gameWinner: "mafia" | "village" | null = null;
 
     setPlayers((prev) => {
       const updated = prev.map((p) => ({ ...p, protected: false }));
@@ -389,9 +407,9 @@ export default function MafiaGamePage() {
 
       if (!msg) msg = "☀️ The town wakes up... everyone survived the night!";
 
-      const w = checkWinner(updated);
-      if (w) {
-        setWinner(w);
+      gameWinner = checkWinner(updated);
+      if (gameWinner) {
+        setWinner(gameWinner);
         setTimeout(() => setPhase("gameOver"), 100);
       }
 
@@ -399,14 +417,14 @@ export default function MafiaGamePage() {
     });
 
     setNightMessage(msg);
-    if (!winner) setPhase("nightResult");
+    if (!gameWinner) setPhase("nightResult");
 
     // Reset
     setMafiaTarget(null);
     setDoctorTarget(null);
     setDetectiveTarget(null);
     setDetectiveResult(null);
-  }, [mafiaTarget, doctorTarget, winner]);
+  }, [mafiaTarget, doctorTarget]);
 
   // ── Day / Voting ──
   const startDay = useCallback(() => {
@@ -734,12 +752,24 @@ export default function MafiaGamePage() {
               </p>
 
               <p className="text-[10px] text-white/25">
-                Close your eyes and put the phone back down.
+                Put the phone face-down. The narrator will speak in a moment.
               </p>
 
-              <ActionButton onClick={confirmNightAction}>
-                ✓ Done — Put Phone Down
-              </ActionButton>
+              {confirmCountdown !== null ? (
+                <motion.div
+                  key={confirmCountdown}
+                  initial={{ scale: 1.4, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="text-3xl font-black text-white/30">{confirmCountdown}</span>
+                  <span className="text-[10px] uppercase tracking-widest text-white/20">Narrating soon…</span>
+                </motion.div>
+              ) : (
+                <ActionButton onClick={confirmNightAction}>
+                  ✓ Done — Put Phone Down
+                </ActionButton>
+              )}
             </motion.div>
           )}
 
