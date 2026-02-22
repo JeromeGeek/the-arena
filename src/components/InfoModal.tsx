@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-type GameType = "codenames" | "imposter" | "truthordare" | "neverhaveiever" | "charades" | "mafia" | "inkarena";
+type GameType = "codenames" | "imposter" | "truthordare" | "neverhaveiever" | "charades" | "mafia" | "inkarena" | "headrush";
 
 interface InfoModalProps {
   game: GameType;
@@ -91,6 +91,18 @@ const instructions: Record<GameType, { title: string; steps: string[] }> = {
       "First team to 1000 points wins the Arena!",
     ],
   },
+  headrush: {
+    title: "How to Play",
+    steps: [
+      "Split into 2–4 teams",
+      "One player holds the phone to their forehead — screen out",
+      "Teammates shout clues — no saying the word!",
+      "Tilt phone forward (down) = Got it! ✅",
+      "Tilt phone backward (up) = Skip ⏭",
+      "Or tap the on-screen buttons if tilt isn't available",
+      "Score the most points across all rounds to win! 🏆",
+    ],
+  },
 };
 
 export default function InfoModal({ game, size = "md" }: InfoModalProps) {
@@ -105,6 +117,7 @@ export default function InfoModal({ game, size = "md" }: InfoModalProps) {
     charades: "#F97316",
     mafia: "#E11D48",
     inkarena: "#FF416C",
+    headrush: "#FACC15",
   };
   const accent = accentMap[game];
   const isSmall = size === "sm";

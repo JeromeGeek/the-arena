@@ -541,6 +541,46 @@ canvas {
     radial-gradient(ellipse at 70% 30%, rgba(0,180,219,0.05) 0%, transparent 50%);
 }
 
+/* ── HeadRush: Electric pulse — yellow/orange radial surge ── */
+@keyframes headrush-surge {
+  0%, 100% { opacity: 0.0; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+@keyframes headrush-streak {
+  0%   { transform: translateX(-60%) skewX(-15deg); opacity: 0; }
+  30%  { opacity: 0.5; }
+  100% { transform: translateX(160%) skewX(-15deg); opacity: 0; }
+}
+
+.headrush-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 85%, rgba(250,204,21,0.13) 0%, rgba(249,115,22,0.07) 40%, transparent 70%);
+  animation: headrush-surge 3s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.headrush-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(250,204,21,0.08) 50%, transparent 100%);
+  animation: headrush-streak 4.5s ease-in-out 1.2s infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.headrush-pulse {
+  background-image: radial-gradient(ellipse at 50% 100%, rgba(250,204,21,0.05) 0%, transparent 60%);
+}
+
 /* GPU layer promotion for animated elements */
 .smoke-ambient::before,
 .scanline-effect::before,
@@ -555,7 +595,9 @@ canvas {
 .blood-vignette::before,
 .blood-vignette::after,
 .ink-splatter::before,
-.ink-splatter::after {
+.ink-splatter::after,
+.headrush-pulse::before,
+.headrush-pulse::after {
   backface-visibility: hidden;
   transform: translateZ(0);
 }
@@ -577,6 +619,8 @@ canvas {
   .blood-vignette::after,
   .ink-splatter::before,
   .ink-splatter::after,
+  .headrush-pulse::before,
+  .headrush-pulse::after,
   .pulse-glow {
     animation: none !important;
   }

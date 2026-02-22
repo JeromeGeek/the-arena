@@ -108,6 +108,19 @@ const games = [
     players: "4–12 Players",
     emoji: "🎨",
   },
+  {
+    id: "headrush",
+    title: "HEADRUSH",
+    subtitle: "Tilt · Guess · Dominate",
+    description: "2–4 Teams · Tilt to Score · Race the Clock. Hold the phone to your forehead. Teammates shout clues. Tilt to win.",
+    href: "/headrush",
+    accentFrom: "#FACC15",
+    accentTo: "#F97316",
+    glowColor: "rgba(250, 204, 21, 0.35)",
+    variant: "headrush" as const,
+    players: "4+ Players",
+    emoji: "🎯",
+  },
 ];
 
 /* ─── Compact Mobile Tile (phone only) ─── */
@@ -145,7 +158,9 @@ function MobileGameTile({
                       ? "blood-vignette"
                       : game.variant === "inkarena"
                         ? "ink-splatter"
-                        : "spotlight-sweep"
+                        : game.variant === "headrush"
+                          ? "headrush-pulse"
+                          : "spotlight-sweep"
           }`}
           style={{
             minHeight: "120px",
@@ -165,7 +180,9 @@ function MobileGameTile({
                         ? { borderBottom: "2px solid rgba(225,29,72,0.35)" }
                         : game.variant === "inkarena"
                           ? { borderTop: "2px solid rgba(255,65,108,0.3)", borderBottom: "2px solid rgba(0,180,219,0.3)" }
-                          : undefined),
+                          : game.variant === "headrush"
+                            ? { borderBottom: "2px solid rgba(250,204,21,0.35)" }
+                            : undefined),
           }}
         >
           {/* Effect clip layer */}
@@ -300,7 +317,9 @@ function GameCard({
                         ? "blood-vignette"
                         : game.variant === "inkarena"
                           ? "ink-splatter"
-                          : "spotlight-sweep"
+                          : game.variant === "headrush"
+                            ? "headrush-pulse"
+                            : "spotlight-sweep"
             }`}
             style={{
               overflow: "clip",
@@ -319,7 +338,9 @@ function GameCard({
                           ? { borderBottom: "2px solid rgba(225,29,72,0.35)" }
                           : game.variant === "inkarena"
                             ? { borderTop: "2px solid rgba(255,65,108,0.3)", borderBottom: "2px solid rgba(0,180,219,0.3)" }
-                            : {}),
+                            : game.variant === "headrush"
+                              ? { borderBottom: "2px solid rgba(250,204,21,0.35)" }
+                              : {}),
             }}
           >
 
