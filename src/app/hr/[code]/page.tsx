@@ -20,9 +20,10 @@ import {
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const WORDS_PER_GAME = 300; // generous pool
-const TILT_CORRECT_THRESHOLD = 25;  // degrees down  → correct
-const TILT_SKIP_THRESHOLD   = -25;  // degrees up    → skip
-const TILT_LOCKOUT_MS       = 800;  // ms before next tilt accepted
+const TILT_CORRECT_THRESHOLD = 40;  // degrees down  → correct (phone face-down tilt)
+const TILT_SKIP_THRESHOLD   = -40;  // degrees up    → skip   (phone face-up tilt)
+const TILT_DWELL_MS         = 600;  // ms phone must hold the angle before triggering
+const TILT_LOCKOUT_MS       = 1000; // ms before next tilt accepted after action fires
 
 const TEAM_COLORS = [
   { accent: "#FF416C", bg: "rgba(255,65,108,0.12)", border: "rgba(255,65,108,0.35)", gradient: "linear-gradient(135deg,#FF416C,#FF4B2B)" },
@@ -98,9 +99,10 @@ export default function HeadRushGamePage() {
   const [tiltEnabled, setTiltEnabled]       = useState(false);
   const [holdingCountdown, setHoldingCountdown] = useState(3);
 
-  const timerRef    = useRef<NodeJS.Timeout | null>(null);
-  const tiltLockRef = useRef(false);
-  const phaseRef    = useRef(phase);
+  const timerRef     = useRef<NodeJS.Timeout | null>(null);
+  const tiltLockRef  = useRef(false);
+  const tiltDwellRef = useRef<NodeJS.Timeout | null>(null); // dwell timer for tilt
+  const phaseRef     = useRef(phase);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const timerDuration = parsed?.timer ?? 60;
@@ -108,8 +110,36 @@ export default function HeadRushGamePage() {
   const words         = parsed?.words ?? [];
   const totalRounds   = parsed?.totalRounds ?? 4;
 
-  const teamColor = TEAM_COLORS[teamIndex % TEAM_COLORS.length];
+  const teamColor   = TEAM_COLORS[teamIndex % TEAM_COLORS.length];
   const currentWord = words[wordIndex] ?? "";
+
+  // ── Landscape lock ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const isActive = phase === "holding" || phase === "playing";
+    if (!isActive) {
+      // Unlock when done
+      try {
+        const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
+        orientation.unlock?.();
+      } catch { /* not supported */ }
+      return;
+    }
+    const lock = async () => {
+      try {
+        const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+        await orientation.lock?.("landscape");
+      } catch {
+        // Not supported on desktop / some browsers — silent fail
+      }
+    };
+    lock();
+    return () => {
+      try {
+        const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
+        orientation.unlock?.();
+      } catch { /* not supported */ }
+    };
+  }, [phase]);
 
   // ── Timer ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -154,14 +184,29 @@ export default function HeadRushGamePage() {
     if (phaseRef.current !== "playing") return;
     if (tiltLockRef.current) return;
 
-    if (beta >= TILT_CORRECT_THRESHOLD) {
-      tiltLockRef.current = true;
-      handleCorrect();
-      setTimeout(() => { tiltLockRef.current = false; }, TILT_LOCKOUT_MS);
-    } else if (beta <= TILT_SKIP_THRESHOLD) {
-      tiltLockRef.current = true;
-      handleSkip();
-      setTimeout(() => { tiltLockRef.current = false; }, TILT_LOCKOUT_MS);
+    const isCorrect = beta >= TILT_CORRECT_THRESHOLD;
+    const isSkip    = beta <= TILT_SKIP_THRESHOLD;
+
+    if (isCorrect || isSkip) {
+      // Start dwell timer only if not already waiting
+      if (!tiltDwellRef.current) {
+        tiltDwellRef.current = setTimeout(() => {
+          tiltDwellRef.current = null;
+          // Re-check phase and lock — state may have changed during dwell
+          if (phaseRef.current !== "playing") return;
+          if (tiltLockRef.current) return;
+          tiltLockRef.current = true;
+          if (isCorrect) handleCorrect();
+          else handleSkip();
+          setTimeout(() => { tiltLockRef.current = false; }, TILT_LOCKOUT_MS);
+        }, TILT_DWELL_MS);
+      }
+    } else {
+      // Phone moved back to neutral — cancel pending dwell
+      if (tiltDwellRef.current) {
+        clearTimeout(tiltDwellRef.current);
+        tiltDwellRef.current = null;
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -174,6 +219,14 @@ export default function HeadRushGamePage() {
     window.addEventListener("deviceorientation", listener);
     return () => window.removeEventListener("deviceorientation", listener);
   }, [tiltEnabled, handleTilt]);
+
+  // Clear dwell timer if phase leaves "playing"
+  useEffect(() => {
+    if (phase !== "playing" && tiltDwellRef.current) {
+      clearTimeout(tiltDwellRef.current);
+      tiltDwellRef.current = null;
+    }
+  }, [phase]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
   const handleCorrect = useCallback(() => {
