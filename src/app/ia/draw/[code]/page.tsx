@@ -236,9 +236,10 @@ export default function DrawerPage() {
         </motion.button>
       </div>
 
-      {/* Canvas — fills all remaining space */}
+      {/* Canvas — fills all remaining space, locked to 4:3 to match TV */}
       <div className="relative flex-1 overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative h-full w-full" style={{ maxWidth: "min(100%, calc(100dvh * 1.333))", maxHeight: "min(100%, calc(100vw * 0.75))" }}>
           {waitingForRound && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[rgba(11,14,20,0.92)]">
               <p className="text-4xl">✏️</p>
@@ -267,6 +268,7 @@ export default function DrawerPage() {
               display: "block",
             }}
           />
+          </div>
         </div>
       </div>
 

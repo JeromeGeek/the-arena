@@ -363,8 +363,9 @@ export default function InkArenaTVPage() {
             {/* Canvas — fills remaining space */}
             <div className="relative flex-1 overflow-hidden">
               <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3">
-                <div className="relative h-full w-full" style={{ maxWidth: "min(100%, calc((100dvh - 140px) * 1.46))" }}>
-                  <canvas ref={canvasRef} width={700} height={480}
+                {/* maxWidth constrains to 4:3 (800/600) so it matches the drawer canvas exactly */}
+                <div className="relative h-full w-full" style={{ maxWidth: "min(100%, calc((100dvh - 140px) * 1.333))" }}>
+                  <canvas ref={canvasRef} width={800} height={600}
                     className="h-full w-full rounded-xl border border-white/10 bg-white"
                     style={{ boxShadow: `0 0 60px ${teamColor(drawingTeam)}22` }} />
                   {/* Word hint bar — overlaid at bottom of canvas */}
