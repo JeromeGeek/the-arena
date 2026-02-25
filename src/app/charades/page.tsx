@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { generateSeed, seedToSlug } from "@/lib/gamecodes";
 import { charadesCategories } from "@/lib/charades";
+import GameSetupShell, {
+  SetupLabel,
+  SetupAddRow,
+  SetupOptionPill,
+  SetupStartButton,
+} from "@/components/GameSetupShell";
 
 const categoryEmojis: Record<string, string> = {
   Movies: "🎬",
@@ -85,248 +90,142 @@ export default function CharadesPage() {
   }
 
   return (
-    <main className="relative min-h-[100dvh] overflow-hidden pb-12">
-      {/* Ambient Background */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(249,115,22,0.04)] blur-[80px]" />
-        <div className="absolute right-1/4 top-2/3 h-[300px] w-[300px] rounded-full bg-[rgba(234,88,12,0.03)] blur-[60px]" />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5">
-        <Link
-          href="/"
-          className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 transition-colors hover:text-white/60 sm:text-xs sm:tracking-[0.3em]"
-        >
-          ← The Arena
-        </Link>
-        <h1
-          className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-sm sm:tracking-[0.35em]"
-          style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
-        >
-          Charades
-        </h1>
-        <div className="w-9" />
-      </header>
-
-      <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="glass-panel rounded-2xl p-3 sm:rounded-3xl sm:p-8">
-            {/* Title */}
-            <div className="mb-4 text-center sm:mb-8">
-              <motion.div
-                className="mb-2 text-3xl sm:mb-3 sm:text-4xl"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
-              >
-                🎭
-              </motion.div>
-              <h2
-                className="mb-2 text-xl font-bold uppercase tracking-[0.15em] text-white/90 sm:text-2xl sm:tracking-[0.25em]"
-                style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
-              >
-                Stage Setup
-              </h2>
-              <p className="text-sm text-white/30">
-                Create teams • Act it out • No talking allowed
-              </p>
-            </div>
-
-            {/* Team Grid */}
-            <div className="mb-6">
-              <div className="mb-3 flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-                  Teams ({teams.length}/6)
-                </label>
-              </div>
-
-              <div className="space-y-2">
-                {teams.map((name, i) => {
-                  const color = teamColors[i % teamColors.length];
-                  return (
-                    <motion.div
-                      key={i}
-                      layout
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="group flex items-center gap-2 rounded-lg px-3 py-2.5 transition-colors sm:gap-3 sm:rounded-xl sm:px-4 sm:py-3"
-                      style={{
-                        background: color.bg,
-                        border: `1px solid ${color.border}`,
-                      }}
-                    >
-                      <span className="text-lg">{teamEmojis[i % teamEmojis.length]}</span>
-                      <input
-                        value={name}
-                        onChange={(e) => {
-                          const updated = [...teams];
-                          updated[i] = e.target.value;
-                          setTeams(updated);
-                        }}
-                        className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/20"
-                        style={{ color: color.text }}
-                        placeholder="Team name..."
-                      />
-                      {teams.length > 2 && (
-                        <motion.button
-                          onClick={() => handleRemoveTeam(i)}
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs text-white/15 transition-colors hover:bg-white/[0.05] hover:text-red-400"
-                        >
-                          ✕
-                        </motion.button>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Add Team */}
-            {teams.length < 6 && (
-              <motion.div layout className="mb-6 flex gap-2 sm:mb-8">
-                <input
-                  value={inputTeam}
-                  onChange={(e) => setInputTeam(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddTeam()}
-                  placeholder={`Add team ${teams.length + 1}...`}
-                  className="flex-1 rounded-xl border border-dashed border-white/10 bg-white/[0.01] px-4 py-3 text-sm text-white/80 outline-none placeholder:text-white/20 focus:border-white/25 focus:bg-white/[0.03]"
-                />
-                <motion.button
-                  onClick={handleAddTeam}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-3 text-lg font-bold text-white/60 transition-colors hover:bg-white/[0.08]"
+    <GameSetupShell
+      title="CHARADES"
+      emoji="🎬"
+      subtitle="Act It Out"
+      flavour="Create teams · Act it out · No talking allowed"
+      accentFrom="#FB923C"
+      accentTo="#EA580C"
+      emojiAnimate={{ y: [0, -8, 0] }}
+      emojiTransition={{ duration: 1.2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+    >
+      {/* Teams */}
+      <div className="mb-6">
+        <SetupLabel>Teams ({teams.length}/6)</SetupLabel>
+        <div className="space-y-2">
+          <AnimatePresence>
+            {teams.map((name, i) => {
+              const color = teamColors[i % teamColors.length];
+              return (
+                <motion.div
+                  key={i}
+                  layout
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="flex items-center gap-2 rounded-xl px-3 py-2.5"
+                  style={{ background: color.bg, border: `1px solid ${color.border}` }}
                 >
-                  +
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* Timer Selection */}
-            <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-                Timer Per Turn
-              </label>
-              <div className="flex gap-2 sm:gap-3">
-                {timerOptions.map((opt) => (
-                  <motion.button
-                    key={opt.value}
-                    onClick={() => setTimer(opt.value)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative flex-1 rounded-lg px-2 py-3 text-center transition-all sm:rounded-xl sm:px-4 sm:py-4"
-                    style={{
-                      background:
-                        timer === opt.value
-                          ? "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))"
-                          : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${timer === opt.value ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`,
-                      color: timer === opt.value ? "#F97316" : "rgba(255,255,255,0.35)",
-                      boxShadow: timer === opt.value ? "0 0 20px rgba(249,115,22,0.15)" : "none",
+                  <span className="text-base">{teamEmojis[i % teamEmojis.length]}</span>
+                  <input
+                    value={name}
+                    onChange={(e) => {
+                      const updated = [...teams];
+                      updated[i] = e.target.value;
+                      setTeams(updated);
                     }}
-                  >
-                    <span className="block text-2xl">{opt.emoji}</span>
-                    <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest">
-                      {opt.label}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Rounds Selection */}
-            <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-                Number of Rounds
-              </label>
-              <div className="flex gap-2 sm:gap-3">
-                {roundOptions.map((opt) => (
-                  <motion.button
-                    key={opt.value}
-                    onClick={() => setRounds(opt.value)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative flex-1 rounded-lg px-2 py-3 text-center transition-all sm:rounded-xl sm:px-4 sm:py-4"
-                    style={{
-                      background:
-                        rounds === opt.value
-                          ? "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))"
-                          : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${rounds === opt.value ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`,
-                      color: rounds === opt.value ? "#F97316" : "rgba(255,255,255,0.35)",
-                      boxShadow: rounds === opt.value ? "0 0 20px rgba(249,115,22,0.15)" : "none",
-                    }}
-                  >
-                    <span className="block text-2xl">{opt.emoji}</span>
-                    <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest">
-                      {opt.label} {opt.value === 1 ? "Round" : "Rounds"}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Category Selection */}
-            <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-                Category
-              </label>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {categoryOptions.map((cat) => (
-                  <motion.button
-                    key={cat.value}
-                    onClick={() => setSelectedCategory(cat.value)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-[calc(25%-0.375rem)] rounded-lg px-2 py-2.5 text-center transition-all sm:w-[calc(25%-0.5rem)] sm:rounded-xl sm:px-3 sm:py-3"
-                    style={{
-                      background:
-                        selectedCategory === cat.value
-                          ? "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))"
-                          : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${
-                        selectedCategory === cat.value
-                          ? "rgba(249,115,22,0.4)"
-                          : "rgba(255,255,255,0.08)"
-                      }`,
-                      color:
-                        selectedCategory === cat.value ? "#F97316" : "rgba(255,255,255,0.35)",
-                      boxShadow:
-                        selectedCategory === cat.value
-                          ? "0 0 15px rgba(249,115,22,0.1)"
-                          : "none",
-                    }}
-                  >
-                    <span className="block text-lg">{cat.emoji}</span>
-                    <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wider">
-                      {cat.label}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Start Button */}
-            <motion.button
-              onClick={handleGenerate}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.95 }}
-              disabled={teams.length < 2}
-              className="w-full rounded-lg bg-gradient-to-r from-[#F97316] to-[#EA580C] px-3 py-3.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow-lg transition-shadow hover:shadow-[0_0_30px_rgba(249,115,22,0.3)] disabled:cursor-not-allowed disabled:opacity-40 sm:rounded-xl sm:px-6 sm:py-4 sm:text-sm sm:tracking-[0.2em]"
-            >
-              Start Game • {teams.length} Teams • {timer}s • {rounds} {rounds === 1 ? "Round" : "Rounds"}
-            </motion.button>
-          </div>
-        </motion.div>
+                    className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/20"
+                    style={{ color: color.text }}
+                    placeholder="Team name…"
+                  />
+                  {teams.length > 2 && (
+                    <motion.button
+                      onClick={() => handleRemoveTeam(i)}
+                      whileTap={{ scale: 0.85 }}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] text-white/15 transition-colors hover:text-red-400"
+                    >
+                      ✕
+                    </motion.button>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
       </div>
-    </main>
+
+      {/* Add team */}
+      {teams.length < 6 && (
+        <motion.div layout className="mb-6">
+          <SetupAddRow
+            value={inputTeam}
+            onChange={setInputTeam}
+            onAdd={handleAddTeam}
+            placeholder={`Add team ${teams.length + 1}…`}
+          />
+        </motion.div>
+      )}
+
+      {/* Timer */}
+      <div className="mb-5">
+        <SetupLabel>Timer Per Turn</SetupLabel>
+        <div className="flex gap-2">
+          {timerOptions.map((opt) => (
+            <SetupOptionPill
+              key={opt.value}
+              selected={timer === opt.value}
+              onClick={() => setTimer(opt.value)}
+              accentColor="#FB923C"
+            >
+              <span className="mr-1">{opt.emoji}</span> {opt.label}
+            </SetupOptionPill>
+          ))}
+        </div>
+      </div>
+
+      {/* Rounds */}
+      <div className="mb-5">
+        <SetupLabel>Rounds</SetupLabel>
+        <div className="flex flex-wrap gap-2">
+          {roundOptions.map((opt) => (
+            <SetupOptionPill
+              key={opt.value}
+              selected={rounds === opt.value}
+              onClick={() => setRounds(opt.value)}
+              accentColor="#FB923C"
+            >
+              {opt.emoji} {opt.label}
+            </SetupOptionPill>
+          ))}
+        </div>
+      </div>
+
+      {/* Category */}
+      <div className="mb-7">
+        <SetupLabel>Category</SetupLabel>
+        <div className="flex flex-wrap justify-center gap-2">
+          {categoryOptions.map((cat) => (
+            <motion.button
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
+              whileTap={{ scale: 0.93 }}
+              transition={{ type: "spring", stiffness: 420, damping: 22 }}
+              className="w-[calc(25%-0.375rem)] rounded-xl px-2 py-3 text-center transition-all"
+              style={{
+                background: selectedCategory === cat.value ? "rgba(251,146,60,0.14)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${selectedCategory === cat.value ? "rgba(251,146,60,0.38)" : "rgba(255,255,255,0.07)"}`,
+                color: selectedCategory === cat.value ? "#FB923C" : "rgba(255,255,255,0.35)",
+                boxShadow: selectedCategory === cat.value ? "0 0 14px rgba(251,146,60,0.14)" : "none",
+              }}
+            >
+              <span className="block text-lg">{cat.emoji}</span>
+              <span className="mt-1 block text-[9px] font-semibold uppercase tracking-wider">{cat.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Start */}
+      <SetupStartButton
+        onClick={handleGenerate}
+        disabled={teams.length < 2}
+        accentFrom="#FB923C"
+        accentTo="#EA580C"
+      >
+        Start · {teams.length} Teams · {timer}s · {rounds} {rounds === 1 ? "Round" : "Rounds"}
+      </SetupStartButton>
+    </GameSetupShell>
   );
 }

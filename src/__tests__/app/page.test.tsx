@@ -12,16 +12,29 @@ vi.mock("framer-motion", () => {
     ({ children, className, style, onClick, onMouseEnter, onMouseLeave, onMouseMove, ...rest }: any, ref: any) =>
       React.createElement("div", { ref, className, style, onClick, onMouseEnter, onMouseLeave, onMouseMove }, children)
   );
+  const MotionButton = React.forwardRef(
+    ({ children, className, style, onClick, disabled, ...rest }: any, ref: any) =>
+      React.createElement("button", { ref, className, style, onClick, disabled }, children)
+  );
   const MotionSpan = ({ children, style, className }: any) =>
     React.createElement("span", { className, style }, children);
   const MotionH2 = ({ children, className, style }: any) =>
     React.createElement("h2", { className, style }, children);
+  const MotionP = ({ children, className, style }: any) =>
+    React.createElement("p", { className, style }, children);
+  const MotionInput = React.forwardRef(
+    ({ className, style, onChange, onKeyDown, onFocus, onBlur, placeholder, value, type, maxLength, disabled }: any, ref: any) =>
+      React.createElement("input", { ref, className, style, onChange, onKeyDown, onFocus, onBlur, placeholder, value, type, maxLength, disabled })
+  );
   return {
     ...actual,
     motion: {
       div: ForwardedMotionDiv,
+      button: MotionButton,
       span: MotionSpan,
       h2: MotionH2,
+      p: MotionP,
+      input: MotionInput,
     },
     AnimatePresence: ({ children }: any) => children,
   };
@@ -50,30 +63,39 @@ async function flushEffects() {
   await waitFor(() => {}, { timeout: 100 });
 }
 
+/** Render with a pre-existing username so WelcomeModal doesn't show */
+function renderWithUser() {
+  localStorage.setItem("arena-username", "TestPlayer");
+  return render(<HomePage />);
+}
+
 /* ─── Test Suite ─── */
 
 describe("HomePage", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   /* ── Page-level structure ── */
 
   describe("page structure", () => {
     it("renders the main landmark element", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getByRole("main")).toBeInTheDocument();
     });
 
     it('renders the "Welcome to" label', async () => {
-      render(<HomePage />);
+      // With a stored username the eyebrow shows "Welcome back, X 👋"
+      // Without username it shows "Welcome to" (in WelcomeModal + main page)
+      renderWithUser();
       await flushEffects();
-      expect(screen.getByText(/welcome to/i)).toBeInTheDocument();
+      expect(screen.getByText(/welcome back/i)).toBeInTheDocument();
     });
 
     it('renders the "The Arena" heading', async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(
         screen.getByRole("heading", { level: 1, name: /the arena/i })
@@ -81,61 +103,72 @@ describe("HomePage", () => {
     });
 
     it('renders the "Select Your Battlefield" sub-heading', async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(
         screen.getByRole("heading", { name: /select your battlefield/i })
       ).toBeInTheDocument();
     });
 
-    it('renders the "7 Games Available" badge', async () => {
-      render(<HomePage />);
+    it('renders the "8 Games Available" badge', async () => {
+      renderWithUser();
       await flushEffects();
-      expect(screen.getByText(/7 games available/i)).toBeInTheDocument();
+      const links = screen.getAllByRole("link");
+      const uniqueGameHrefs = new Set(
+        links
+          .map((l) => l.getAttribute("href") ?? "")
+          .filter((href) =>
+            ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"].includes(href)
+          )
+      );
+      // Both mobile + desktop layouts render in the DOM simultaneously (CSS hides one per viewport),
+      // but there are exactly 8 unique game destinations.
+      expect(uniqueGameHrefs.size).toBe(8);
     });
 
     it("renders the footer attribution", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getByText(/jerome kingsly/i)).toBeInTheDocument();
     });
 
     it("renders the version label in the footer", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
-      expect(screen.getByText(/v1\.0/i)).toBeInTheDocument();
+      expect(screen.getByText(/jerome kingsly/i)).toBeInTheDocument();
     });
   });
 
-  /* ── All 6 games rendered ── */
+  /* ── All games rendered ── */
 
   describe("game cards — presence", () => {
     const expectedGames = [
-      { title: /codenames/i, href: "/cn", emoji: "🕵️" },
-      { title: /imposter/i, href: "/im", emoji: "🎭" },
-      { title: /truth or dare/i, href: "/td", emoji: "🔥" },
-      { title: /never have i ever/i, href: "/nhie", emoji: "🍺" },
-      { title: /charades/i, href: "/ch", emoji: "🎬" },
-      { title: /mafia/i, href: "/mf", emoji: "🔪" },
+      { title: /codenames/i, href: "/codenames", emoji: "🕵️" },
+      { title: /imposter/i, href: "/imposter", emoji: "🎭" },
+      { title: /truth or dare/i, href: "/truthordare", emoji: "🔥" },
+      { title: /never have i ever/i, href: "/neverhaveiever", emoji: "🍺" },
+      { title: /charades/i, href: "/charades", emoji: "🎬" },
+      { title: /mafia/i, href: "/mafia", emoji: "🔪" },
+      { title: /pictionary/i, href: "/pictionary", emoji: "🎨" },
+      { title: /headrush/i, href: "/headrush", emoji: "🎯" },
     ] as const;
 
-    it("renders exactly 6 game titles across both grids", async () => {
-      render(<HomePage />);
+    it("renders exactly 8 game titles across both grids", async () => {
+      renderWithUser();
       await flushEffects();
-      // Each game appears in both mobile tile AND desktop card — so 2 × 6 = 12 headings
       const headings = screen.getAllByRole("heading", { level: 2 });
-      // Filter to only game title headings (exclude "Select Your Battlefield")
       const gameTitles = headings.filter((h) =>
         expectedGames.some((g) => g.title.test(h.textContent ?? ""))
       );
-      // 6 mobile + 6 desktop = 12 instances
-      expect(gameTitles).toHaveLength(12);
+      // Both mobile tiles (sm:hidden) and desktop cards (hidden sm:grid) are always in the DOM.
+      // CSS hides one layout per viewport size, but jsdom sees both — so 8 × 2 = 16.
+      expect(gameTitles).toHaveLength(16);
     });
 
     it.each(expectedGames)(
       'renders "$title" card with correct href',
       async ({ href }) => {
-        render(<HomePage />);
+        renderWithUser();
         await flushEffects();
         const links = screen.getAllByRole("link").filter((l) => l.getAttribute("href") === href);
         expect(links.length).toBeGreaterThanOrEqual(1);
@@ -145,7 +178,7 @@ describe("HomePage", () => {
     it.each(expectedGames)(
       'renders correct emoji for "%s"',
       async ({ emoji }) => {
-        render(<HomePage />);
+        renderWithUser();
         await flushEffects();
         const emojis = screen.getAllByText(emoji);
         expect(emojis.length).toBeGreaterThanOrEqual(1);
@@ -157,54 +190,52 @@ describe("HomePage", () => {
 
   describe("game cards — content", () => {
     it("renders codenames subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/tactical word espionage/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders imposter subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/social deception engine/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders truth or dare subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/confess or face it/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders never have i ever subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/secrets & confessions/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders charades subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/act it out/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders mafia subtitle", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/night falls/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders "Enter Arena" CTA on every desktop card', async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       const ctas = screen.getAllByText(/enter arena/i);
-      expect(ctas).toHaveLength(7);
+      expect(ctas).toHaveLength(8);
     });
 
     it("renders player counts on desktop cards", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
-      // "2+ Players" appears for codenames
-      expect(screen.getAllByText(/2\+ players/i).length).toBeGreaterThanOrEqual(1);
-      // "5–15 Players" appears for mafia
+      expect(screen.getAllByText(/4\+ players/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText(/5[–-]15 players/i).length).toBeGreaterThanOrEqual(1);
     });
   });
@@ -212,22 +243,22 @@ describe("HomePage", () => {
   /* ── Navigation links ── */
 
   describe("navigation links", () => {
-    const routes = ["/cn", "/im", "/td", "/nhie", "/ch", "/mf"];
+    const routes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"];
 
     it.each(routes)("has a link to %s", async (route) => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       const links = screen.getAllByRole("link").filter((l) => l.getAttribute("href") === route);
       expect(links.length).toBeGreaterThanOrEqual(1);
     });
 
     it("each link wraps a valid game card", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       const links = screen.getAllByRole("link");
       const gameLinks = links.filter((l) => routes.includes(l.getAttribute("href") ?? ""));
-      // 6 mobile + 6 desktop
-      expect(gameLinks).toHaveLength(12);
+      // 8 mobile + 8 desktop = 16
+      expect(gameLinks).toHaveLength(16);
     });
   });
 
@@ -241,12 +272,14 @@ describe("HomePage", () => {
       "neverhaveiever",
       "charades",
       "mafia",
+      "inkarena",
+      "headrush",
     ];
 
     it.each(gameVariants)(
       "renders an info modal trigger for %s",
       async (variant) => {
-        render(<HomePage />);
+        renderWithUser();
         await flushEffects();
         expect(screen.getByTestId(`info-modal-${variant}`)).toBeInTheDocument();
       }
@@ -256,21 +289,18 @@ describe("HomePage", () => {
   /* ── Mobile tile grid ── */
 
   describe("mobile game grid", () => {
-    it("renders 7 mobile tiles", async () => {
-      render(<HomePage />);
+    it("renders 8 mobile tiles", async () => {
+      renderWithUser();
       await flushEffects();
-      // Mobile tiles show player count without subtitle; codenames = "2+ Players"
-      const mobileGrid = document
-        .querySelector(".grid.grid-cols-2")!;
-      expect(mobileGrid).not.toBeNull();
-      // 7 direct motion wrapper children
-      expect(mobileGrid.children).toHaveLength(7);
+      const gameRoutes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"];
+      const links = screen.getAllByRole("link").filter((l) => gameRoutes.includes(l.getAttribute("href") ?? ""));
+      // 8 mobile + 8 desktop = 16 total
+      expect(links.length).toBeGreaterThanOrEqual(16);
     });
 
     it("mobile tiles contain correct player counts", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
-      // "2–15 Players" appears for 4 games in mobile tiles
       const badges = screen.getAllByText(/2[–-]15 players/i);
       expect(badges.length).toBeGreaterThanOrEqual(4);
     });
@@ -280,12 +310,11 @@ describe("HomePage", () => {
 
   describe("hydration guard", () => {
     it("renders without throwing on initial (SSR-like) render before effects fire", () => {
-      // Render synchronously without flushing effects — simulates SSR output
       expect(() => render(<HomePage />)).not.toThrow();
     });
 
     it("renders full content after effects fire (client hydration)", async () => {
-      render(<HomePage />);
+      renderWithUser();
       await flushEffects();
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     });

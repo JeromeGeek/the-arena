@@ -202,7 +202,8 @@ describe("scoring logic", () => {
     const drawingTeamScore = 300;
     const penalty = POINTS_STEAL_PENALTY;
     const afterSteal = Math.max(0, drawingTeamScore - penalty);
-    expect(afterSteal).toBe(270);
+    // 300 - 50 (POINTS_STEAL_PENALTY) = 250
+    expect(afterSteal).toBe(250);
   });
 
   it("steal does not reduce drawing team score below 0", () => {

@@ -88,7 +88,7 @@ export function setupCharadesGame(
   playerNames: string[],
   categoryName?: string,
   randomFn: () => number = Math.random,
-  wordCount: number = 20
+  wordCount: number = 50
 ): { words: string[]; category: string } {
   // Pick category
   const pool = categoryName
@@ -110,15 +110,26 @@ export function setupCharadesGame(
     wordPool = category.words;
   }
 
-  // Shuffle and pick
+  // Shuffle and pick — if wordCount exceeds pool, cycle through pool multiple times
   const shuffled = [...wordPool];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(randomFn() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
+  // If we need more words than the pool, repeat the shuffled pool
+  let finalWords = shuffled;
+  while (finalWords.length < wordCount) {
+    const extra = [...wordPool];
+    for (let i = extra.length - 1; i > 0; i--) {
+      const j = Math.floor(randomFn() * (i + 1));
+      [extra[i], extra[j]] = [extra[j], extra[i]];
+    }
+    finalWords = [...finalWords, ...extra];
+  }
+
   return {
-    words: shuffled.slice(0, wordCount),
+    words: finalWords.slice(0, wordCount),
     category: categoryName === "random" || !categoryName ? "Random" : category.name,
   };
 }

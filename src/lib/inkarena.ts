@@ -88,6 +88,7 @@ export const ROUND_SECONDS = 45;
 export const BONUS_SECONDS_THRESHOLD = 15; // under this = bonus
 export const POINTS_CORRECT_GUESS = 100;
 export const POINTS_FAST_BONUS = 50;
+export const POINTS_STEAL_PENALTY = 50;
 export const POINTS_TO_WIN = 1000;
 
 // ── Room code generator (6-char alphanumeric) ──

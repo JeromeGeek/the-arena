@@ -54,7 +54,9 @@ function parseCode(code: string, teamsList?: string[]) {
     : Array.from({ length: teamCount }, (_, i) => `Team ${i + 1}`);
 
   const categoryName = category === "random" ? undefined : category;
-  const game = setupCharadesGame(teamNames, categoryName, randomFn);
+  // Request enough words for all teams × all rounds × ~15 words per turn
+  const neededWords = teamCount * totalRounds * 15;
+  const game = setupCharadesGame(teamNames, categoryName, randomFn, neededWords);
 
   return { teamNames, timer, totalRounds, ...game, seed };
 }
@@ -89,28 +91,38 @@ export default function CharadesGamePage() {
   const [timeLeft, setTimeLeft] = useState(timerDuration);
   const [turnScore, setTurnScore] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Track whether this turn ended via timer (true) or words exhausted (false)
+  const timerExpiredRef = useRef(false);
 
   const currentColor = TEAM_COLORS[currentTeamIndex % TEAM_COLORS.length];
 
-  // Timer logic
+  // Timer logic — clear on phase change or unmount
   useEffect(() => {
-    if (phase === "acting" && timeLeft > 0) {
-      timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-      // Timer tick sounds in last seconds
-      if (soundEnabled && timeLeft <= 5 && timeLeft > 3) {
-        playTimerTick();
-      } else if (soundEnabled && timeLeft <= 3 && timeLeft > 0) {
-        playTimerCritical();
-      }
-      return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    if (phase !== "acting") {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
     }
-    if (phase === "acting" && timeLeft === 0) {
+
+    if (timeLeft <= 0) {
+      // Timer ran out naturally
+      timerExpiredRef.current = true;
       if (soundEnabled) playTimesUp();
-      setTimeout(() => setPhase("scored"), 0);
+      setPhase("scored");
+      return;
     }
+
+    // Play tick sounds
+    if (soundEnabled) {
+      if (timeLeft <= 3) playTimerCritical();
+      else if (timeLeft <= 5) playTimerTick();
+    }
+
+    timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [phase, timeLeft, soundEnabled]);
 
   const handleStartTurn = useCallback(() => {
+    timerExpiredRef.current = false;
     setTimeLeft(timerDuration);
     setTurnScore(0);
     setPhase("acting");
@@ -127,6 +139,9 @@ export default function CharadesGamePage() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex((i) => i + 1);
     } else {
+      // No more words — stop timer and end turn
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerExpiredRef.current = false;
       setPhase("scored");
     }
   }, [currentTeamIndex, currentWordIndex, teams, words.length, soundEnabled]);
@@ -135,21 +150,25 @@ export default function CharadesGamePage() {
     if (soundEnabled) playSkip();
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex((i) => i + 1);
+    } else {
+      // Last word skipped — end the turn
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerExpiredRef.current = false;
+      setPhase("scored");
     }
   }, [currentWordIndex, words.length, soundEnabled]);
 
   const handleNextTeam = useCallback(() => {
-    const nextTeam = (currentTeamIndex + 1) % teams.length;
-    const nextRound = nextTeam === 0 ? round + 1 : round;
+    const nextTeamIndex = (currentTeamIndex + 1) % teams.length;
+    const completedFullRound = nextTeamIndex === 0;
+    const nextRound = completedFullRound ? round + 1 : round;
 
-    if (currentWordIndex >= words.length - 1) {
-      setPhase("gameover");
-      if (soundEnabled) setTimeout(() => playGameOverFanfare(), 300);
-    } else if (nextRound > totalRounds) {
+    // Game over if: all rounds done, or no words left for anyone
+    if (nextRound > totalRounds || currentWordIndex >= words.length - 1) {
       setPhase("gameover");
       if (soundEnabled) setTimeout(() => playGameOverFanfare(), 300);
     } else {
-      setCurrentTeamIndex(nextTeam);
+      setCurrentTeamIndex(nextTeamIndex);
       setRound(nextRound);
       setPhase("ready");
     }

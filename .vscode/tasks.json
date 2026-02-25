@@ -24,6 +24,13 @@
 				"panel": "dedicated",
 				"group": "dev"
 			}
+		},
+		{
+			"label": "Next.js Dev",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": []
 		}
 	]
 }

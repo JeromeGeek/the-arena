@@ -29,9 +29,9 @@ describe("charades", () => {
   describe("setupCharadesGame", () => {
     const players = ["Alice", "Bob", "Charlie"];
 
-    it("returns 20 words by default", () => {
+    it("returns 50 words by default", () => {
       const { words } = setupCharadesGame(players);
-      expect(words).toHaveLength(20);
+      expect(words).toHaveLength(50);
     });
 
     it("returns custom word count", () => {

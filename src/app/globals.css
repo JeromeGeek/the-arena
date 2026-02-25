@@ -13,13 +13,13 @@ html {
 }
 
 body {
-  background: #0B0E14;
+  background: #080B11;
   color: #e2e8f0;
   font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeSpeed;
+  text-rendering: optimizeLegibility;
   /* PWA safe areas */
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
@@ -46,15 +46,21 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.12) 0%, transparent 100%),
-    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.08) 0%, transparent 100%),
-    radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.1) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70% 75%, rgba(255,255,255,0.07) 0%, transparent 100%),
-    radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.09) 0%, transparent 100%),
-    radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,0.06) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.08) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 45% 90%, rgba(255,255,255,0.05) 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.07) 0%, transparent 100%);
+    radial-gradient(1px 1px at 8% 18%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 55%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 38% 12%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 52% 72%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 67% 30%, rgba(255,255,255,0.13) 0%, transparent 100%),
+    radial-gradient(2px 2px at 78% 88%, rgba(255,255,255,0.08) 0%, transparent 100%),
+    radial-gradient(1px 1px at 14% 80%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 22%, rgba(255,255,255,0.14) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 95%, rgba(255,255,255,0.09) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 42%, rgba(255,255,255,0.11) 0%, transparent 100%),
+    radial-gradient(1px 1px at 3% 45%, rgba(255,255,255,0.07) 0%, transparent 100%),
+    radial-gradient(1px 1px at 96% 68%, rgba(255,255,255,0.09) 0%, transparent 100%),
+    radial-gradient(1px 1px at 33% 33%, rgba(255,255,255,0.08) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 52%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 8%, rgba(255,255,255,0.1) 0%, transparent 100%);
 }
 
 /* Thin gradient top bar for PWA chrome feel */
@@ -65,16 +71,16 @@ body::after {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,65,108,0.4) 30%, rgba(0,180,219,0.4) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.5) 20%, rgba(168,85,247,0.5) 50%, rgba(255,65,108,0.5) 80%, transparent 100%);
   pointer-events: none;
   z-index: 9999;
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .gradient-red {
@@ -123,12 +129,21 @@ body::after {
 }
 
 .text-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.4) 25%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0.1) 100%);
+  background: linear-gradient(
+    105deg,
+    rgba(255,255,255,0.08) 0%,
+    rgba(255,255,255,0.35) 20%,
+    rgba(255,255,255,0.95) 40%,
+    rgba(255,255,255,1) 50%,
+    rgba(255,255,255,0.95) 60%,
+    rgba(255,255,255,0.35) 80%,
+    rgba(255,255,255,0.08) 100%
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
+  animation: shimmer 5s linear infinite;
   will-change: background-position;
 }
 
@@ -467,7 +482,7 @@ canvas {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -475,12 +490,114 @@ canvas {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
+}
+
+/* ── Premium card base — rich glass with inner top-edge highlight ── */
+.card-premium {
+  background: linear-gradient(
+    150deg,
+    rgba(255,255,255,0.048) 0%,
+    rgba(255,255,255,0.016) 45%,
+    rgba(0,0,0,0.1) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.085);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.11),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 12px 40px rgba(0,0,0,0.48),
+    0 3px 10px rgba(0,0,0,0.32);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+}
+
+/* ── Featured game card — elevated, richer glass ── */
+.card-featured {
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.062) 0%,
+    rgba(255,255,255,0.024) 40%,
+    rgba(0,0,0,0.14) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.28),
+    inset 1px 0 0 rgba(255,255,255,0.04),
+    0 24px 72px rgba(0,0,0,0.6),
+    0 6px 24px rgba(0,0,0,0.42),
+    0 1px 4px rgba(0,0,0,0.5);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+}
+
+/* ── Subtle film-grain overlay on hero ── */
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2%, -3%); }
+  20% { transform: translate(3%, 2%); }
+  30% { transform: translate(-1%, 4%); }
+  40% { transform: translate(4%, -1%); }
+  50% { transform: translate(-3%, 3%); }
+  60% { transform: translate(2%, -4%); }
+  70% { transform: translate(-4%, 1%); }
+  80% { transform: translate(1%, -2%); }
+  90% { transform: translate(3%, 4%); }
+}
+
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  animation: grain 8s steps(10) infinite;
+  will-change: transform;
+}
+
+/* ── Luxury divider line ── */
+@keyframes divider-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+.divider-luxury {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(56,189,248,0.4) 20%,
+    rgba(168,85,247,0.6) 50%,
+    rgba(255,65,108,0.4) 80%,
+    transparent 100%
+  );
+  animation: divider-glow 4s ease-in-out infinite;
+}
+
+/* ── Badge pill — premium frosted ── */
+.badge-premium {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Card hover lift shadow ── */
+.card-hover-lift {
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+.card-hover-lift:hover {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.5),
+    0 8px 24px rgba(0,0,0,0.3);
 }
 
 /* ── Ink Arena: Ink splatter — paint blobs bursting from center ── */

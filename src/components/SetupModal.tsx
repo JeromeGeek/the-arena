@@ -62,25 +62,38 @@ export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <div className="glass-panel relative w-full max-w-md rounded-3xl p-4 shadow-2xl sm:p-8">
+            <div className="relative w-full max-w-md rounded-3xl p-5 shadow-2xl sm:p-8"
+              style={{
+                background: "linear-gradient(145deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.12) 100%)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2), 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,65,108,0.08)",
+                backdropFilter: "blur(24px) saturate(160%)",
+              }}
+            >
+              {/* Red accent top bar */}
+              <div className="absolute left-0 right-0 top-0 h-[2px] rounded-t-3xl"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,65,108,0.6), rgba(255,75,43,0.4), transparent)" }}
+              />
+
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/10 hover:text-white/60"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-all hover:bg-white/10 hover:text-white/70"
               >
                 ✕
               </button>
 
               {/* Title */}
-              <div className="mb-4 sm:mb-8">
+              <div className="mb-5 sm:mb-7">
+                <div className="mb-3 h-0.5 w-8 rounded-full" style={{ background: "linear-gradient(90deg, #FF416C, #FF4B2B)" }} />
                 <h2
-                  className="mb-2 text-xl font-bold uppercase tracking-[0.15em] text-white/90 sm:text-2xl sm:tracking-[0.25em]"
+                  className="mb-1.5 text-xl font-semibold uppercase tracking-[0.15em] text-white/90 sm:text-2xl"
                   style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
                 >
-                  Mission Config
+                  CODENAMES
                 </h2>
-                <p className="text-sm text-white/30">
-                  Configure your operation parameters
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/30">
+                  Tactical Word Espionage
                 </p>
               </div>
 
@@ -122,7 +135,11 @@ export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
                   onClick={handleGenerate}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] px-4 py-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-lg transition-shadow hover:shadow-[0_0_30px_rgba(255,65,108,0.3)] sm:px-6 sm:text-sm sm:tracking-[0.2em]"
+                  className="w-full rounded-xl px-4 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white shadow-lg sm:px-6 sm:text-sm"
+                  style={{
+                    background: "linear-gradient(135deg, #FF416C, #FF4B2B)",
+                    boxShadow: "0 0 30px rgba(255,65,108,0.25), 0 4px 16px rgba(0,0,0,0.3)",
+                  }}
                 >
                   Generate Game Code
                 </motion.button>
@@ -130,28 +147,35 @@ export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   {/* QR Code + URL Display */}
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                  <div className="rounded-xl p-4 text-center"
+                    style={{
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-                      📱 Open this URL on your phone
+                      📱 Open on your phone
                     </p>
 
                     {/* QR Code */}
-                    <div className="mx-auto mb-3 flex w-fit items-center justify-center rounded-xl bg-white p-2.5 sm:p-3">
+                    <div className="mx-auto mb-3 flex w-fit items-center justify-center rounded-xl bg-white p-2.5 shadow-lg sm:p-3">
                       <QRCodeSVG
                         value={gameUrl!}
                         size={140}
                         bgColor="#ffffff"
-                        fgColor="#0B0E14"
+                        fgColor="#080B11"
                         level="M"
                         className="h-[120px] w-[120px] sm:h-[140px] sm:w-[140px]"
                       />
                     </div>
 
                     {/* Full URL */}
-                    <p className="overflow-x-auto whitespace-nowrap font-mono text-[10px] font-bold tracking-wider text-[#FF416C]/80 sm:text-xs">
+                    <p className="overflow-x-auto whitespace-nowrap font-mono text-[10px] font-bold tracking-wider sm:text-xs"
+                      style={{ color: "#FF416C" }}
+                    >
                       {gameUrl}
                     </p>
                   </div>
@@ -161,7 +185,7 @@ export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
                       onClick={handleRegenerate}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-colors hover:border-white/20 hover:text-white/60 sm:px-4 sm:text-sm"
+                      className="flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-xs font-semibold uppercase tracking-widest text-white/40 transition-colors hover:border-white/20 hover:text-white/60 sm:px-4 sm:text-sm"
                     >
                       Regenerate
                     </motion.button>
@@ -169,7 +193,11 @@ export default function SetupModal({ isOpen, onClose }: SetupModalProps) {
                       onClick={handleLaunch}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 rounded-xl bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] px-3 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-lg sm:px-4 sm:text-sm"
+                      className="flex-1 rounded-xl px-3 py-3 text-xs font-semibold uppercase tracking-widest text-white shadow-lg sm:px-4 sm:text-sm"
+                      style={{
+                        background: "linear-gradient(135deg, #FF416C, #FF4B2B)",
+                        boxShadow: "0 0 20px rgba(255,65,108,0.2)",
+                      }}
                     >
                       Launch →
                     </motion.button>

@@ -10,8 +10,6 @@ import SoundToggle from "@/components/SoundToggle";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import {
   playRevealWord,
-  playImposterReveal,
-  playCrewReveal,
   playVoteCast,
   playDiscussionStart,
   playCrewWins,
@@ -70,12 +68,10 @@ export default function ImposterGamePage() {
 
   function handleShowWord() {
     setShowWord(true);
+    // Play the same neutral reveal sound for everyone — imposter/crew-specific
+    // sounds would let other players hear who is the imposter
     if (soundEnabled) {
-      if (players[revealIndex]?.isImposter) {
-        playImposterReveal();
-      } else {
-        playCrewReveal();
-      }
+      playRevealWord();
     }
   }
 
@@ -92,16 +88,31 @@ export default function ImposterGamePage() {
 
   function handleVote(playerId: number) {
     if (soundEnabled) playVoteCast();
-    setPlayers((prev) =>
-      prev.map((p) => (p.id === playerId ? { ...p, eliminated: true } : p))
+
+    // Apply elimination to a local copy to make accurate win checks
+    const updatedPlayers = players.map((p) =>
+      p.id === playerId ? { ...p, eliminated: true } : p
     );
-    const target = players.find((p) => p.id === playerId);
-    if (target?.isImposter) {
+    setPlayers(updatedPlayers);
+
+    const target = updatedPlayers.find((p) => p.id === playerId);
+    const remainingImposters = updatedPlayers.filter((p) => p.isImposter && !p.eliminated).length;
+    const remainingCrew = updatedPlayers.filter((p) => !p.isImposter && !p.eliminated).length;
+
+    if (remainingImposters === 0) {
+      // All imposters caught — crew wins
       setPhase("result");
       if (soundEnabled) setTimeout(() => playCrewWins(), 300);
+    } else if (remainingImposters >= remainingCrew) {
+      // Imposters outnumber or equal crew — imposter wins
+      setPhase("result");
+      if (soundEnabled) setTimeout(() => playImposterWins(), 300);
+    } else if (target?.isImposter && remainingImposters > 0) {
+      // Caught one but more remain — go back to discussion
+      setPhase("discussion");
     } else {
-      const remaining = players.filter((p) => !p.eliminated && p.id !== playerId && !p.isImposter);
-      if (remaining.length <= 1) {
+      // Wrong vote — check if game still winnable for crew
+      if (remainingCrew <= 1) {
         setPhase("result");
         if (soundEnabled) setTimeout(() => playImposterWins(), 300);
       } else {
@@ -110,8 +121,8 @@ export default function ImposterGamePage() {
     }
   }
 
-  const impostersEliminated = players.filter((p) => p.isImposter && p.eliminated).length;
   const totalImposters = players.filter((p) => p.isImposter).length;
+  const impostersEliminated = players.filter((p) => p.isImposter && p.eliminated).length;
   const crewWins = impostersEliminated === totalImposters && totalImposters > 0;
 
   const discussionStarter = useMemo(() => {

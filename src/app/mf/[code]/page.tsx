@@ -385,7 +385,6 @@ export default function MafiaGamePage() {
   // ── Resolve Night ──
   const resolveNight = useCallback(() => {
     let msg = "";
-    let gameWinner: "mafia" | "village" | null = null;
 
     setPlayers((prev) => {
       const updated = prev.map((p) => ({ ...p, protected: false }));
@@ -407,19 +406,20 @@ export default function MafiaGamePage() {
 
       if (!msg) msg = "☀️ The town wakes up... everyone survived the night!";
 
-      gameWinner = checkWinner(updated);
+      const gameWinner = checkWinner(updated);
       if (gameWinner) {
         setWinner(gameWinner);
+        setNightMessage(msg);
         setTimeout(() => setPhase("gameOver"), 100);
+      } else {
+        setNightMessage(msg);
+        setPhase("nightResult");
       }
 
       return updated;
     });
 
-    setNightMessage(msg);
-    if (!gameWinner) setPhase("nightResult");
-
-    // Reset
+    // Reset night targets
     setMafiaTarget(null);
     setDoctorTarget(null);
     setDetectiveTarget(null);
@@ -458,6 +458,7 @@ export default function MafiaGamePage() {
   const startNextNight = useCallback(() => {
     setPhase("nightAnnounce");
     setNightRole("mafia");
+    setNightSubPhase("privacy");
     setVotedPlayer(null);
     setNightMessage("");
     setRound((r) => r + 1);

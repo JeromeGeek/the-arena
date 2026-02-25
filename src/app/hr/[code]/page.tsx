@@ -238,16 +238,18 @@ export default function HeadRushGamePage() {
       next[teamIndex] = (next[teamIndex] ?? 0) + 1;
       return next;
     });
-    setWordIndex((i) => i + 1);
+    // Guard: don't advance past the last word
+    setWordIndex((i) => Math.min(i + 1, words.length - 1));
     setTimeout(() => setLastAction(null), 500);
-  }, [soundEnabled, teamIndex]);
+  }, [soundEnabled, teamIndex, words.length]);
 
   const handleSkip = useCallback(() => {
     if (soundEnabled) playSkip();
     setLastAction("skip");
-    setWordIndex((i) => i + 1);
+    // Guard: don't advance past the last word
+    setWordIndex((i) => Math.min(i + 1, words.length - 1));
     setTimeout(() => setLastAction(null), 500);
-  }, [soundEnabled]);
+  }, [soundEnabled, words.length]);
 
   const requestTiltPermission = useCallback(async () => {
     const DME = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
@@ -268,7 +270,8 @@ export default function HeadRushGamePage() {
 
   const handleNextTurn = useCallback(() => {
     const nextTeam  = (teamIndex + 1) % teams.length;
-    const nextRound = nextTeam === 0 ? round + 1 : round;
+    const completedRound = nextTeam === 0;
+    const nextRound = completedRound ? round + 1 : round;
 
     if (nextRound > totalRounds) {
       setPhase("gameover");
@@ -278,6 +281,7 @@ export default function HeadRushGamePage() {
 
     setTeamIndex(nextTeam);
     setRound(nextRound);
+    setTurnScore(0);
     setPhase("ready");
   }, [teamIndex, teams.length, round, totalRounds, soundEnabled]);
 
