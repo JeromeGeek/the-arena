@@ -129,7 +129,9 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 400);
+    // Longer delay on mobile so the bottom-sheet animation completes before
+    // the keyboard is triggered (avoids layout jump)
+    setTimeout(() => inputRef.current?.focus(), 700);
   }, []);
 
   const handleSubmit = () => {
@@ -145,27 +147,28 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
       style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)" }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.88, y: 32 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 16 }}
+        initial={{ opacity: 0, y: 48 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 32 }}
         transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.1 }}
-        className="w-full max-w-sm rounded-3xl p-8 text-center"
+        className="w-full max-w-sm rounded-t-3xl p-6 pb-8 text-center sm:rounded-3xl sm:p-8"
         style={{
           background: "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(10,10,15,0.98) 100%)",
           border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
+          borderBottom: "none",
+          boxShadow: "0 -20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >
-        {/* Logo */}
+        {/* Logo — hidden on mobile to save space when keyboard is up */}
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
-          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl text-4xl"
+          className="mx-auto mb-4 hidden h-16 w-16 items-center justify-center rounded-2xl text-4xl sm:mb-6 sm:flex"
           style={{
             background: "linear-gradient(135deg, rgba(255,65,108,0.2), rgba(0,180,219,0.15))",
             border: "1px solid rgba(255,255,255,0.1)",
@@ -184,12 +187,12 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
             Welcome to
           </p>
           <h2
-            className="text-shimmer mb-2 text-3xl font-black uppercase tracking-[0.15em]"
+            className="text-shimmer mb-1 text-2xl font-black uppercase tracking-[0.15em] sm:mb-2 sm:text-3xl"
             style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
           >
             The Arena
           </h2>
-          <p className="mb-8 text-sm text-white/40">
+          <p className="mb-5 text-sm text-white/40 sm:mb-8">
             What should we call you?
           </p>
         </motion.div>
@@ -1024,15 +1027,15 @@ export default function HomePage() {
 
   return (
     <main className="grain-overlay relative flex flex-col px-3 py-2 sm:px-6 sm:py-3 md:py-4 lg:py-5 xl:py-6"
-      style={{ minHeight: "100dvh" }}
+      style={{ minHeight: "100dvh", overscrollBehavior: "none" }}
     >
 
       {/* First-time username modal */}
       <AnimatePresence>
         {showWelcome && <WelcomeModal onDone={handleNameSet} />}
       </AnimatePresence>
-      {/* Ambient Background — layered depth system */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Ambient Background — fixed to viewport, never scrolls with content */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ contain: "strict" }}>
         {/* Layer 0: Deep base — rich obsidian with directional gradient */}
         <div
           className="absolute inset-0"
@@ -1042,19 +1045,19 @@ export default function HomePage() {
         {/* Layer 1: Large slow-drifting colour fields — very low opacity, luxury not harsh */}
         <motion.div
           className="absolute"
-          style={{ top: "-10%", left: "-5%", width: "65%", height: "70%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(255,65,108,0.055) 0%, transparent 68%)", filter: "blur(60px)" }}
+          style={{ top: "-10%", left: "-5%", width: "65%", height: "70%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(255,65,108,0.055) 0%, transparent 68%)", filter: "blur(60px)", willChange: "transform" }}
           animate={{ x: [0, 18, -8, 0], y: [0, -12, 8, 0], scale: [1, 1.04, 0.98, 1] }}
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute"
-          style={{ bottom: "-5%", right: "-8%", width: "60%", height: "65%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(0,180,219,0.048) 0%, transparent 65%)", filter: "blur(70px)" }}
+          style={{ bottom: "-5%", right: "-8%", width: "60%", height: "65%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(0,180,219,0.048) 0%, transparent 65%)", filter: "blur(70px)", willChange: "transform" }}
           animate={{ x: [0, -14, 10, 0], y: [0, 10, -6, 0], scale: [1, 0.97, 1.03, 1] }}
           transition={{ duration: 26, repeat: Infinity, ease: "easeInOut", delay: 4 }}
         />
         <motion.div
           className="absolute"
-          style={{ top: "20%", left: "30%", width: "50%", height: "55%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(168,85,247,0.038) 0%, transparent 60%)", filter: "blur(80px)" }}
+          style={{ top: "20%", left: "30%", width: "50%", height: "55%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(168,85,247,0.038) 0%, transparent 60%)", filter: "blur(80px)", willChange: "transform" }}
           animate={{ x: [0, 10, -16, 0], y: [0, -8, 12, 0] }}
           transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 8 }}
         />
