@@ -169,7 +169,7 @@ export default function CodenamesGamePage() {
 
   if (invalidCode) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
         <h1
           className="text-2xl font-black uppercase tracking-[0.2em] text-white/80 sm:text-3xl sm:tracking-[0.3em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}

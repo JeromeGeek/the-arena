@@ -204,7 +204,7 @@ export default function DrawerPage() {
   return (
     <main
       className="flex h-[100dvh] flex-col bg-[#0B0E14] select-none overflow-hidden"
-      style={{ touchAction: "none", userSelect: "none" }}
+      style={{ touchAction: "none", userSelect: "none", overscrollBehavior: "none" }}
     >
       {/* Header — compact single line */}
       <div

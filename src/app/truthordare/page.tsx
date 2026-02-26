@@ -9,13 +9,21 @@ import GameSetupShell, {
   SetupLabel,
   SetupPlayerRow,
   SetupAddRow,
+  SetupOptionPill,
   SetupStartButton,
 } from "@/components/GameSetupShell";
 
 const intensityOptions: { value: Intensity; label: string; emoji: string; color: string; glow: string }[] = [
-  { value: "mild", label: "MILD", emoji: "😇", color: "#A855F7", glow: "rgba(168,85,247,0.3)" },
-  { value: "spicy", label: "SPICY", emoji: "🌶️", color: "#D946EF", glow: "rgba(217,70,239,0.3)" },
+  { value: "mild",    label: "MILD",    emoji: "😇", color: "#A855F7", glow: "rgba(168,85,247,0.3)" },
+  { value: "spicy",   label: "SPICY",   emoji: "🌶️", color: "#D946EF", glow: "rgba(217,70,239,0.3)" },
   { value: "extreme", label: "EXTREME", emoji: "💀", color: "#7C3AED", glow: "rgba(124,58,237,0.3)" },
+];
+
+const roundOptions = [
+  { value: 5,  label: "5",  emoji: "🎯" },
+  { value: 10, label: "10", emoji: "🔥" },
+  { value: 15, label: "15", emoji: "💀" },
+  { value: 20, label: "20", emoji: "☠️" },
 ];
 
 const playerEmojis = [
@@ -32,12 +40,15 @@ export default function TruthOrDarePage() {
   ]);
   const [inputName, setInputName] = useState("");
   const [intensity, setIntensity] = useState<Intensity>("spicy");
+  const [rounds, setRounds] = useState(10);
 
   function handleAddPlayer() {
-    if (inputName.trim() && playerNames.length < 15) {
-      setPlayerNames((prev) => [...prev, inputName.trim()]);
-      setInputName("");
-    }
+    if (playerNames.length >= 15) return;
+    const nextNum = playerNames.length + 1;
+    // Use typed name if present, otherwise default "Player N"
+    const name = inputName.trim() || `Player ${nextNum}`;
+    setPlayerNames((prev) => [...prev, name]);
+    setInputName("");
   }
 
   function handleRemovePlayer(index: number) {
@@ -48,7 +59,7 @@ export default function TruthOrDarePage() {
     if (playerNames.length < 2) return;
     const seed = generateSeed();
     const slug = seedToSlug(seed);
-    const code = `${playerNames.length}-${intensity}-${slug}`;
+    const code = `${playerNames.length}-${intensity}-${rounds}-${slug}`;
     const names = encodeURIComponent(playerNames.join(","));
     router.push(`/td/${code}?names=${names}`);
   }
@@ -96,10 +107,27 @@ export default function TruthOrDarePage() {
             value={inputName}
             onChange={setInputName}
             onAdd={handleAddPlayer}
-            placeholder={`Add player ${playerNames.length + 1}…`}
+            placeholder={`Player ${playerNames.length + 1} (or type a name)`}
           />
         </motion.div>
       )}
+
+      {/* Rounds */}
+      <div className="mb-6">
+        <SetupLabel>Rounds</SetupLabel>
+        <div className="flex flex-wrap gap-2">
+          {roundOptions.map((opt) => (
+            <SetupOptionPill
+              key={opt.value}
+              selected={rounds === opt.value}
+              onClick={() => setRounds(opt.value)}
+              accentColor="#A855F7"
+            >
+              {opt.emoji} {opt.label}
+            </SetupOptionPill>
+          ))}
+        </div>
+      </div>
 
       {/* Intensity */}
       <div className="mb-7">
@@ -133,7 +161,7 @@ export default function TruthOrDarePage() {
         accentFrom="#A855F7"
         accentTo="#7C3AED"
       >
-        Start Game · {playerNames.length} Players
+        Start · {playerNames.length} Players · {rounds} Rounds
       </SetupStartButton>
     </GameSetupShell>
   );

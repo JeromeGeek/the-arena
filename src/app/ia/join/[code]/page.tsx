@@ -162,7 +162,7 @@ export default function GuesserPage() {
   // ── Join screen ──
   if (!joined) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 px-6 bg-[#0B0E14]">
+      <main className="flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center gap-6 px-6 bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
         <div className="text-center">
           <p className="mb-2 text-[11px] uppercase tracking-[0.4em] text-white/30">Join Game · {code}</p>
           <h1
@@ -241,7 +241,7 @@ export default function GuesserPage() {
 
   // ── Guessing screen ──
   return (
-    <main className="relative flex min-h-[100dvh] flex-col bg-[#0B0E14]">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
       {/* Header */}
       <div
         className="flex items-center justify-between border-b px-4 py-3"

@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#0B0E14",
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -66,7 +67,11 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js').catch(() => {});
+                  navigator.serviceWorker.register('/sw.js').then((reg) => {
+                    // Force update check on every page load so the SW
+                    // always reflects the latest version (fixes PWA stale cache).
+                    reg.update().catch(() => {});
+                  }).catch(() => {});
                 });
               }
             `,

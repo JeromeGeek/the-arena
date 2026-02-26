@@ -163,13 +163,21 @@ export default function CharadesGamePage() {
     const completedFullRound = nextTeamIndex === 0;
     const nextRound = completedFullRound ? round + 1 : round;
 
-    // Game over if: all rounds done, or no words left for anyone
-    if (nextRound > totalRounds || currentWordIndex >= words.length - 1) {
+    // If the timer expired, the current word was shown but NOT guessed — skip it.
+    // If words were exhausted (Correct/Skip on last word), currentWordIndex is already
+    // on the last-used word, so we also need to advance by 1 for the next team.
+    const nextWordIndex = currentWordIndex + 1;
+
+    // Game over if: all rounds done, or truly no words left after advancing
+    if (nextRound > totalRounds || nextWordIndex >= words.length) {
       setPhase("gameover");
       if (soundEnabled) setTimeout(() => playGameOverFanfare(), 300);
     } else {
       setCurrentTeamIndex(nextTeamIndex);
       setRound(nextRound);
+      // Always advance past the word that ended the previous turn
+      // (whether it was the un-guessed timer-expire word, or the last guessed word)
+      setCurrentWordIndex(nextWordIndex);
       setPhase("ready");
     }
   }, [currentTeamIndex, currentWordIndex, teams.length, words.length, round, totalRounds, soundEnabled]);
@@ -187,7 +195,7 @@ export default function CharadesGamePage() {
 
   if (!parsed) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
         <h1
           className="text-2xl font-black uppercase tracking-[0.2em] text-white/80 sm:text-3xl sm:tracking-[0.3em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
@@ -209,7 +217,7 @@ export default function CharadesGamePage() {
   const timerColor = timeLeft <= 5 ? "#EF4444" : timeLeft <= 15 ? "#FBBF24" : currentColor.accent;
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-x-hidden">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ overscrollBehavior: "none" }}>
       {/* Ambient Background — colored by current team */}
       <div className="pointer-events-none fixed inset-0">
         <motion.div

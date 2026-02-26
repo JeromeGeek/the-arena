@@ -253,7 +253,7 @@ export default function InkArenaTVPage() {
   const joinUrl = origin ? `${origin}/ia/join/${code}` : "";
 
   return (
-    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]">
+    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
 
       {/* LOBBY */}
       <AnimatePresence mode="wait">

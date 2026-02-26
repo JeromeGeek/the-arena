@@ -1,15 +1,26 @@
 {
   "name": "The Arena — Party Game Hub",
   "short_name": "The Arena",
-  "description": "A cinematic command center for tactical party games. Codenames, Truth or Dare, Never Have I Ever, Imposter, and Charades.",
+  "description": "A cinematic command center for tactical party games. Codenames, Truth or Dare, Never Have I Ever, Imposter, Charades, Mafia, Pictionary & Snap Quiz.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#0B0E14",
   "theme_color": "#0B0E14",
   "categories": ["games", "entertainment"],
   "lang": "en",
   "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.thearena.app",
+      "id": "com.thearena.app"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -35,6 +46,16 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    { "name": "Codenames",       "url": "/codenames",     "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Imposter",        "url": "/imposter",      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Truth or Dare",   "url": "/truthordare",   "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Never Have I Ever","url": "/neverhaveiever","icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Charades",        "url": "/charades",      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mafia",           "url": "/mafia",         "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Pictionary",      "url": "/pictionary",    "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Snap Quiz",       "url": "/headrush",      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ],
   "screenshots": [
     {

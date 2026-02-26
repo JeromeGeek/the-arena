@@ -7,7 +7,7 @@ export default function CnPage() {
   const router = useRouter();
 
   return (
-    <main className="grain-overlay relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#080B11]">
+    <main className="grain-overlay relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#080B11]" style={{ overscrollBehavior: "none" }}>
       {/* Ambient glows */}
       <div
         className="pointer-events-none fixed left-[15%] top-[20%] h-[500px] w-[500px] rounded-full"

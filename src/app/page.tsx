@@ -110,16 +110,16 @@ const games = [
   },
   {
     id: "headrush",
-    title: "HEADRUSH",
-    subtitle: "Tilt · Guess · Dominate",
-    description: "2–4 Teams · Tilt to Score · Race the Clock. Phone on forehead. Teammates shout. Tilt to win.",
+    title: "SNAP QUIZ",
+    subtitle: "See It · Shout It · Score",
+    description: "2–4 Teams · 5 Categories · 3 Difficulties. Image appears. Blur fades. First team to shout the answer wins.",
     href: "/headrush",
-    accentFrom: "#FACC15",
-    accentTo: "#CA8A04",
-    glowColor: "rgba(250, 204, 21, 0.35)",
+    accentFrom: "#06B6D4",
+    accentTo: "#0891B2",
+    glowColor: "rgba(6, 182, 212, 0.35)",
     variant: "headrush" as const,
     players: "4+ Players",
-    emoji: "🎯",
+    emoji: "🖼️",
   },
 ];
 
@@ -129,9 +129,9 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Longer delay on mobile so the bottom-sheet animation completes before
-    // the keyboard is triggered (avoids layout jump)
-    setTimeout(() => inputRef.current?.focus(), 700);
+    // Auto-focus on all screens — this triggers the on-screen keyboard on TV
+    // which is exactly what we want so users can type their name.
+    setTimeout(() => inputRef.current?.focus(), 600);
   }, []);
 
   const handleSubmit = () => {
@@ -147,28 +147,27 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 xl:p-8"
       style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)" }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 48 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 32 }}
+        initial={{ opacity: 0, y: 48, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 32, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.1 }}
-        className="w-full max-w-sm rounded-t-3xl p-6 pb-8 text-center sm:rounded-3xl sm:p-8"
+        className="w-full max-w-sm rounded-3xl p-6 pb-8 text-center sm:p-8 xl:max-w-lg xl:p-12"
         style={{
           background: "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(10,10,15,0.98) 100%)",
           border: "1px solid rgba(255,255,255,0.1)",
-          borderBottom: "none",
-          boxShadow: "0 -20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
+          boxShadow: "0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >
-        {/* Logo — hidden on mobile to save space when keyboard is up */}
+        {/* Logo */}
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
-          className="mx-auto mb-4 hidden h-16 w-16 items-center justify-center rounded-2xl text-4xl sm:mb-6 sm:flex"
+          className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-4xl sm:mb-6 xl:mb-8 xl:h-20 xl:w-20 xl:text-5xl"
           style={{
             background: "linear-gradient(135deg, rgba(255,65,108,0.2), rgba(0,180,219,0.15))",
             border: "1px solid rgba(255,255,255,0.1)",
@@ -183,16 +182,16 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.4em] text-white/30">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.4em] text-white/30 xl:text-sm xl:tracking-[0.5em]">
             Welcome to
           </p>
           <h2
-            className="text-shimmer mb-1 text-2xl font-black uppercase tracking-[0.15em] sm:mb-2 sm:text-3xl"
+            className="text-shimmer mb-1 text-2xl font-black uppercase tracking-[0.15em] sm:mb-2 sm:text-3xl xl:text-5xl xl:tracking-[0.2em]"
             style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
           >
             The Arena
           </h2>
-          <p className="mb-5 text-sm text-white/40 sm:mb-8">
+          <p className="mb-5 text-sm text-white/40 sm:mb-8 xl:mb-10 xl:text-xl">
             What should we call you?
           </p>
         </motion.div>
@@ -201,7 +200,7 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="space-y-3"
+          className="space-y-3 xl:space-y-4"
         >
           <input
             ref={inputRef}
@@ -211,7 +210,7 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Enter your name…"
             maxLength={20}
-            className="w-full rounded-xl px-4 py-3.5 text-center text-base font-semibold text-white placeholder-white/20 outline-none transition-all duration-200"
+            className="w-full rounded-xl px-4 py-3.5 text-center text-base font-semibold text-white placeholder-white/20 outline-none transition-all duration-200 xl:rounded-2xl xl:py-5 xl:text-2xl"
             style={{
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.12)",
@@ -233,7 +232,7 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             disabled={!name.trim()}
-            className="w-full rounded-xl py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg transition-opacity disabled:opacity-30"
+            className="w-full rounded-xl py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg transition-opacity disabled:opacity-30 xl:rounded-2xl xl:py-5 xl:text-xl xl:tracking-[0.3em]"
             style={{
               background: "linear-gradient(135deg, #FF416C, #FF4B2B)",
               boxShadow: "0 8px 24px rgba(255,65,108,0.35)",
@@ -394,7 +393,7 @@ function MobileGameTile({
       initial={mounted ? "hidden" : false}
       animate={mounted ? "visible" : false}
       transition={entranceTransition}
-      className="mx-auto w-full max-w-[420px]"
+      className="relative mx-auto w-full max-w-[420px]"
       style={{ perspective: 800 }}
     >
       <Link href={game.href} className="block">
@@ -519,6 +518,11 @@ function MobileGameTile({
         </motion.div>
         </motion.div>
       </Link>
+
+      {/* Info button — outside Link so it doesn't navigate */}
+      <div className="absolute right-3 top-3 z-20">
+        <InfoModal game={game.variant} size="sm" />
+      </div>
     </motion.div>
   );
 }
@@ -528,10 +532,12 @@ function GameCard({
   game,
   index,
   featured = false,
+  reducedMotion = false,
 }: {
   game: (typeof games)[0];
   index: number;
   featured?: boolean;
+  reducedMotion?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -543,6 +549,12 @@ function GameCard({
 
   const idle = desktopIdleAnimations[game.variant] ?? desktopIdleAnimations.codenames;
   const emojiIdle = desktopEmojiAnimations[game.variant] ?? desktopEmojiAnimations.codenames;
+
+  // On TV/large screens skip all looping idle animations — they're the main lag source
+  const idleAnimate = (mounted && !reducedMotion) ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
+  const idleTransition = !reducedMotion ? (idle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
+  const emojiIdleAnimate = (mounted && !reducedMotion) ? (emojiIdle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
+  const emojiIdleTransition = !reducedMotion ? (emojiIdle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
 
   const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
@@ -619,8 +631,8 @@ function GameCard({
         <Link href={game.href} className="block h-full">
           <motion.div
             className="h-full"
-            animate={mounted ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined}
-            transition={idle.transition as Parameters<typeof motion.div>[0]["transition"]}
+            animate={idleAnimate}
+            transition={idleTransition}
           >
             <motion.div
               ref={ref}
@@ -716,8 +728,8 @@ function GameCard({
                           : `inset 0 1px 0 rgba(255,255,255,0.06)`,
                         transition: "box-shadow 0.4s ease",
                       }}
-                      animate={mounted ? (emojiIdle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined}
-                      transition={emojiIdle.transition as Parameters<typeof motion.div>[0]["transition"]}
+                      animate={emojiIdleAnimate}
+                      transition={emojiIdleTransition}
                     >
                       {game.emoji}
                     </motion.div>
@@ -827,8 +839,8 @@ function GameCard({
         {/* Outer idle breathing animation */}
         <motion.div
           className="h-full"
-          animate={mounted ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined}
-          transition={idle.transition as Parameters<typeof motion.div>[0]["transition"]}
+          animate={idleAnimate}
+          transition={idleTransition}
         >
           <motion.div
             ref={ref}
@@ -892,8 +904,8 @@ function GameCard({
                   transition: "box-shadow 0.4s ease",
                   boxShadow: isHovered ? `0 0 20px ${game.accentFrom}40, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
                 }}
-                animate={mounted ? (emojiIdle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined}
-                transition={emojiIdle.transition as Parameters<typeof motion.div>[0]["transition"]}
+                animate={emojiIdleAnimate}
+                transition={emojiIdleTransition}
               >
                 {game.emoji}
               </motion.div>
@@ -1009,6 +1021,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isTV, setIsTV] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -1018,6 +1031,12 @@ export default function HomePage() {
     } else {
       setShowWelcome(true);
     }
+    // Detect TV / large screens to reduce animation load
+    const mq = window.matchMedia("(min-width: 1280px)");
+    setIsTV(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsTV(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
   const handleNameSet = (name: string) => {
@@ -1096,7 +1115,7 @@ export default function HomePage() {
           custom={0}
           initial={mounted ? "hidden" : false}
           animate={mounted ? "visible" : false}
-          className="mb-2 text-center sm:mb-2 md:mb-3 lg:mb-3"
+          className="mb-3 text-center sm:mb-3 md:mb-4 lg:mb-4"
         >
           {/* Eyebrow */}
           <div className="mb-2 inline-flex items-center gap-2 sm:mb-2">
@@ -1114,29 +1133,18 @@ export default function HomePage() {
             The Arena
           </h1>
 
-        </motion.div>
+          {/* Tagline */}
+          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/30 sm:text-[11px]">
+            Select Your Battlefield
+          </p>
 
-        {/* Battlefield Heading — desktop gets extra spacing and a luxury rule */}
-        <motion.div
-          variants={fadeUp}
-          custom={0.5}
-          initial={mounted ? "hidden" : false}
-          animate={mounted ? "visible" : false}
-          className="mb-2 flex flex-col items-center gap-1.5 sm:mb-2 sm:gap-2 lg:mb-3 lg:gap-2.5"
-        >
-          <div className="flex items-center gap-3">
-            <span className="h-px w-8 bg-white/10 sm:w-16" />
-            <h2 className="text-center text-[9px] font-bold uppercase tracking-[0.3em] text-white/20 sm:text-[10px] sm:tracking-[0.45em]">
-              Select Your Battlefield
-            </h2>
-            <span className="h-px w-8 bg-white/10 sm:w-16" />
-          </div>
           {/* Luxury rule — desktop only */}
-          <div className="divider-luxury hidden w-full max-w-[480px] sm:block" />
+          <div className="divider-luxury mx-auto mt-3 hidden w-full max-w-[480px] sm:block" />
+
         </motion.div>
 
-        {/* Mobile Game List — single column, centered, scrollable, phone only */}
-        <div className="flex w-full flex-col items-center gap-2.5 px-4 pb-8 sm:hidden">
+        {/* Mobile Game List — single column, scrollable within viewport, phone only */}
+        <div className="flex w-full flex-1 flex-col items-center gap-2.5 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-8 sm:hidden">
           {games.map((game, i) => (
             <MobileGameTile key={game.id} game={game} index={i} />
           ))}
@@ -1144,11 +1152,11 @@ export default function HomePage() {
 
         {/* Desktop/Tablet Game Cards — hidden on phone, responsive columns, fills remaining height */}
         <div
-          className="hidden w-full max-w-7xl flex-1 grid-cols-2 gap-2 px-2 pb-6 sm:grid md:grid-cols-2 md:gap-3 md:px-4 lg:grid-cols-4 lg:gap-2 lg:px-0 xl:gap-3"
-          style={{ gridTemplateRows: "1fr 1fr" }}
+          className="hidden w-full max-w-7xl flex-1 grid-cols-2 gap-2 overflow-y-auto px-2 pb-6 sm:grid md:grid-cols-2 md:gap-3 md:px-4 lg:grid-cols-4 lg:gap-2 lg:px-0 xl:gap-3"
+          style={{ gridTemplateRows: "auto auto" }}
         >
           {games.map((game, i) => (
-            <GameCard key={game.id} game={game} index={i} />
+            <GameCard key={game.id} game={game} index={i} reducedMotion={isTV} />
           ))}
         </div>
       </div>

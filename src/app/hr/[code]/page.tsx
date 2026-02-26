@@ -1,29 +1,22 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { slugToSeed, seededRandom } from "@/lib/gamecodes";
-import { getHeadRushWords } from "@/lib/headrush";
+import { getSnapImages, difficultyConfig, POINTS_PER_CORRECT, SnapImage, SnapDifficulty } from "@/lib/snapquiz";
 import SoundToggle from "@/components/SoundToggle";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import {
   playCorrectAnswer,
   playSkip,
-  playTimerTick,
-  playTimerCritical,
-  playTimesUp,
-  playStartTurn,
   playGameOverFanfare,
 } from "@/lib/sounds";
 
-// ── Constants ──────────────────────────────────────────────────────────────
-const WORDS_PER_GAME = 300; // generous pool
-const TILT_CORRECT_THRESHOLD = 40;  // degrees down  → correct (phone face-down tilt)
-const TILT_SKIP_THRESHOLD   = -40;  // degrees up    → skip   (phone face-up tilt)
-const TILT_DWELL_MS         = 600;  // ms phone must hold the angle before triggering
-const TILT_LOCKOUT_MS       = 1000; // ms before next tilt accepted after action fires
+// ── Constants ─────────────────────────────────────────────────────────────────
+const IMAGES_PER_GAME = 60; // generous pool
 
 const TEAM_COLORS = [
   { accent: "#FF416C", bg: "rgba(255,65,108,0.12)", border: "rgba(255,65,108,0.35)", gradient: "linear-gradient(135deg,#FF416C,#FF4B2B)" },
@@ -32,38 +25,35 @@ const TEAM_COLORS = [
   { accent: "#22C55E", bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.35)",  gradient: "linear-gradient(135deg,#22C55E,#16A34A)" },
 ];
 
-type Phase = "ready" | "holding" | "playing" | "scored" | "gameover";
+type Phase = "lobby" | "revealing" | "answered" | "gameover";
 
-// ── Code parser ─────────────────────────────────────────────────────────────
+// ── Code parser ───────────────────────────────────────────────────────────────
 function parseCode(code: string, teamsList?: string[]) {
   const parts = code.split("-");
   if (parts.length < 5) return null;
 
   const teamCount  = parseInt(parts[0], 10);
-  const timer      = parseInt(parts[1], 10);
+  const difficulty = parts[1] as SnapDifficulty;
   const rounds     = parseInt(parts[2], 10);
   const slug       = parts[parts.length - 1];
   const category   = parts.slice(3, -1).join("-");
 
   if (isNaN(teamCount) || teamCount < 2 || teamCount > 4) return null;
-  if (isNaN(timer) || ![45, 60].includes(timer)) return null;
+  if (!["easy", "medium", "extreme"].includes(difficulty)) return null;
   if (isNaN(rounds) || rounds < 1) return null;
 
   const seed = slugToSeed(slug);
   if (seed === null) return null;
 
-  const random = seededRandom(seed);
   const teamNames =
     teamsList && teamsList.length === teamCount
       ? teamsList
       : Array.from({ length: teamCount }, (_, i) => `Team ${i + 1}`);
 
-  const words = getHeadRushWords(category, WORDS_PER_GAME, random);
-
-  return { teamNames, timer, totalRounds: rounds, words };
+  return { teamNames, difficulty, totalImages: rounds, category, baseSeed: seed };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function Syne({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <span className={`font-black uppercase tracking-[0.15em] ${className}`}
@@ -73,11 +63,62 @@ function Syne({ children, className = "", style }: { children: React.ReactNode; 
   );
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
-export default function HeadRushGamePage() {
-  const params      = useParams();
+// ── Blur-reveal image component ───────────────────────────────────────────────
+function BlurImage({
+  image,
+  blurPx,
+  revealMs,
+  revealed,
+  onRevealComplete,
+}: {
+  image: SnapImage;
+  blurPx: number;
+  revealMs: number;
+  revealed: boolean;
+  onRevealComplete: () => void;
+}) {
+  const revealDone = useRef(false);
+
+  // Reset when image changes
+  useEffect(() => {
+    revealDone.current = false;
+  }, [image.id]);
+
+  return (
+    <motion.div
+      className="relative h-full w-full"
+      initial={{ filter: `blur(${blurPx}px)` }}
+      animate={{ filter: revealed ? "blur(0px)" : `blur(${blurPx}px)` }}
+      transition={
+        revealed
+          ? { duration: revealMs / 1000, ease: "easeOut" }
+          : { duration: 0 }
+      }
+      onAnimationComplete={() => {
+        if (revealed && !revealDone.current) {
+          revealDone.current = true;
+          onRevealComplete();
+        }
+      }}
+    >
+      <Image
+        src={image.url}
+        alt="Snap Quiz image"
+        fill
+        className="object-cover"
+        sizes="100vw"
+        priority
+        unoptimized // external URLs from Wikimedia
+      />
+    </motion.div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function SnapQuizGamePage() {
+  const params       = useParams();
   const searchParams = useSearchParams();
-  const code        = params.code as string;
+  const code         = params.code as string;
 
   const teamsList = useMemo(() => {
     const raw = searchParams.get("teams");
@@ -87,208 +128,133 @@ export default function HeadRushGamePage() {
   const parsed = useMemo(() => parseCode(code, teamsList), [code, teamsList]);
   const { soundEnabled, toggleSound } = useSoundEnabled();
 
-  // ── Game state ──────────────────────────────────────────────────────────
-  const [phase, setPhase]                   = useState<Phase>("ready");
-  const [teamIndex, setTeamIndex]           = useState(0);
-  const [round, setRound]                   = useState(1);
-  const [wordIndex, setWordIndex]           = useState(0);
-  const [scores, setScores]                 = useState<number[]>(() => new Array(parsed?.teamNames.length ?? 2).fill(0));
-  const [timeLeft, setTimeLeft]             = useState(parsed?.timer ?? 60);
-  const [turnScore, setTurnScore]           = useState(0);
-  const [lastAction, setLastAction]         = useState<"correct" | "skip" | null>(null);
-  const [tiltEnabled, setTiltEnabled]       = useState(false);
-  const [holdingCountdown, setHoldingCountdown] = useState(3);
+  // ── Rematch counter — increment to get a fresh image shuffle ──────────────
+  const [rematchCount, setRematchCount] = useState(0);
 
-  const timerRef     = useRef<NodeJS.Timeout | null>(null);
-  const tiltLockRef  = useRef(false);
-  const tiltDwellRef = useRef<NodeJS.Timeout | null>(null); // dwell timer for tilt
-  const phaseRef     = useRef(phase);
-  useEffect(() => { phaseRef.current = phase; }, [phase]);
+  // ── Derive image pool — reshuffle on each rematch ─────────────────────────
+  const images = useMemo(() => {
+    if (!parsed) return [];
+    const seed   = parsed.baseSeed + rematchCount * 99991;
+    const random = seededRandom(seed);
+    return getSnapImages(parsed.category, IMAGES_PER_GAME, random);
+  }, [parsed, rematchCount]);
 
-  const timerDuration = parsed?.timer ?? 60;
-  const teams         = parsed?.teamNames ?? [];
-  const words         = parsed?.words ?? [];
-  const totalRounds   = parsed?.totalRounds ?? 4;
+  // ── Game state ─────────────────────────────────────────────────────────────
+  const [phase, setPhase]         = useState<Phase>("lobby");
+  const [imgIndex, setImgIndex]   = useState(0);
+  const [scores, setScores]       = useState<number[]>(() => new Array(parsed?.teamNames.length ?? 2).fill(0));
+  const [revealed, setRevealed]   = useState(false);
+  const [showHint, setShowHint]   = useState(false);
+  const [lastWinner, setLastWinner] = useState<number | null>(null); // team index
+  const [countdown, setCountdown] = useState(3);
+  const [countdownActive, setCountdownActive] = useState(false);
 
-  const teamColor   = TEAM_COLORS[teamIndex % TEAM_COLORS.length];
-  const currentWord = words[wordIndex] ?? "";
+  // Controls for the reveal progress bar
+  const barControls = useAnimationControls();
+  const revealTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Landscape lock ───────────────────────────────────────────────────────
+  const teams       = parsed?.teamNames ?? [];
+  const totalImages = parsed?.totalImages ?? 4;
+  const difficulty  = parsed?.difficulty ?? "medium";
+  const diffCfg     = difficultyConfig[difficulty];
+
+  const currentImage = images[imgIndex];
+
+  // ── Leaderboard ────────────────────────────────────────────────────────────
+  const leaderboard = useMemo(() =>
+    teams.map((name, i) => ({ name, score: scores[i] ?? 0, i }))
+      .sort((a, b) => b.score - a.score),
+    [teams, scores]
+  );
+  const winner = leaderboard[0];
+
+  // ── Countdown before first image ──────────────────────────────────────────
   useEffect(() => {
-    const isActive = phase === "holding" || phase === "playing";
-    if (!isActive) {
-      // Unlock when done
-      try {
-        const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
-        orientation.unlock?.();
-      } catch { /* not supported */ }
+    if (!countdownActive) return;
+    if (countdown <= 0) {
+      setCountdownActive(false);
+      setPhase("revealing");
       return;
     }
-    const lock = async () => {
-      try {
-        const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
-        await orientation.lock?.("landscape");
-      } catch {
-        // Not supported on desktop / some browsers — silent fail
-      }
-    };
-    lock();
-    return () => {
-      try {
-        const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
-        orientation.unlock?.();
-      } catch { /* not supported */ }
-    };
-  }, [phase]);
-
-  // ── Timer ────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (phase !== "playing") return;
-    if (timeLeft <= 0) {
-      if (soundEnabled) playTimesUp();
-      setPhase("scored");
-      return;
-    }
-    if (soundEnabled && timeLeft <= 5 && timeLeft > 3) playTimerTick();
-    if (soundEnabled && timeLeft <= 3) playTimerCritical();
-
-    timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [phase, timeLeft, soundEnabled]);
-
-  // ── Holding countdown (3s before playing) ────────────────────────────────
-  useEffect(() => {
-    if (phase !== "holding") return;
-    if (holdingCountdown <= 0) {
-      setPhase("playing");
-      setTimeLeft(timerDuration);
-      if (soundEnabled) playStartTurn();
-      return;
-    }
-    const t = setTimeout(() => setHoldingCountdown((c) => c - 1), 1000);
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, holdingCountdown, timerDuration, soundEnabled]);
+  }, [countdownActive, countdown]);
 
-  // ── Tilt detection ───────────────────────────────────────────────────────
+  // ── Auto-reveal progress bar when "revealing" ─────────────────────────────
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (typeof DeviceMotionEvent !== "undefined" &&
-        typeof (DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === "function") {
-      // iOS 13+ — permission must be requested; we request on "Start Turn" tap instead
-      return;
-    }
-    setTiltEnabled(true);
-  }, []);
+    if (phase !== "revealing") return;
+    setRevealed(false);
+    setShowHint(false);
 
-  const handleTilt = useCallback((beta: number) => {
-    if (phaseRef.current !== "playing") return;
-    if (tiltLockRef.current) return;
+    // Animate progress bar over revealMs
+    barControls.set({ scaleX: 0 });
+    barControls.start({ scaleX: 1, transition: { duration: diffCfg.revealMs / 1000, ease: "linear" } });
 
-    const isCorrect = beta >= TILT_CORRECT_THRESHOLD;
-    const isSkip    = beta <= TILT_SKIP_THRESHOLD;
+    // After revealMs → fully reveal
+    revealTimerRef.current = setTimeout(() => {
+      setRevealed(true);
+    }, diffCfg.revealMs);
 
-    if (isCorrect || isSkip) {
-      // Start dwell timer only if not already waiting
-      if (!tiltDwellRef.current) {
-        tiltDwellRef.current = setTimeout(() => {
-          tiltDwellRef.current = null;
-          // Re-check phase and lock — state may have changed during dwell
-          if (phaseRef.current !== "playing") return;
-          if (tiltLockRef.current) return;
-          tiltLockRef.current = true;
-          if (isCorrect) handleCorrect();
-          else handleSkip();
-          setTimeout(() => { tiltLockRef.current = false; }, TILT_LOCKOUT_MS);
-        }, TILT_DWELL_MS);
-      }
-    } else {
-      // Phone moved back to neutral — cancel pending dwell
-      if (tiltDwellRef.current) {
-        clearTimeout(tiltDwellRef.current);
-        tiltDwellRef.current = null;
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!tiltEnabled) return;
-    const listener = (e: DeviceOrientationEvent) => {
-      if (e.beta !== null) handleTilt(e.beta);
+    return () => {
+      if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+      barControls.stop();
     };
-    window.addEventListener("deviceorientation", listener);
-    return () => window.removeEventListener("deviceorientation", listener);
-  }, [tiltEnabled, handleTilt]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, imgIndex]);
 
-  // Clear dwell timer if phase leaves "playing"
-  useEffect(() => {
-    if (phase !== "playing" && tiltDwellRef.current) {
-      clearTimeout(tiltDwellRef.current);
-      tiltDwellRef.current = null;
-    }
-  }, [phase]);
-
-  // ── Actions ───────────────────────────────────────────────────────────────
-  const handleCorrect = useCallback(() => {
+  // ── Actions ────────────────────────────────────────────────────────────────
+  const handleAward = useCallback((teamIdx: number) => {
+    if (phase !== "revealing" && phase !== "answered") return;
     if (soundEnabled) playCorrectAnswer();
-    setLastAction("correct");
-    setTurnScore((s) => s + 1);
+
+    // Stop auto-reveal timer
+    if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+    barControls.stop();
+
+    setRevealed(true);
+    setLastWinner(teamIdx);
     setScores((prev) => {
       const next = [...prev];
-      next[teamIndex] = (next[teamIndex] ?? 0) + 1;
+      next[teamIdx] = (next[teamIdx] ?? 0) + POINTS_PER_CORRECT;
       return next;
     });
-    // Guard: don't advance past the last word
-    setWordIndex((i) => Math.min(i + 1, words.length - 1));
-    setTimeout(() => setLastAction(null), 500);
-  }, [soundEnabled, teamIndex, words.length]);
+    setPhase("answered");
+  }, [phase, soundEnabled, barControls]);
 
-  const handleSkip = useCallback(() => {
+  const handlePass = useCallback(() => {
+    if (phase !== "revealing" && phase !== "answered") return;
     if (soundEnabled) playSkip();
-    setLastAction("skip");
-    // Guard: don't advance past the last word
-    setWordIndex((i) => Math.min(i + 1, words.length - 1));
-    setTimeout(() => setLastAction(null), 500);
-  }, [soundEnabled, words.length]);
 
-  const requestTiltPermission = useCallback(async () => {
-    const DME = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
-    if (typeof DME.requestPermission === "function") {
-      const result = await DME.requestPermission();
-      if (result === "granted") setTiltEnabled(true);
-    } else {
-      setTiltEnabled(true);
-    }
-  }, []);
+    if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+    barControls.stop();
 
-  const handleStartTurn = useCallback(async () => {
-    await requestTiltPermission();
-    setTurnScore(0);
-    setHoldingCountdown(3);
-    setPhase("holding");
-  }, [requestTiltPermission]);
+    setRevealed(true);
+    setLastWinner(null);
+    setPhase("answered");
+  }, [phase, soundEnabled, barControls]);
 
-  const handleNextTurn = useCallback(() => {
-    const nextTeam  = (teamIndex + 1) % teams.length;
-    const completedRound = nextTeam === 0;
-    const nextRound = completedRound ? round + 1 : round;
-
-    if (nextRound > totalRounds) {
+  const handleNext = useCallback(() => {
+    const nextIdx = imgIndex + 1;
+    if (nextIdx >= totalImages) {
       setPhase("gameover");
       if (soundEnabled) setTimeout(() => playGameOverFanfare(), 400);
       return;
     }
+    setImgIndex(nextIdx);
+    setLastWinner(null);
+    setRevealed(false);
+    setShowHint(false);
+    setPhase("revealing");
+  }, [imgIndex, totalImages, soundEnabled]);
 
-    setTeamIndex(nextTeam);
-    setRound(nextRound);
-    setTurnScore(0);
-    setPhase("ready");
-  }, [teamIndex, teams.length, round, totalRounds, soundEnabled]);
+  const handleRevealComplete = useCallback(() => {
+    // no-op for now — just ensures the full blur is gone
+  }, []);
 
-  // ── Invalid code ──────────────────────────────────────────────────────────
-  if (!parsed) {
+  // ── Invalid code ───────────────────────────────────────────────────────────
+  if (!parsed || !currentImage) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4">
         <Syne className="text-2xl text-white/80">Invalid Game Code</Syne>
         <Link href="/headrush"
           className="rounded-xl border border-white/15 bg-white/[0.05] px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white/70 transition-colors hover:bg-white/[0.1]">
@@ -298,56 +264,187 @@ export default function HeadRushGamePage() {
     );
   }
 
-  // ── Leaderboard ───────────────────────────────────────────────────────────
-  const leaderboard = useMemo(() =>
-    teams.map((name, i) => ({ name, score: scores[i] ?? 0, i }))
-      .sort((a, b) => b.score - a.score),
-    [teams, scores]
-  );
-  const winner = leaderboard[0];
-
-  const timerPct = (timeLeft / timerDuration) * 100;
-  const timerColor = timeLeft <= 5 ? "#EF4444" : timeLeft <= 15 ? "#FBBF24" : teamColor.accent;
-
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]">
-      {/* Ambient glow */}
-      <motion.div
-        className="pointer-events-none fixed inset-0"
-        animate={{ background: `radial-gradient(ellipse at 50% 30%, ${teamColor.accent}0D 0%, transparent 70%)` }}
-        transition={{ duration: 0.6 }}
-      />
+    <main
+      className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]"
+      style={{ overscrollBehavior: "none" }}
+    >
+      {/* ── LOBBY / COUNTDOWN ─────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {phase === "lobby" && (
+          <motion.div
+            key="lobby"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-[#0B0E14] px-6 text-center"
+          >
+            {/* glow */}
+            <div className="pointer-events-none absolute inset-0"
+              style={{ background: "radial-gradient(ellipse at 50% 35%, #06B6D41A 0%, transparent 65%)" }} />
 
-      {/* Header */}
-      <header className="relative z-10 flex shrink-0 items-center justify-between px-4 py-3">
-        <Link href="/" className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white/60 transition-colors">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 280, damping: 20 }}
+              className="text-6xl"
+            >
+              🖼️
+            </motion.div>
+            <div>
+              <Syne className="text-3xl text-white">Snap Quiz</Syne>
+              <p className="mt-1 text-sm text-white/40">{totalImages} images · {diffCfg.label} · {teams.length} teams</p>
+            </div>
+
+            {/* Team list */}
+            <div className="flex flex-col gap-2 w-full max-w-xs">
+              {teams.map((name, i) => {
+                const col = TEAM_COLORS[i % TEAM_COLORS.length];
+                return (
+                  <div key={i}
+                    className="flex items-center gap-2 rounded-xl border px-4 py-2.5"
+                    style={{ borderColor: col.border, background: col.bg }}
+                  >
+                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: col.accent }}>{name}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {!countdownActive ? (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                onClick={() => { setCountdown(3); setCountdownActive(true); }}
+                className="rounded-2xl px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
+                style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 30px #06B6D444" }}
+              >
+                🚀 Start Game
+              </motion.button>
+            ) : (
+              <motion.div
+                key={countdown}
+                initial={{ scale: 1.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 350, damping: 22 }}
+              >
+                <Syne className="text-7xl" style={{ color: "#06B6D4" }}>
+                  {countdown > 0 ? countdown : "GO!"}
+                </Syne>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── GAME OVER ─────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {phase === "gameover" && (
+          <motion.div
+            key="gameover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.7, y: 40, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="w-full max-w-xs rounded-3xl border p-6 text-center"
+              style={{
+                borderColor: TEAM_COLORS[winner.i % TEAM_COLORS.length].border,
+                background: "rgba(11,14,20,0.97)",
+                boxShadow: `0 0 60px ${TEAM_COLORS[winner.i % TEAM_COLORS.length].accent}33`,
+              }}
+            >
+              <p className="text-5xl mb-3">🏆</p>
+              <p className="text-xs uppercase tracking-widest text-white/40 mb-1">Winner</p>
+              <Syne className="text-3xl" style={{ color: TEAM_COLORS[winner.i % TEAM_COLORS.length].accent }}>
+                {winner.name}
+              </Syne>
+              <p className="mt-0.5 text-lg font-black text-white/60">{winner.score} pts</p>
+
+              <div className="mt-4 space-y-2">
+                {leaderboard.map(({ name, score, i: ti }, rank) => {
+                  const col = TEAM_COLORS[ti % TEAM_COLORS.length];
+                  return (
+                    <div key={name}
+                      className="flex items-center justify-between rounded-xl px-3 py-2"
+                      style={{ background: rank === 0 ? col.bg : "rgba(255,255,255,0.03)", borderLeft: `3px solid ${col.accent}` }}
+                    >
+                      <span className="text-xs text-white/60">{rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}</span>
+                      <span className="text-sm font-black" style={{ color: col.accent }}>{score}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <Link href="/headrush" className="flex-1">
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    className="rounded-xl border border-white/10 bg-white/[0.04] py-3 text-xs font-bold uppercase tracking-widest text-white/60 text-center cursor-pointer hover:bg-white/[0.08] transition-colors"
+                  >
+                    New Game
+                  </motion.div>
+                </Link>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setRematchCount((c) => c + 1);
+                    setScores(new Array(teams.length).fill(0));
+                    setImgIndex(0);
+                    setRevealed(false);
+                    setLastWinner(null);
+                    setPhase("lobby");
+                  }}
+                  className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-widest text-black"
+                  style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)" }}
+                >
+                  Rematch
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <header className="relative z-10 flex shrink-0 items-center justify-between px-4 py-2.5">
+        <Link href="/"
+          className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white/60 transition-colors">
           ← Arena
         </Link>
-        <div className="text-center">
-          <Syne className="text-[10px] text-white/40" style={{ letterSpacing: "0.3em" }}>
-            HeadRush · Round {round}/{totalRounds}
-          </Syne>
-        </div>
+        <Syne className="text-[10px] text-white/40" style={{ letterSpacing: "0.3em" }}>
+          Snap Quiz · {imgIndex + 1}/{totalImages}
+        </Syne>
         <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
       </header>
 
-      {/* Score strip */}
-      <div className="relative z-10 flex shrink-0 items-center justify-center gap-3 px-4 pb-2">
+      {/* ── SCORE STRIP ────────────────────────────────────────────────────── */}
+      <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 px-4 pb-1.5">
         {teams.map((name, i) => {
           const col = TEAM_COLORS[i % TEAM_COLORS.length];
-          const isActive = i === teamIndex;
+          const isWinner = lastWinner === i && phase === "answered";
           return (
             <motion.div
               key={i}
-              animate={{ scale: isActive ? 1.05 : 1, opacity: isActive ? 1 : 0.45 }}
+              animate={{
+                scale: isWinner ? 1.12 : 1,
+                opacity: 1,
+              }}
               transition={{ type: "spring", stiffness: 300, damping: 22 }}
               className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5"
-              style={{ borderColor: isActive ? col.border : "rgba(255,255,255,0.06)", background: isActive ? col.bg : "transparent" }}
+              style={{
+                borderColor: isWinner ? col.border : "rgba(255,255,255,0.07)",
+                background: isWinner ? col.bg : "transparent",
+              }}
             >
               <span className="text-[10px] font-semibold text-white/50">{name}</span>
               <motion.span
                 key={scores[i]}
-                initial={{ scale: 1.4 }}
+                initial={{ scale: 1.5 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 18 }}
                 className="text-sm font-black"
@@ -360,289 +457,162 @@ export default function HeadRushGamePage() {
         })}
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4">
+      {/* ── IMAGE AREA ─────────────────────────────────────────────────────── */}
+      <div className="relative z-10 flex-1 overflow-hidden rounded-t-2xl mx-2">
         <AnimatePresence mode="wait">
+          <motion.div
+            key={imgIndex}
+            initial={{ opacity: 0, scale: 1.04 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative h-full w-full"
+          >
+            <BlurImage
+              image={currentImage}
+              blurPx={diffCfg.blurPx}
+              revealMs={diffCfg.revealMs}
+              revealed={revealed}
+              onRevealComplete={handleRevealComplete}
+            />
 
-          {/* ── READY ── */}
-          {phase === "ready" && (
-            <motion.div key="ready"
-              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="flex w-full max-w-xs flex-col items-center gap-6 text-center"
-            >
-              <div
-                className="rounded-2xl border px-6 py-4"
-                style={{ borderColor: teamColor.border, background: teamColor.bg }}
-              >
-                <Syne className="text-2xl sm:text-3xl" style={{ color: teamColor.accent }}>
-                  {teams[teamIndex]}
-                </Syne>
-                <p className="mt-1 text-xs text-white/40">It&apos;s your turn!</p>
+            {/* Dark vignette at bottom for readability */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
+              style={{ background: "linear-gradient(to top, rgba(11,14,20,0.85) 0%, transparent 100%)" }} />
+
+            {/* Difficulty badge */}
+            <div className="absolute top-3 left-3 rounded-full border border-white/15 bg-black/40 px-3 py-1 backdrop-blur-sm">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+                {diffCfg.emoji} {diffCfg.label}
+              </span>
+            </div>
+
+            {/* Reveal progress bar */}
+            {phase === "revealing" && !revealed && (
+              <div className="absolute bottom-0 inset-x-0 h-1 bg-white/10">
+                <motion.div
+                  className="h-full origin-left rounded-full"
+                  style={{ background: "linear-gradient(90deg,#06B6D4,#0891B2)" }}
+                  initial={{ scaleX: 0 }}
+                  animate={barControls}
+                />
               </div>
+            )}
 
-              <div className="space-y-1 text-center">
-                <p className="text-xs text-white/30 uppercase tracking-widest">How to play</p>
-                <p className="text-sm text-white/50">
-                  Hold the phone <strong className="text-white/80">to your forehead</strong>, screen facing your team.
-                </p>
-                <p className="text-sm text-white/50 mt-1">
-                  <span className="text-green-400">↓ Tilt down</span> = Got it!
-                  &nbsp;&nbsp;
-                  <span className="text-white/30">↑ Tilt up</span> = Skip
-                </p>
-                <p className="text-[10px] text-white/25 mt-1">Or use the on-screen buttons</p>
-              </div>
-
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                onClick={handleStartTurn}
-                className="rounded-2xl px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
-                style={{ backgroundImage: teamColor.gradient, boxShadow: `0 0 30px ${teamColor.accent}44` }}
-              >
-                Start Turn ▶
-              </motion.button>
-            </motion.div>
-          )}
-
-          {/* ── HOLDING COUNTDOWN ── */}
-          {phase === "holding" && (
-            <motion.div key="holding"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-4 text-center"
-            >
-              <p className="text-sm text-white/40 uppercase tracking-widest">Hold phone to forehead…</p>
-              <motion.div
-                key={holdingCountdown}
-                initial={{ scale: 1.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 18 }}
-              >
-                <Syne className="text-8xl" style={{ color: teamColor.accent }}>
-                  {holdingCountdown > 0 ? holdingCountdown : "GO!"}
-                </Syne>
-              </motion.div>
-              <p className="text-xs text-white/20">Screen should face your team</p>
-            </motion.div>
-          )}
-
-          {/* ── PLAYING ── */}
-          {phase === "playing" && (
-            <motion.div key="playing"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex w-full flex-col items-center gap-6"
-            >
-              {/* Word display — big, filling, team-colored */}
-              <div className="relative flex w-full items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentWord}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                    className="text-center px-4"
-                  >
-                    <Syne
-                      className="text-4xl sm:text-5xl leading-tight"
-                      style={{ color: teamColor.accent }}
-                    >
-                      {currentWord}
-                    </Syne>
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Action flash */}
-                <AnimatePresence>
-                  {lastAction && (
+            {/* Answer reveal overlay */}
+            <AnimatePresence>
+              {revealed && phase === "answered" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                  className="absolute bottom-4 inset-x-4 flex flex-col items-center gap-1"
+                >
+                  <div className="rounded-2xl border border-white/20 bg-black/70 px-5 py-3 text-center backdrop-blur-md">
+                    <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Answer</p>
+                    <Syne className="text-xl text-white">{currentImage.answer}</Syne>
+                    {showHint && (
+                      <p className="mt-0.5 text-xs text-white/40">{currentImage.hint}</p>
+                    )}
+                  </div>
+                  {lastWinner !== null && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1.3 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 18, delay: 0.1 }}
+                      className="rounded-2xl border px-4 py-1.5"
+                      style={{
+                        borderColor: TEAM_COLORS[lastWinner % TEAM_COLORS.length].border,
+                        background: TEAM_COLORS[lastWinner % TEAM_COLORS.length].bg,
+                      }}
                     >
-                      <span className="text-6xl">
-                        {lastAction === "correct" ? "✅" : "⏭️"}
+                      <span className="text-xs font-black" style={{ color: TEAM_COLORS[lastWinner % TEAM_COLORS.length].accent }}>
+                        +{POINTS_PER_CORRECT} → {teams[lastWinner]}
                       </span>
                     </motion.div>
                   )}
-                </AnimatePresence>
-              </div>
-
-              {/* Timer */}
-              <div className="w-full max-w-xs space-y-1">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/25">Time</span>
-                  <motion.span
-                    key={timeLeft}
-                    className="text-2xl font-black tabular-nums"
-                    style={{ color: timerColor, fontFamily: "var(--font-syne),var(--font-display)" }}
-                    animate={{ scale: timeLeft <= 5 ? [1, 1.2, 1] : 1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {timeLeft}
-                  </motion.span>
-                </div>
-                <div className="overflow-hidden rounded-full bg-white/[0.06]" style={{ height: "6px" }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    animate={{ width: `${timerPct}%` }}
-                    transition={{ duration: 0.9, ease: "linear" }}
-                    style={{ backgroundColor: timerColor }}
-                  />
-                </div>
-              </div>
-
-              {/* Manual buttons — fallback if no tilt */}
-              <div className="flex w-full max-w-xs gap-3">
-                <motion.button
-                  whileTap={{ scale: 0.93 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  onClick={handleSkip}
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] py-4 text-sm font-bold uppercase tracking-widest text-white/40"
-                >
-                  ⏭ Skip
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.93 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  onClick={handleCorrect}
-                  className="flex-[2] rounded-2xl py-4 text-sm font-black uppercase tracking-widest text-black"
-                  style={{ backgroundImage: teamColor.gradient, boxShadow: `0 0 20px ${teamColor.accent}44` }}
-                >
-                  ✓ Got It!
-                </motion.button>
-              </div>
-
-              <p className="text-[10px] text-white/20">
-                {tiltEnabled ? "Tilt enabled ↑↓" : "Tilt not available — use buttons"}
-              </p>
-            </motion.div>
-          )}
-
-          {/* ── SCORED ── */}
-          {phase === "scored" && (
-            <motion.div key="scored"
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="flex w-full max-w-xs flex-col items-center gap-5 text-center"
-            >
-              <div
-                className="w-full rounded-2xl border px-6 py-5"
-                style={{ borderColor: teamColor.border, background: teamColor.bg }}
-              >
-                <p className="text-xs uppercase tracking-widest text-white/40 mb-1">{teams[teamIndex]} scored</p>
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
-                >
-                  <Syne className="text-6xl" style={{ color: teamColor.accent }}>
-                    +{turnScore}
-                  </Syne>
                 </motion.div>
-                <p className="mt-1 text-xs text-white/30">this round</p>
-              </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-              {/* Scores so far */}
-              <div className="w-full space-y-2">
-                {leaderboard.map(({ name, score, i }, rank) => {
+      {/* ── BOTTOM CONTROLS ────────────────────────────────────────────────── */}
+      <div className="relative z-10 shrink-0 px-3 pt-2 pb-4 space-y-2">
+        {(phase === "revealing" || phase === "answered") && (
+          <>
+            {/* Team award buttons */}
+            {phase !== "answered" && (
+              <div className="flex gap-2">
+                {teams.map((name, i) => {
                   const col = TEAM_COLORS[i % TEAM_COLORS.length];
                   return (
-                    <div key={name}
-                      className="flex items-center justify-between rounded-xl border px-3 py-2"
-                      style={{ borderColor: rank === 0 ? col.border : "rgba(255,255,255,0.06)", background: rank === 0 ? col.bg : "transparent" }}>
-                      <span className="text-xs font-semibold text-white/60">{rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}</span>
-                      <span className="text-sm font-black" style={{ color: col.accent }}>{score}</span>
-                    </div>
+                    <motion.button
+                      key={i}
+                      whileTap={{ scale: 0.93 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      onClick={() => handleAward(i)}
+                      className="flex-1 rounded-2xl py-3.5 text-xs font-black uppercase tracking-widest text-black"
+                      style={{ backgroundImage: col.gradient, boxShadow: `0 0 18px ${col.accent}33` }}
+                    >
+                      ✓ {name}
+                    </motion.button>
                   );
                 })}
+                <motion.button
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  onClick={handlePass}
+                  className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3.5 text-xs font-bold uppercase tracking-widest text-white/40"
+                >
+                  Pass
+                </motion.button>
               </div>
+            )}
 
+            {/* Hint toggle (only while revealing) */}
+            {phase === "revealing" && (
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                onClick={handleNextTurn}
-                className="w-full rounded-2xl py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white/80 border border-white/10 bg-white/[0.05]"
+                onClick={() => setShowHint((h) => !h)}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 text-xs font-semibold uppercase tracking-widest text-white/30"
               >
-                {round >= totalRounds && teamIndex === teams.length - 1
-                  ? "🏆 See Final Results"
-                  : `Next: ${teams[(teamIndex + 1) % teams.length]} →`}
+                {showHint ? "Hide Hint" : "💡 Hint"}
               </motion.button>
-            </motion.div>
-          )}
+            )}
 
-          {/* ── GAME OVER ── */}
-          {phase === "gameover" && (
-            <motion.div key="gameover"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
-            >
-              <motion.div
-                initial={{ scale: 0.7, y: 30, opacity: 0 }}
-                animate={{ scale: 1, y: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                className="w-full max-w-xs rounded-3xl border p-6 text-center"
-                style={{
-                  borderColor: TEAM_COLORS[winner.i % TEAM_COLORS.length].border,
-                  background: TEAM_COLORS[winner.i % TEAM_COLORS.length].bg,
-                  boxShadow: `0 0 60px ${TEAM_COLORS[winner.i % TEAM_COLORS.length].accent}33`,
-                }}
-              >
-                <p className="text-4xl mb-3">🏆</p>
-                <p className="text-xs uppercase tracking-widest text-white/40 mb-1">Winner</p>
-                <Syne
-                  className="text-3xl"
-                  style={{ color: TEAM_COLORS[winner.i % TEAM_COLORS.length].accent }}
+            {/* Hint text inline while revealing */}
+            <AnimatePresence>
+              {showHint && phase === "revealing" && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-center text-xs text-white/40 px-2"
                 >
-                  {winner.name}
-                </Syne>
-                <p className="mt-1 text-lg font-black text-white/60">{winner.score} points</p>
+                  💡 {currentImage.hint}
+                </motion.p>
+              )}
+            </AnimatePresence>
 
-                <div className="mt-4 space-y-2">
-                  {leaderboard.map(({ name, score, i }, rank) => {
-                    const col = TEAM_COLORS[i % TEAM_COLORS.length];
-                    return (
-                      <div key={name} className="flex items-center justify-between rounded-xl px-3 py-2 bg-white/[0.04]">
-                        <span className="text-xs text-white/50">{rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}</span>
-                        <span className="text-sm font-black" style={{ color: col.accent }}>{score}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-5 flex gap-3">
-                  <Link href="/headrush" className="flex-1">
-                    <motion.div
-                      whileTap={{ scale: 0.95 }}
-                      className="rounded-xl border border-white/10 bg-white/[0.05] py-3 text-xs font-bold uppercase tracking-widest text-white/60 text-center cursor-pointer hover:bg-white/[0.08] transition-colors"
-                    >
-                      New Game
-                    </motion.div>
-                  </Link>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setScores(new Array(teams.length).fill(0));
-                      setTeamIndex(0);
-                      setRound(1);
-                      setWordIndex(0);
-                      setTurnScore(0);
-                      setPhase("ready");
-                    }}
-                    className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-widest text-black"
-                    style={{ backgroundImage: "linear-gradient(135deg,#FACC15,#F97316)" }}
-                  >
-                    Rematch
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
+            {/* Next button — only after answered */}
+            {phase === "answered" && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNext}
+                className="w-full rounded-2xl py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
+                style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 24px #06B6D444" }}
+              >
+                {imgIndex + 1 >= totalImages ? "🏆 Final Results" : "Next Image →"}
+              </motion.button>
+            )}
+          </>
+        )}
       </div>
     </main>
   );

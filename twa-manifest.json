@@ -1,6 +1,6 @@
 {
   "host": "the-arena.vercel.app",
-  "name": "The Arena",
+  "name": "The Arena — Party Game Hub",
   "display": "standalone",
   "themeColor": "#0B0E14",
   "navigationColor": "#0B0E14",
@@ -8,6 +8,7 @@
   "enableNotifications": false,
   "isChromeOSOnly": false,
   "launcherName": "The Arena",
+  "packageId": "com.thearena.app",
   "shortcuts": [
     {
       "name": "Codenames",
@@ -16,22 +17,64 @@
       "chosenIconUrl": "/icons/icon-192.png"
     },
     {
+      "name": "Imposter",
+      "shortName": "Imposter",
+      "url": "/imposter",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
       "name": "Truth or Dare",
       "shortName": "TruthOrDare",
       "url": "/truthordare",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Never Have I Ever",
+      "shortName": "NHIE",
+      "url": "/neverhaveiever",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Charades",
+      "shortName": "Charades",
+      "url": "/charades",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Mafia",
+      "shortName": "Mafia",
+      "url": "/mafia",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Pictionary",
+      "shortName": "Pictionary",
+      "url": "/pictionary",
+      "chosenIconUrl": "/icons/icon-192.png"
+    },
+    {
+      "name": "Snap Quiz",
+      "shortName": "SnapQuiz",
+      "url": "/headrush",
       "chosenIconUrl": "/icons/icon-192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://the-arena.vercel.app/manifest.json",
   "fallbackType": "customtabs",
-  "features": {},
+  "features": {
+    "locationDelegation": { "enabled": false },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isSplashScreenEnabled": true,
+  "orientation": "default",
   "signingKey": {
     "path": "./arena-keystore.jks",
     "alias": "arena"
   },
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
-  "splashScreenFadeOutDuration": 300,
-  "enableSiteSettingsShortcut": true
+  "splashScreenFadeOutDuration": 300
 }

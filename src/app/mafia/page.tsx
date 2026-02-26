@@ -34,8 +34,9 @@ export default function MafiaSetupPage() {
   const maxMafia = Math.max(1, Math.floor(playerNames.length / 3));
 
   function handleAddPlayer() {
-    if (inputName.trim() && playerNames.length < 15) {
-      setPlayerNames((prev) => [...prev, inputName.trim()]);
+    if (playerNames.length < 15) {
+      const name = inputName.trim() || `Player ${playerNames.length + 1}`;
+      setPlayerNames((prev) => [...prev, name]);
       setInputName("");
     }
   }

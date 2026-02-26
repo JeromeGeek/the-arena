@@ -22,6 +22,8 @@ const categoryEmojis: Record<string, string> = {
   "Internet Culture": "\u{1F480}",
   "Music & Bands": "\u{1F3B5}",
   "Bollywood": "\u{1F1EE}\u{1F1F3}",
+  "Food": "\u{1F355}",
+  "Sports": "\u26BD",
 };
 
 // URL-safe slug for category names
@@ -59,8 +61,9 @@ export default function ImposterPage() {
   const maxImposters = Math.min(5, Math.max(1, playerNames.length - 2));
 
   function handleAddPlayer() {
-    if (inputName.trim() && playerNames.length < 15) {
-      setPlayerNames((prev) => [...prev, inputName.trim()]);
+    if (playerNames.length < 15) {
+      const name = inputName.trim() || `Player ${playerNames.length + 1}`;
+      setPlayerNames((prev) => [...prev, name]);
       setInputName("");
     }
   }

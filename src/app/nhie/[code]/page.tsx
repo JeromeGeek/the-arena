@@ -20,7 +20,16 @@ function parseCode(code: string, namesList?: string[]) {
 
   const playerCount = parseInt(parts[0], 10);
   const intensity = parts[1] as NHIEIntensity;
-  const slug = parts[parts.length - 1];
+  // Support both old format (3 parts) and new format (4 parts with rounds)
+  let rounds: number;
+  let slug: string;
+  if (parts.length >= 4 && !isNaN(parseInt(parts[2], 10))) {
+    rounds = parseInt(parts[2], 10);
+    slug = parts[parts.length - 1];
+  } else {
+    rounds = 10; // default for old codes
+    slug = parts[parts.length - 1];
+  }
 
   if (isNaN(playerCount) || playerCount < 2 || playerCount > 15) return null;
   if (!["wild", "spicy", "chaos"].includes(intensity)) return null;
@@ -32,7 +41,7 @@ function parseCode(code: string, namesList?: string[]) {
     ? namesList
     : Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`);
 
-  return { playerNames, intensity, seed };
+  return { playerNames, intensity, seed, rounds };
 }
 
 export default function NHIEGamePage() {
@@ -51,7 +60,9 @@ export default function NHIEGamePage() {
     if (!parsed) return [];
     const pool = getPromptsByIntensity(parsed.intensity);
     const rng = seededRandom(parsed.seed);
-    return shufflePrompts(pool, rng);
+    const shuffled = shufflePrompts(pool, rng);
+    // Limit to configured rounds
+    return shuffled.slice(0, parsed.rounds);
   }, [parsed]);
 
   const players = useMemo(() => parsed?.playerNames ?? [], [parsed]);
@@ -94,7 +105,7 @@ export default function NHIEGamePage() {
 
   if (!parsed) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
         <h1
           className="text-2xl font-black uppercase tracking-[0.2em] text-white/80 sm:text-3xl sm:tracking-[0.3em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
@@ -115,7 +126,7 @@ export default function NHIEGamePage() {
   const intensityEmoji: Record<string, string> = { wild: "🐺", spicy: "🌶️", chaos: "☠️" };
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-x-hidden">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ overscrollBehavior: "none" }}>
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(34,197,94,0.04)] blur-[80px]" />
@@ -138,7 +149,7 @@ export default function NHIEGamePage() {
             Never Have I Ever
           </h1>
           <p className="mt-0.5 font-mono text-[10px] tracking-wider text-white/20">
-            {promptIndex + 1}/{shuffledPrompts.length} • {intensity.toUpperCase()}
+            Round {promptIndex + 1}/{shuffledPrompts.length} • {intensity.toUpperCase()}
           </p>
         </div>
         <div className="flex items-center gap-2">

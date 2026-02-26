@@ -1,0 +1,65 @@
+{
+  "packageId": "com.thearena.app",
+  "host": "the-arena.vercel.app",
+  "name": "The Arena — Party Game Hub",
+  "launcherName": "The Arena",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#0B0E14",
+  "navigationColor": "#0B0E14",
+  "navigationColorDark": "#0B0E14",
+  "navigationDividerColor": "#0B0E14",
+  "navigationDividerColorDark": "#0B0E14",
+  "backgroundColor": "#0B0E14",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://the-arena.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://the-arena.vercel.app/icons/icon-maskable-512.png",
+  "monochromeIconUrl": "https://the-arena.vercel.app/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./arena-keystore.jks",
+    "alias": "arena"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Codenames",
+      "shortName": "Codenames",
+      "url": "/codenames",
+      "chosenIconUrl": "https://the-arena.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Imposter",
+      "shortName": "Imposter",
+      "url": "/imposter",
+      "chosenIconUrl": "https://the-arena.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Truth or Dare",
+      "shortName": "TruthDare",
+      "url": "/truthordare",
+      "chosenIconUrl": "https://the-arena.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Never Have I Ever",
+      "shortName": "NHIE",
+      "url": "/neverhaveiever",
+      "chosenIconUrl": "https://the-arena.vercel.app/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://the-arena.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://the-arena.vercel.app/",
+  "minSdkVersion": 19,
+  "fingerprints": []
+}

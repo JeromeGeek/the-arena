@@ -476,7 +476,7 @@ export default function MafiaGamePage() {
   // ── Invalid code ──
   if (invalidCode) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4">
         <SyneHeading className="text-2xl text-white/80">Invalid Game Code</SyneHeading>
         <p className="text-xs text-white/40">This game code doesn&apos;t exist or has expired.</p>
         <Link
@@ -496,7 +496,7 @@ export default function MafiaGamePage() {
     role === "mafia" ? "#EF4444" : role === "doctor" ? "#22C55E" : role === "detective" ? "#3B82F6" : "#A78BFA";
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ overscrollBehavior: "none" }}>
       {/* Ambient */}
       <div
         className="pointer-events-none fixed inset-0 transition-all duration-1000"

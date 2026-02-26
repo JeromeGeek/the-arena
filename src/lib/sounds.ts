@@ -446,13 +446,13 @@ function stopHeavenlyPad() {
 
 /** 
  * Speak with a dark, authoritative narrator voice.
+ * Uses SSML-style pauses via comma/ellipsis tricks and selects
+ * the best available voice on the device.
  * 
- * For best quality, download premium voices on your device:
- * macOS: System Settings → Accessibility → Spoken Content → System Voice → Manage Voices
- *   → Download "Aaron (Premium)" or "Daniel (Premium)" or "Tom (Premium)"
- * These sound near-human vs the robotic default voices.
+ * For best quality on macOS/iOS, enable premium voices:
+ * Settings → Accessibility → Spoken Content → Voices → English → Download a premium voice
  */
-export function speak(text: string, rate = 0.85, pitch = 0.95): Promise<void> {
+export function speak(text: string, rate = 0.82, pitch = 0.9): Promise<void> {
   return new Promise(async (resolve) => {
     if (!isSpeechSupported()) {
       resolve();
@@ -467,32 +467,49 @@ export function speak(text: string, rate = 0.85, pitch = 0.95): Promise<void> {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.volume = 1;
 
-    // Voice priority: premium/enhanced male voices first, then best standard voices
     const englishVoices = voices.filter((v) => v.lang.startsWith("en"));
     const pick = (pattern: RegExp) =>
       englishVoices.find((v) => pattern.test(v.name));
 
-    // Premium voices sound dramatically better — near human quality
+    // Priority: premium/enhanced (near-human) → quality standard voices
+    // Explicitly avoid known robotic/novelty voices
+    const AVOID = /compact|bad|bahh|boing|bell|bubble|wobble|cello|whisper|zarvox|trinoid|organ|deranged|hysterical|jester|ralph|fred|junior|grandma|grandpa|superstar|rocko|shelley|sandy|flo|reed|eddy|aman|tara|rishi|albert/i;
+
     const chosen =
-      pick(/aaron.*premium/i) ??                      // Best macOS premium male
-      pick(/daniel.*premium/i) ??                     // Premium British male
-      pick(/tom.*premium/i) ??                        // Premium male
-      pick(/premium|enhanced/i) ??                    // Any premium voice
-      pick(/^google uk english male/i) ??             // Chrome — decent quality
-      pick(/\bdaniel\b/i) ??                          // Standard British male (best non-premium)
-      pick(/^google/i) ??
-      pick(/\bmicrosoft.*(david|mark|guy)/i) ??
+      // macOS / iOS premium voices — near-human quality
+      pick(/aaron.*premium/i) ??
+      pick(/daniel.*premium/i) ??
+      pick(/arthur.*premium/i) ??
+      pick(/tom.*premium/i) ??
+      pick(/oliver.*premium/i) ??
+      pick(/liam.*premium/i) ??
+      pick(/evan.*premium/i) ??
+      pick(/.*premium.*male/i) ??
+      pick(/premium|enhanced/i) ??
+      // Chrome / Android good voices
+      pick(/^google uk english male/i) ??
+      pick(/^google us english/i) ??
+      // Standard non-robotic male voices
+      pick(/\bdaniel\b/i) ??
       pick(/\baaron\b/i) ??
       pick(/\btom\b/i) ??
-      pick(/\balbert\b/i) ??
-      englishVoices.find((v) => !/compact|bad|bahh|boing|bell|bubble|wobble|cello|whisper|zarvox|trinoid|organ|deranged|hysterical|jester|ralph|fred|junior|grandma|grandpa|superstar|rocko|shelley|sandy|flo|reed|eddy|aman|tara|rishi/i.test(v.name)) ??
+      pick(/\boliver\b/i) ??
+      pick(/\bliam\b/i) ??
+      // Microsoft voices (Windows / Edge)
+      pick(/microsoft.*(guy|david|mark|ryan)/i) ??
+      // Any remaining clean English voice
+      englishVoices.find((v) => !AVOID.test(v.name)) ??
       englishVoices[0] ??
       null;
 
-    // Adjust rate/pitch based on voice quality — premium voices sound good at natural settings
     const isPremium = chosen?.name ? /premium|enhanced/i.test(chosen.name) : false;
-    utterance.rate = isPremium ? 0.90 : rate;
-    utterance.pitch = isPremium ? 1.0 : pitch;
+    const isGoogle = chosen?.name ? /^google/i.test(chosen.name) : false;
+
+    // Premium voices sound great at natural settings; 
+    // Google voices need slower rate to not sound rushed;
+    // Standard voices benefit from slightly lower rate + pitch
+    utterance.rate  = isPremium ? 0.88 : isGoogle ? 0.80 : rate;
+    utterance.pitch = isPremium ? 1.0  : isGoogle ? 0.95 : pitch;
     utterance.voice = chosen;
 
     let resolved = false;
@@ -508,11 +525,13 @@ export function speak(text: string, rate = 0.85, pitch = 0.95): Promise<void> {
 
     window.speechSynthesis.speak(utterance);
 
+    // Watchdog: some browsers freeze speechSynthesis mid-sentence
     const watchdog = setInterval(() => {
       if (!window.speechSynthesis.speaking) {
         done();
         return;
       }
+      // Keep it alive on iOS/macOS which can suspend it
       window.speechSynthesis.pause();
       window.speechSynthesis.resume();
     }, 5000);
@@ -530,8 +549,8 @@ export function stopSpeaking() {
 /** Narrate night announcement with dark ambient drone */
 export async function narrateNightAnnounce(onDone: () => void) {
   startHeavenlyPad();
-  await speak("Night falls upon the town. Everyone, close your eyes. Do not open them until you are called.");
-  await new Promise((r) => setTimeout(r, 1200));
+  await speak("Night falls upon the town. Everyone... close your eyes. Do not open them, until you are called upon.");
+  await new Promise((r) => setTimeout(r, 1000));
   stopHeavenlyPad();
   onDone();
 }
@@ -543,9 +562,9 @@ export async function narratePrivacyWall(
 ) {
   startHeavenlyPad();
   const lines: Record<string, string> = {
-    mafia: "Mafia... open your eyes. Look around. Silently... agree on your target for tonight.",
-    doctor: "Doctor... open your eyes. Someone in this town needs your protection. Choose... carefully.",
-    detective: "Detective... open your eyes. You may investigate one player tonight. Trust your instincts.",
+    mafia:     "Mafia. Open your eyes. Look around the table. Silently... choose your target for tonight. You have a few moments.",
+    doctor:    "Doctor. Open your eyes. Someone in this town is in danger tonight. Think carefully... who will you protect?",
+    detective: "Detective. Open your eyes. You may investigate one player tonight. Trust your instincts. Choose wisely.",
   };
   await speak(lines[role]);
   await new Promise((r) => setTimeout(r, 500));
@@ -557,9 +576,9 @@ export async function narratePrivacyWall(
 export async function narrateNightDone(role: "mafia" | "doctor" | "detective") {
   startHeavenlyPad();
   const lines: Record<string, string> = {
-    mafia: "Mafia... close your eyes. Return to the darkness. Your deed is done.",
-    doctor: "Doctor... close your eyes. You have done what you can. Rest now.",
-    detective: "Detective... close your eyes. Hold that knowledge close. Tell no one.",
+    mafia:     "Mafia... close your eyes. Return to the darkness. Your deed... is done.",
+    doctor:    "Doctor... close your eyes. You have done what you can. Rest now, and hope it was enough.",
+    detective: "Detective... close your eyes. Hold that knowledge close. Tell no one, until the time is right.",
   };
   await speak(lines[role]);
   await new Promise((r) => setTimeout(r, 600));
@@ -569,7 +588,7 @@ export async function narrateNightDone(role: "mafia" | "doctor" | "detective") {
 /** Narrate "everyone open your eyes" */
 export async function narrateWakeUp() {
   startHeavenlyPad();
-  await speak("Everyone... open your eyes. A new day has come to the town. But not everyone made it through the night.");
+  await speak("Everyone... open your eyes. A new day has dawned upon the town. But I am afraid... not everyone made it through the night.");
   await new Promise((r) => setTimeout(r, 400));
   stopHeavenlyPad();
 }

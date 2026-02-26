@@ -20,6 +20,9 @@ const categoryEmojis: Record<string, string> = {
   Professions: "👨‍⚕️",
   Objects: "📦",
   Sports: "⚽",
+  "Food & Drink": "🍕",
+  Places: "🗺️",
+  "TV Shows": "📺",
 };
 
 function categoryToSlug(name: string): string {
@@ -69,8 +72,9 @@ export default function CharadesPage() {
   const [rounds, setRounds] = useState(3);
 
   function handleAddTeam() {
-    if (inputTeam.trim() && teams.length < 6) {
-      setTeams((prev) => [...prev, inputTeam.trim()]);
+    if (teams.length < 6) {
+      const name = inputTeam.trim() || `Team ${teams.length + 1}`;
+      setTeams((prev) => [...prev, name]);
       setInputTeam("");
     }
   }

@@ -21,7 +21,18 @@ function parseCode(code: string, namesList?: string[]) {
 
   const playerCount = parseInt(parts[0], 10);
   const intensity = parts[1] as Intensity;
-  const slug = parts[parts.length - 1];
+
+  // Support new format: playerCount-intensity-rounds-slug
+  // and old format:     playerCount-intensity-slug
+  let totalRounds: number;
+  let slug: string;
+  if (parts.length >= 4 && !isNaN(parseInt(parts[2], 10))) {
+    totalRounds = parseInt(parts[2], 10);
+    slug = parts[parts.length - 1];
+  } else {
+    totalRounds = 10; // default
+    slug = parts[parts.length - 1];
+  }
 
   if (isNaN(playerCount) || playerCount < 2 || playerCount > 15) return null;
   if (!["mild", "spicy", "extreme"].includes(intensity)) return null;
@@ -33,7 +44,7 @@ function parseCode(code: string, namesList?: string[]) {
     ? namesList
     : Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`);
 
-  return { playerNames, intensity, seed };
+  return { playerNames, intensity, seed, totalRounds };
 }
 
 export default function TruthOrDareGamePage() {
@@ -60,6 +71,11 @@ export default function TruthOrDareGamePage() {
 
   const players = useMemo(() => parsed?.playerNames ?? [], [parsed]);
   const intensity = parsed?.intensity ?? "spicy";
+  const totalRounds = parsed?.totalRounds ?? 10;
+
+  // Global turn counter across all players and rounds
+  const [turnCount, setTurnCount] = useState(0);
+  const totalTurns = players.length > 0 ? totalRounds * players.length : totalRounds;
 
   const handleChoice = useCallback((type: "truth" | "dare") => {
     if (soundEnabled) {
@@ -93,11 +109,12 @@ export default function TruthOrDareGamePage() {
     const nextIndex = (currentPlayerIndex + 1) % players.length;
     setCurrentPlayerIndex(nextIndex);
     if (nextIndex === 0) setRound((r) => r + 1);
+    setTurnCount((t) => t + 1);
   }, [currentPlayerIndex, players.length, soundEnabled]);
 
   if (!parsed) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
         <h1
           className="text-2xl font-black uppercase tracking-[0.2em] text-white/80 sm:text-3xl sm:tracking-[0.3em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
@@ -122,7 +139,7 @@ export default function TruthOrDareGamePage() {
   };
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-x-hidden">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ overscrollBehavior: "none" }}>
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(168,85,247,0.04)] blur-[80px]" />
@@ -145,7 +162,7 @@ export default function TruthOrDareGamePage() {
             Truth or Dare
           </h1>
           <p className="mt-0.5 font-mono text-[10px] tracking-wider text-white/20">
-            Round {round} • {intensity.toUpperCase()}
+            Round {round}/{totalRounds} • {intensity.toUpperCase()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -159,7 +176,31 @@ export default function TruthOrDareGamePage() {
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-1 items-center justify-center px-4 pb-6 sm:px-6 sm:pb-12">
+      <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-6 sm:px-6 sm:pb-12">
+        {/* Big round counter — always visible above the card */}
+        <motion.div
+          key={`round-${round}-${turnCount}`}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex flex-col items-center sm:mb-6"
+        >
+          <span
+            className="text-5xl font-black sm:text-7xl"
+            style={{
+              fontFamily: "var(--font-syne), var(--font-display)",
+              background: "linear-gradient(135deg, #A855F7, #7C3AED)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {round}<span className="text-2xl text-white/20 sm:text-4xl">/{totalRounds}</span>
+          </span>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/25 sm:text-xs">
+            Round
+          </p>
+        </motion.div>
+
         <AnimatePresence mode="wait">
           {!showPrompt ? (
             /* ── CHOICE PHASE ── */

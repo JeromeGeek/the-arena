@@ -9,6 +9,7 @@ import GameSetupShell, {
   SetupLabel,
   SetupPlayerRow,
   SetupAddRow,
+  SetupOptionPill,
   SetupStartButton,
 } from "@/components/GameSetupShell";
 
@@ -16,6 +17,13 @@ const intensityOptions: { value: NHIEIntensity; label: string; emoji: string; co
   { value: "wild", label: "WILD", emoji: "🐺", color: "#10B981", glow: "rgba(16,185,129,0.3)" },
   { value: "spicy", label: "SPICY", emoji: "🌶️", color: "#F59E0B", glow: "rgba(245,158,11,0.3)" },
   { value: "chaos", label: "CHAOS", emoji: "☠️", color: "#EF4444", glow: "rgba(239,68,68,0.3)" },
+];
+
+const roundOptions = [
+  { value: 5,  label: "5",  emoji: "🎯" },
+  { value: 10, label: "10", emoji: "🔥" },
+  { value: 15, label: "15", emoji: "💀" },
+  { value: 20, label: "20", emoji: "☠️" },
 ];
 
 const playerEmojis = [
@@ -32,12 +40,11 @@ export default function NeverHaveIEverPage() {
   ]);
   const [inputName, setInputName] = useState("");
   const [intensity, setIntensity] = useState<NHIEIntensity>("wild");
+  const [rounds, setRounds] = useState(10);
 
   function handleAddPlayer() {
-    if (inputName.trim() && playerNames.length < 15) {
-      setPlayerNames((prev) => [...prev, inputName.trim()]);
-      setInputName("");
-    }
+    const nextNum = playerNames.length + 1;
+    setPlayerNames((prev) => [...prev, `Player ${nextNum}`]);
   }
 
   function handleRemovePlayer(index: number) {
@@ -48,7 +55,7 @@ export default function NeverHaveIEverPage() {
     if (playerNames.length < 2) return;
     const seed = generateSeed();
     const slug = seedToSlug(seed);
-    const code = `${playerNames.length}-${intensity}-${slug}`;
+    const code = `${playerNames.length}-${intensity}-${rounds}-${slug}`;
     const names = encodeURIComponent(playerNames.join(","));
     router.push(`/nhie/${code}?names=${names}`);
   }
@@ -101,6 +108,23 @@ export default function NeverHaveIEverPage() {
         </motion.div>
       )}
 
+      {/* Rounds */}
+      <div className="mb-6">
+        <SetupLabel>Rounds</SetupLabel>
+        <div className="flex flex-wrap gap-2">
+          {roundOptions.map((opt) => (
+            <SetupOptionPill
+              key={opt.value}
+              selected={rounds === opt.value}
+              onClick={() => setRounds(opt.value)}
+              accentColor="#22C55E"
+            >
+              {opt.emoji} {opt.label}
+            </SetupOptionPill>
+          ))}
+        </div>
+      </div>
+
       {/* Intensity */}
       <div className="mb-7">
         <SetupLabel>Intensity</SetupLabel>
@@ -133,7 +157,7 @@ export default function NeverHaveIEverPage() {
         accentFrom="#22C55E"
         accentTo="#16A34A"
       >
-        Start Game · {playerNames.length} Players
+        Start · {playerNames.length} Players · {rounds} Rounds
       </SetupStartButton>
     </GameSetupShell>
   );

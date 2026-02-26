@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { generateSeed, seedToSlug } from "@/lib/gamecodes";
-import { headRushCategories } from "@/lib/headrush";
+import { snapCategories } from "@/lib/snapquiz";
 import GameSetupShell, {
   SetupLabel,
   SetupAddRow,
@@ -12,44 +12,44 @@ import GameSetupShell, {
   SetupStartButton,
 } from "@/components/GameSetupShell";
 
-const timerOptions = [
-  { value: 45, label: "45s", emoji: "⚡" },
-  { value: 60, label: "60s", emoji: "⏱️" },
+const difficultyOptions = [
+  { value: "easy",    label: "Easy",    emoji: "🟢", desc: "Light blur · 2s reveal" },
+  { value: "medium",  label: "Medium",  emoji: "🟡", desc: "Medium blur · 4s reveal" },
+  { value: "extreme", label: "Extreme", emoji: "🔴", desc: "Heavy blur · 8s reveal" },
 ];
 
 const roundOptions = [
-  { value: 2, label: "2", emoji: "✌️" },
-  { value: 4, label: "4", emoji: "🔥" },
-  { value: 6, label: "6", emoji: "💪" },
-  { value: 8, label: "8", emoji: "🏆" },
+  { value: 2,  label: "2",  emoji: "✌️" },
+  { value: 4,  label: "4",  emoji: "🔥" },
+  { value: 6,  label: "6",  emoji: "💪" },
+  { value: 8,  label: "8",  emoji: "🏆" },
 ];
 
-const categoryOptions = [
-  { value: "random", label: "Random Mix", emoji: "🎲" },
-  ...headRushCategories
-    .filter((c) => c.name !== "Random")
-    .map((c) => ({ value: c.name.toLowerCase().replace(/\s+/g, "-"), label: c.name, emoji: c.emoji })),
-  { value: "random-all", label: "Everything", emoji: "🌀" },
-];
+const categoryOptions = snapCategories.map((c) => ({
+  value: c.id,
+  label: c.label,
+  emoji: c.emoji,
+}));
 
 const TEAM_COLORS = [
   { bg: "rgba(255,65,108,0.12)", border: "rgba(255,65,108,0.4)", text: "#FF416C" },
-  { bg: "rgba(0,180,219,0.12)", border: "rgba(0,180,219,0.4)", text: "#00B4DB" },
+  { bg: "rgba(0,180,219,0.12)",  border: "rgba(0,180,219,0.4)",  text: "#00B4DB" },
   { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.4)", text: "#A855F7" },
-  { bg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.4)", text: "#22C55E" },
+  { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.4)",  text: "#22C55E" },
 ];
 
-export default function HeadRushSetupPage() {
+export default function SnapQuizSetupPage() {
   const router = useRouter();
   const [teams, setTeams] = useState<string[]>(["Team 1", "Team 2"]);
   const [inputTeam, setInputTeam] = useState("");
-  const [timer, setTimer] = useState(60);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "extreme">("medium");
   const [rounds, setRounds] = useState(4);
   const [category, setCategory] = useState("random");
 
   function handleAddTeam() {
-    if (inputTeam.trim() && teams.length < 4) {
-      setTeams((prev) => [...prev, inputTeam.trim()]);
+    if (teams.length < 4) {
+      const name = inputTeam.trim() || `Team ${teams.length + 1}`;
+      setTeams((prev) => [...prev, name]);
       setInputTeam("");
     }
   }
@@ -62,22 +62,21 @@ export default function HeadRushSetupPage() {
     if (teams.length < 2) return;
     const seed = generateSeed();
     const slug = seedToSlug(seed);
-    // code: teamCount-timer-rounds-category-slug
-    const code = `${teams.length}-${timer}-${rounds}-${category}-${slug}`;
+    const code = `${teams.length}-${difficulty}-${rounds}-${category}-${slug}`;
     const teamsParam = encodeURIComponent(teams.join(","));
     router.push(`/hr/${code}?teams=${teamsParam}`);
   }
 
   return (
     <GameSetupShell
-      title="HEADRUSH"
-      emoji="🎯"
-      subtitle="Tilt · Guess · Dominate"
-      flavour="Hold phone to forehead · Teammates shout clues · Tilt to score"
-      accentFrom="#FACC15"
-      accentTo="#CA8A04"
-      emojiAnimate={{ y: [0, -6, 1, 0], rotate: [0, -8, 8, 0] }}
-      emojiTransition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+      title="SNAP QUIZ"
+      emoji="🖼️"
+      subtitle="See It · Shout It · Score"
+      flavour="Image appears blurred · Reveals slowly · First to shout wins"
+      accentFrom="#06B6D4"
+      accentTo="#0891B2"
+      emojiAnimate={{ scale: [1, 1.12, 1], rotate: [0, -6, 6, 0] }}
+      emojiTransition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" }}
     >
       {/* Teams */}
       <div className="mb-6">
@@ -124,33 +123,36 @@ export default function HeadRushSetupPage() {
         )}
       </div>
 
-      {/* Timer */}
+      {/* Difficulty */}
       <div className="mb-5">
-        <SetupLabel>Round Time</SetupLabel>
+        <SetupLabel>Difficulty</SetupLabel>
         <div className="flex gap-2">
-          {timerOptions.map((opt) => (
+          {difficultyOptions.map((opt) => (
             <SetupOptionPill
               key={opt.value}
-              selected={timer === opt.value}
-              onClick={() => setTimer(opt.value)}
-              accentColor="#FACC15"
+              selected={difficulty === opt.value}
+              onClick={() => setDifficulty(opt.value as "easy" | "medium" | "extreme")}
+              accentColor="#06B6D4"
             >
               {opt.emoji} {opt.label}
             </SetupOptionPill>
           ))}
         </div>
+        <p className="mt-1.5 text-xs text-white/35">
+          {difficultyOptions.find((o) => o.value === difficulty)?.desc}
+        </p>
       </div>
 
       {/* Rounds */}
       <div className="mb-5">
-        <SetupLabel>Total Rounds</SetupLabel>
+        <SetupLabel>Images per Game</SetupLabel>
         <div className="flex flex-wrap gap-2">
           {roundOptions.map((opt) => (
             <SetupOptionPill
               key={opt.value}
               selected={rounds === opt.value}
               onClick={() => setRounds(opt.value)}
-              accentColor="#FACC15"
+              accentColor="#06B6D4"
             >
               {opt.emoji} {opt.label}
             </SetupOptionPill>
@@ -160,14 +162,14 @@ export default function HeadRushSetupPage() {
 
       {/* Category */}
       <div className="mb-7">
-        <SetupLabel>Word Category</SetupLabel>
+        <SetupLabel>Image Category</SetupLabel>
         <div className="flex flex-wrap gap-2">
           {categoryOptions.map((opt) => (
             <SetupOptionPill
               key={opt.value}
               selected={category === opt.value}
               onClick={() => setCategory(opt.value)}
-              accentColor="#FACC15"
+              accentColor="#06B6D4"
             >
               {opt.emoji} {opt.label}
             </SetupOptionPill>
@@ -179,10 +181,10 @@ export default function HeadRushSetupPage() {
       <SetupStartButton
         onClick={handleStart}
         disabled={teams.length < 2}
-        accentFrom="#FACC15"
-        accentTo="#CA8A04"
+        accentFrom="#06B6D4"
+        accentTo="#0891B2"
       >
-        � Start HeadRush · {teams.length} Teams
+        🖼️ Start Snap Quiz · {teams.length} Teams
       </SetupStartButton>
     </GameSetupShell>
   );

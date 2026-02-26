@@ -63,6 +63,7 @@ export default function ImposterGamePage() {
   const [secretWord] = useState(() => parsed?.secretWord ?? "");
   const [revealIndex, setRevealIndex] = useState(0);
   const [showWord, setShowWord] = useState(false);
+  const [resultRevealed, setResultRevealed] = useState(false);
 
   const invalidCode = !parsed;
 
@@ -101,10 +102,12 @@ export default function ImposterGamePage() {
 
     if (remainingImposters === 0) {
       // All imposters caught — crew wins
+      setResultRevealed(false);
       setPhase("result");
       if (soundEnabled) setTimeout(() => playCrewWins(), 300);
     } else if (remainingImposters >= remainingCrew) {
       // Imposters outnumber or equal crew — imposter wins
+      setResultRevealed(false);
       setPhase("result");
       if (soundEnabled) setTimeout(() => playImposterWins(), 300);
     } else if (target?.isImposter && remainingImposters > 0) {
@@ -113,6 +116,7 @@ export default function ImposterGamePage() {
     } else {
       // Wrong vote — check if game still winnable for crew
       if (remainingCrew <= 1) {
+        setResultRevealed(false);
         setPhase("result");
         if (soundEnabled) setTimeout(() => playImposterWins(), 300);
       } else {
@@ -135,7 +139,7 @@ export default function ImposterGamePage() {
 
   if (invalidCode) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
+      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-4 sm:gap-6">
         <h1
           className="text-2xl font-black uppercase tracking-[0.2em] text-white/80 sm:text-3xl sm:tracking-[0.3em]"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
@@ -154,7 +158,7 @@ export default function ImposterGamePage() {
   }
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-x-hidden">
+    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ overscrollBehavior: "none" }}>
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,180,219,0.04)] blur-[80px]" />
@@ -292,19 +296,48 @@ export default function ImposterGamePage() {
               className="w-full text-center"
             >
               <div className="glass-panel rounded-2xl p-3 sm:rounded-3xl sm:p-8">
+                <motion.span
+                  className="mb-3 block text-4xl sm:mb-4 sm:text-5xl"
+                  animate={{ rotate: [-5, 5, -5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  🕵️
+                </motion.span>
                 <h2
                   className="mb-3 text-xl font-bold uppercase tracking-[0.15em] text-white/90 sm:mb-4 sm:text-3xl sm:tracking-[0.25em]"
                   style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
                 >
-                  Discussion
+                  Discussion Time
                 </h2>
-                <p className="mb-2 text-xs text-white/40 sm:text-sm">
-                  Who&apos;s the Imposter?
+                <p className="mb-5 text-xs text-white/40 sm:mb-6 sm:text-sm">
+                  Discuss who you think the imposter is.<br />
+                  <span className="text-white/25">Don&apos;t reveal your word directly.</span>
                 </p>
+
                 {discussionStarter && (
-                  <p className="mb-5 text-xs font-semibold text-[#00B4DB]/70 sm:mb-8 sm:text-sm">
-                    {discussionStarter.name} starts the round
-                  </p>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 280 }}
+                    className="mb-6 rounded-xl border p-4 sm:mb-8 sm:rounded-2xl sm:p-5"
+                    style={{
+                      background: "rgba(0,180,219,0.08)",
+                      borderColor: "rgba(0,180,219,0.3)",
+                    }}
+                  >
+                    <p className="mb-1 text-[10px] uppercase tracking-[0.25em] text-[#00B4DB]/60 sm:text-xs">
+                      Starts the discussion
+                    </p>
+                    <p
+                      className="text-2xl font-black uppercase tracking-[0.1em] text-[#00B4DB] sm:text-4xl sm:tracking-[0.2em]"
+                      style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
+                    >
+                      {discussionStarter.name}
+                    </p>
+                    <p className="mt-1.5 text-[10px] text-white/30 sm:mt-2 sm:text-xs">
+                      Goes first — describe the word without saying it
+                    </p>
+                  </motion.div>
                 )}
 
                 <motion.button
@@ -313,7 +346,7 @@ export default function ImposterGamePage() {
                   whileTap={{ scale: 0.95 }}
                   className="rounded-xl bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-white shadow-lg sm:px-8 sm:py-4 sm:text-sm sm:tracking-[0.2em]"
                 >
-                  Proceed to Vote
+                  Proceed to Vote →
                 </motion.button>
               </div>
             </motion.div>
@@ -368,9 +401,16 @@ export default function ImposterGamePage() {
               className="w-full text-center"
             >
               <div className="glass-panel rounded-2xl p-3 sm:rounded-3xl sm:p-8">
-                <span className="mb-3 block text-4xl sm:mb-4 sm:text-6xl">{crewWins ? "🎉" : "🕵️"}</span>
+                <motion.span
+                  className="mb-3 block text-4xl sm:mb-4 sm:text-6xl"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                >
+                  {crewWins ? "🎉" : "🕵️"}
+                </motion.span>
                 <h2
-                  className="mb-3 text-xl font-black uppercase tracking-[0.15em] sm:mb-4 sm:text-3xl sm:tracking-[0.25em]"
+                  className="mb-4 text-xl font-black uppercase tracking-[0.15em] sm:mb-6 sm:text-3xl sm:tracking-[0.25em]"
                   style={{
                     fontFamily: "var(--font-syne), var(--font-display)",
                     color: crewWins ? "#00B4DB" : "#ef4444",
@@ -378,16 +418,86 @@ export default function ImposterGamePage() {
                 >
                   {crewWins ? "Crew Wins!" : "Imposter Wins!"}
                 </h2>
-                <p className="mb-2 text-xs text-white/40 sm:text-sm">
-                  The word was: <span className="font-bold text-white/70">{secretWord}</span>
-                </p>
-                <p className="mb-5 text-xs text-white/30 sm:mb-8 sm:text-sm">
-                  Imposter{totalImposters > 1 ? "s" : ""}:{" "}
-                  {players
-                    .filter((p) => p.isImposter)
-                    .map((p) => p.name)
-                    .join(", ")}
-                </p>
+
+                {/* Tap-to-reveal section */}
+                <AnimatePresence mode="wait">
+                  {!resultRevealed ? (
+                    <motion.button
+                      key="reveal-btn"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      onClick={() => setResultRevealed(true)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="mx-auto mb-5 flex flex-col items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-8 py-6 text-white/50 transition-colors hover:border-white/25 hover:bg-white/[0.07] sm:mb-8 sm:px-10 sm:py-8"
+                    >
+                      <span className="text-3xl sm:text-4xl">🔓</span>
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
+                        Tap to Reveal
+                      </span>
+                      <span className="text-[10px] text-white/25 sm:text-xs">
+                        Word · Imposters · Full reveal
+                      </span>
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      key="reveal-content"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                      className="mb-5 sm:mb-8"
+                    >
+                      {/* Secret Word */}
+                      <div
+                        className="mb-4 rounded-xl border p-4 sm:mb-5 sm:rounded-2xl sm:p-5"
+                        style={{
+                          background: "rgba(0,180,219,0.07)",
+                          borderColor: "rgba(0,180,219,0.25)",
+                        }}
+                      >
+                        <p className="mb-1 text-[10px] uppercase tracking-[0.25em] text-[#00B4DB]/60 sm:text-xs">
+                          The Secret Word
+                        </p>
+                        <p
+                          className="text-2xl font-black uppercase tracking-[0.1em] text-[#00B4DB] sm:text-4xl sm:tracking-[0.2em]"
+                          style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
+                        >
+                          {secretWord}
+                        </p>
+                        <p className="mt-1 text-[10px] text-white/30 sm:text-xs">
+                          Category: {category}
+                        </p>
+                      </div>
+
+                      {/* Imposters */}
+                      <div
+                        className="rounded-xl border p-4 sm:rounded-2xl sm:p-5"
+                        style={{
+                          background: "rgba(239,68,68,0.07)",
+                          borderColor: "rgba(239,68,68,0.25)",
+                        }}
+                      >
+                        <p className="mb-2 text-[10px] uppercase tracking-[0.25em] text-red-400/70 sm:text-xs">
+                          The Imposter{totalImposters > 1 ? "s" : ""}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {players
+                            .filter((p) => p.isImposter)
+                            .map((p) => (
+                              <span
+                                key={p.id}
+                                className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-bold text-red-400 sm:text-base"
+                              >
+                                🕵️ {p.name}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <Link
                   href="/imposter"

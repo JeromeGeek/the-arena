@@ -35,7 +35,7 @@ export default function GameSetupShell({
   children,
 }: GameSetupShellProps) {
   return (
-    <main className="grain-overlay relative min-h-[100dvh] overflow-x-hidden pb-24 sm:pb-16">
+    <main className="grain-overlay relative min-h-[100dvh] overflow-x-hidden pb-20 sm:pb-16" style={{ overscrollBehavior: "none" }}>
       {/* ── Ambient background glows (match homepage) ── */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
@@ -78,8 +78,8 @@ export default function GameSetupShell({
 
       {/* ── Mobile bottom back — slim pill, thumb-zone, unobtrusive ── */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-8 pt-12 sm:hidden"
-        style={{ background: "linear-gradient(to top, rgba(6,6,10,1) 40%, transparent 100%)" }}
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 pt-8 sm:hidden"
+        style={{ background: "linear-gradient(to top, rgba(6,6,10,0.98) 50%, transparent 100%)" }}
       >
         <Link
           href="/"
@@ -127,12 +127,20 @@ export default function GameSetupShell({
           </h1>
 
           {/* Subtitle */}
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/30">
+          <p
+            className="mt-1 text-sm font-bold uppercase tracking-[0.22em] sm:text-base"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${accentFrom}cc, ${accentTo}99)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             {subtitle}
           </p>
 
           {/* Flavour line */}
-          <p className="mt-1.5 text-xs text-white/20">{flavour}</p>
+          <p className="mt-1.5 text-[11px] text-white/35 sm:text-xs">{flavour}</p>
 
           {/* Accent divider */}
           <div className="mx-auto mt-4 h-px w-16 rounded-full opacity-40"
