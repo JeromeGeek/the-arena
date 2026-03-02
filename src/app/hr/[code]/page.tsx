@@ -350,19 +350,19 @@ export default function SnapQuizGamePage() {
             <div className="pointer-events-none absolute inset-0"
               style={{ background: "radial-gradient(ellipse at 50% 35%,#06B6D41A 0%,transparent 65%)" }} />
             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 280, damping: 20 }} className="text-8xl">🖼️</motion.div>
+              transition={{ type: "spring", stiffness: 280, damping: 20 }} className="text-6xl">🖼️</motion.div>
             <div>
-              <Syne className="text-5xl text-white">Snap Quiz</Syne>
-              <p className="mt-2 text-xl text-white/40">{totalRounds} round{totalRounds > 1 ? "s" : ""} · {totalImages} images · {DIFFICULTY_LABEL[difficulty]} · {teams.length} teams</p>
+              <Syne className="text-3xl text-white">Snap Quiz</Syne>
+              <p className="mt-2 text-sm text-white/40">{totalRounds} round{totalRounds > 1 ? "s" : ""} · {totalImages} images · {DIFFICULTY_LABEL[difficulty]} · {teams.length} teams</p>
             </div>
             {/* Teams */}
-            <div className="flex flex-col gap-3 w-full max-w-lg">
+            <div className="flex flex-col gap-2 w-full max-w-lg">
               {teams.map((name, i) => {
                 const col = TEAM_COLORS[i % TEAM_COLORS.length];
                 return (
-                  <div key={i} className="flex items-center gap-3 rounded-2xl border px-6 py-4"
+                  <div key={i} className="flex items-center gap-3 rounded-2xl border px-4 py-3"
                     style={{ borderColor: col.border, background: col.bg }}>
-                    <span className="text-lg font-black uppercase tracking-widest" style={{ color: col.accent }}>{name}</span>
+                    <span className="text-sm font-black uppercase tracking-widest" style={{ color: col.accent }}>{name}</span>
                   </div>
                 );
               })}
@@ -370,14 +370,14 @@ export default function SnapQuizGamePage() {
             {!countdownActive ? (
               <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 onClick={() => { setCountdown(3); setCountdownActive(true); }}
-                className="rounded-2xl px-16 py-6 text-xl font-black uppercase tracking-[0.2em] text-black"
+                className="rounded-2xl px-12 py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
                 style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 40px #06B6D466" }}>
                 🚀 Start Game
               </motion.button>
             ) : (
               <motion.div key={countdown} initial={{ scale: 1.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 350, damping: 22 }}>
-                <Syne className="text-[10rem] leading-none" style={{ color: "#06B6D4" }}>{countdown > 0 ? countdown : "GO!"}</Syne>
+                <Syne className="text-7xl leading-none" style={{ color: "#06B6D4" }}>{countdown > 0 ? countdown : "GO!"}</Syne>
               </motion.div>
             )}
           </motion.div>
@@ -412,13 +412,13 @@ export default function SnapQuizGamePage() {
               <div className="mt-8 flex gap-4">
                 <Link href="/headrush" className="flex-1">
                   <motion.div whileTap={{ scale: 0.95 }}
-                    className="rounded-2xl border border-white/10 bg-white/[0.04] py-5 text-base font-bold uppercase tracking-widest text-white/60 text-center cursor-pointer hover:bg-white/[0.08] transition-colors">
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] py-3 text-sm font-bold uppercase tracking-widest text-white/60 text-center cursor-pointer hover:bg-white/[0.08] transition-colors">
                     New Game
                   </motion.div>
                 </Link>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => { elapsedMsRef.current = 0; setRematchCount((c) => c + 1); setScores(new Array(teams.length).fill(0)); resetForNewImage(0, 0); setPhase("lobby"); }}
-                  className="flex-1 rounded-2xl py-5 text-base font-black uppercase tracking-widest text-black"
+                  className="flex-1 rounded-2xl py-3 text-sm font-black uppercase tracking-widest text-black"
                   style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)" }}>
                   Rematch
                 </motion.button>
@@ -436,15 +436,15 @@ export default function SnapQuizGamePage() {
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6"
             style={{ background: verdictResult === "correct" ? "linear-gradient(160deg,rgba(22,163,74,0.97),rgba(16,185,129,0.95))" : "linear-gradient(160deg,rgba(220,38,38,0.97),rgba(239,68,68,0.95))" }}>
             <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.05 }} className="text-[9rem] leading-none">
+              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.05 }} className="text-[6rem] leading-none">
               {verdictResult === "correct" ? "✅" : "❌"}
             </motion.div>
             <div className="text-center">
-              <Syne className="text-7xl text-white" style={{ textShadow: "0 2px 40px rgba(0,0,0,0.4)" }}>
+              <Syne className="text-5xl text-white" style={{ textShadow: "0 2px 40px rgba(0,0,0,0.4)" }}>
                 {verdictResult === "correct" ? "CORRECT!" : "WRONG!"}
               </Syne>
               {answeringTeam !== null && (
-                <p className="mt-3 text-2xl font-bold text-white/90">
+                <p className="mt-3 text-base font-bold text-white/90">
                   {verdictResult === "correct"
                     ? `+${answeredBlurred ? POINTS_BLURRED : POINTS_REVEALED} pts → ${teams[answeringTeam]}`
                     : `${POINTS_WRONG} pts · ${teams[answeringTeam]}`}
@@ -463,7 +463,7 @@ export default function SnapQuizGamePage() {
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4"
             style={{ background: `linear-gradient(160deg,${activeCol.accent}22 0%,rgba(11,14,20,0.97) 60%)`, backdropFilter: "blur(4px)" }}>
             <p className="text-base uppercase tracking-[0.35em] text-white/40">Passed to</p>
-            <Syne className="text-8xl" style={{ color: activeCol.accent, textShadow: `0 0 60px ${activeCol.accent}88` }}>{teams[activeTeam]}</Syne>
+            <Syne className="text-5xl" style={{ color: activeCol.accent, textShadow: `0 0 60px ${activeCol.accent}88` }}>{teams[activeTeam]}</Syne>
           </motion.div>
         )}
       </AnimatePresence>
@@ -488,12 +488,12 @@ export default function SnapQuizGamePage() {
                 return (
                   <motion.div key={name} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: rank * 0.07, type: "spring", stiffness: 280, damping: 22 }}
-                    className="flex items-center justify-between rounded-2xl border px-6 py-4"
+                    className="flex items-center justify-between rounded-2xl border px-5 py-3"
                     style={{ borderColor: col.border, background: col.bg }}>
-                    <span className="text-xl font-bold" style={{ color: col.accent }}>
+                    <span className="text-sm font-bold" style={{ color: col.accent }}>
                       {rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}
                     </span>
-                    <Syne className="text-3xl" style={{ color: col.accent }}>{score}</Syne>
+                    <Syne className="text-xl" style={{ color: col.accent }}>{score}</Syne>
                   </motion.div>
                 );
               })}
@@ -501,7 +501,7 @@ export default function SnapQuizGamePage() {
             <motion.button initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 280, damping: 22 }}
               whileTap={{ scale: 0.95 }} onClick={() => setPhase("revealing")}
-              className="rounded-2xl px-16 py-6 text-xl font-black uppercase tracking-[0.2em] text-black"
+              className="rounded-2xl px-12 py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
               style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 40px #06B6D466" }}>
               🚀 Start Round {currentRound}
             </motion.button>
@@ -528,10 +528,10 @@ export default function SnapQuizGamePage() {
               className="flex items-center gap-2 rounded-2xl border px-4 py-2"
               style={{ borderColor: isActive || isScorer ? col.border : "rgba(255,255,255,0.08)", background: isActive || isScorer ? col.bg : "rgba(255,255,255,0.03)" }}>
               {isActive && <span className="text-xs text-white/60">▶</span>}
-              <span className="text-sm font-semibold text-white/60">{name}</span>
+              <span className="text-xs font-semibold text-white/60">{name}</span>
               <motion.span key={scores[i]} initial={{ scale: 1.5 }} animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                className="text-xl font-black" style={{ color: col.accent, fontFamily: "var(--font-syne),var(--font-display)" }}>
+                className="text-base font-black" style={{ color: col.accent, fontFamily: "var(--font-syne),var(--font-display)" }}>
                 {scores[i]}
               </motion.span>
             </motion.div>
@@ -583,7 +583,7 @@ export default function SnapQuizGamePage() {
                   transition={{ type: "spring", stiffness: 300, damping: 24 }}
                   className="absolute bottom-5 inset-x-5 rounded-2xl border border-white/20 bg-black/80 px-6 py-4 text-center backdrop-blur-md">
                   <p className="text-sm uppercase tracking-widest text-white/40 mb-1">Answer</p>
-                  <Syne className="text-4xl text-white">{currentImage.answer}</Syne>
+                  <Syne className="text-2xl text-white">{currentImage.answer}</Syne>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -596,7 +596,7 @@ export default function SnapQuizGamePage() {
                   className="absolute bottom-5 inset-x-5 flex flex-col items-center gap-2">
                   <div className="w-full rounded-2xl border border-white/20 bg-black/80 px-6 py-4 text-center backdrop-blur-md">
                     <p className="text-sm uppercase tracking-widest text-white/40 mb-1">Answer</p>
-                    <Syne className="text-4xl text-white">{currentImage.answer}</Syne>
+                    <Syne className="text-2xl text-white">{currentImage.answer}</Syne>
                   </div>
                   {lastScorer !== null && (
                     <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
@@ -625,13 +625,13 @@ export default function SnapQuizGamePage() {
             <div className="flex gap-3">
               <motion.button whileTap={{ scale: 0.93 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 onClick={handleAnswer}
-                className="flex-1 rounded-2xl py-5 text-lg font-black uppercase tracking-[0.15em]"
+                className="flex-1 rounded-2xl py-4 text-sm font-black uppercase tracking-[0.15em]"
                 style={{ backgroundImage: activeCol.gradient, boxShadow: `0 0 32px ${activeCol.accent}55`, color: "black" }}>
                 ✋ Answer
               </motion.button>
               <motion.button whileTap={{ scale: 0.93 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 onClick={handlePass}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] px-7 py-5 text-lg font-bold uppercase tracking-widest text-white/40">
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-7 py-4 text-sm font-bold uppercase tracking-widest text-white/40">
                 Pass →
               </motion.button>
             </div>
@@ -652,13 +652,13 @@ export default function SnapQuizGamePage() {
             <div className="flex gap-3">
               <motion.button whileTap={{ scale: 0.93 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 onClick={handleCorrect}
-                className="flex-1 rounded-2xl py-5 text-lg font-black uppercase tracking-[0.15em] text-black"
+                className="flex-1 rounded-2xl py-4 text-sm font-black uppercase tracking-[0.15em] text-black"
                 style={{ background: "linear-gradient(135deg,#22C55E,#16A34A)", boxShadow: "0 0 28px #22C55E55" }}>
                 ✓ Correct
               </motion.button>
               <motion.button whileTap={{ scale: 0.93 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 onClick={handleWrong}
-                className="flex-1 rounded-2xl py-5 text-lg font-black uppercase tracking-[0.15em] text-white"
+                className="flex-1 rounded-2xl py-4 text-sm font-black uppercase tracking-[0.15em] text-white"
                 style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: "0 0 28px #FF416C55" }}>
                 ✗ Wrong
               </motion.button>
@@ -671,7 +671,7 @@ export default function SnapQuizGamePage() {
           <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             whileTap={{ scale: 0.95 }} onClick={handleNext}
-            className="w-full rounded-2xl py-5 text-lg font-black uppercase tracking-[0.2em] text-black"
+            className="w-full rounded-2xl py-4 text-sm font-black uppercase tracking-[0.2em] text-black"
             style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 32px #06B6D455" }}>
             {imgIndex + 1 >= totalImages ? "🏆 Final Results" : imgInRound >= IMAGES_PER_ROUND ? "Next Round →" : "Next Image →"}
           </motion.button>
