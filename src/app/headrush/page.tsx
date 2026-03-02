@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { generateSeed, seedToSlug } from "@/lib/gamecodes";
 import { snapCategories, IMAGES_PER_ROUND } from "@/lib/snapquiz";
 import GameSetupShell, {
   SetupLabel,
   SetupAddRow,
+  SetupPlayerRow,
   SetupOptionPill,
   SetupStartButton,
 } from "@/components/GameSetupShell";
@@ -29,13 +30,6 @@ const categoryOptions = snapCategories.map((c) => ({
   label: c.label,
   emoji: c.emoji,
 }));
-
-const TEAM_COLORS = [
-  { bg: "rgba(255,65,108,0.12)", border: "rgba(255,65,108,0.4)", text: "#FF416C" },
-  { bg: "rgba(0,180,219,0.12)",  border: "rgba(0,180,219,0.4)",  text: "#00B4DB" },
-  { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.4)", text: "#A855F7" },
-  { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.4)",  text: "#22C55E" },
-];
 
 export default function SnapQuizSetupPage() {
   const router = useRouter();
@@ -82,32 +76,22 @@ export default function SnapQuizSetupPage() {
         <SetupLabel>Teams ({teams.length}/4)</SetupLabel>
         <div className="space-y-2">
           <AnimatePresence>
-            {teams.map((name, i) => {
-              const col = TEAM_COLORS[i % TEAM_COLORS.length];
-              return (
-                <motion.div
-                  key={i}
-                  layout
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 16 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="flex items-center justify-between rounded-xl border px-3 py-2.5"
-                  style={{ borderColor: col.border, background: col.bg }}
-                >
-                  <span className="text-sm font-bold" style={{ color: col.text }}>{name}</span>
-                  {teams.length > 2 && (
-                    <motion.button
-                      onClick={() => handleRemoveTeam(i)}
-                      whileTap={{ scale: 0.85 }}
-                      className="text-[10px] text-white/20 transition-colors hover:text-white/50"
-                    >
-                      ✕
-                    </motion.button>
-                  )}
-                </motion.div>
-              );
-            })}
+            {teams.map((name, i) => (
+              <SetupPlayerRow
+                key={i}
+                emoji={["🔴","🔵","🟣","🟢"][i % 4]}
+                index={i}
+                value={name}
+                onChange={(v) => {
+                  const updated = [...teams];
+                  updated[i] = v;
+                  setTeams(updated);
+                }}
+                onRemove={() => handleRemoveTeam(i)}
+                canRemove={teams.length > 2}
+                placeholder={`Team ${i + 1}…`}
+              />
+            ))}
           </AnimatePresence>
         </div>
         {teams.length < 4 && (

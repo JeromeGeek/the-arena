@@ -333,7 +333,7 @@ export default function InkArenaTVPage() {
             <div className="shrink-0 flex items-center justify-between border-b border-white/8 px-4 py-2 sm:px-8">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full" style={{ background: teamGradient("red"), boxShadow: "0 0 8px rgba(255,65,108,0.6)" }} />
-                <span className="text-xs uppercase tracking-widest text-white/40">Red</span>
+                <span className="text-xs uppercase tracking-widest text-white/40">{teamName("red")}</span>
                 <motion.span key={scores.red} initial={{ scale: 1.3, color: "#FFFFFF" }} animate={{ scale: 1, color: "#FF416C" }}
                   transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="text-2xl font-black sm:text-3xl"
@@ -355,7 +355,7 @@ export default function InkArenaTVPage() {
                   style={{ fontFamily: "var(--font-syne),var(--font-display)" }}>
                   {scores.blue}
                 </motion.span>
-                <span className="text-xs uppercase tracking-widest text-white/40">Blue</span>
+                <span className="text-xs uppercase tracking-widest text-white/40">{teamName("blue")}</span>
                 <div className="h-2 w-2 rounded-full" style={{ background: teamGradient("blue"), boxShadow: "0 0 8px rgba(0,180,219,0.6)" }} />
               </div>
             </div>
@@ -449,12 +449,12 @@ export default function InkArenaTVPage() {
             </motion.div>
             <div className="flex items-center gap-8">
               <div className="text-center">
-                <p className="text-xs uppercase tracking-widest text-white/30">Red</p>
+                <p className="text-xs uppercase tracking-widest text-white/30">{teamName("red")}</p>
                 <p className="text-3xl font-black" style={{ color: "#FF416C" }}>{scores.red}</p>
               </div>
               <div className="h-8 w-px bg-white/10" />
               <div className="text-center">
-                <p className="text-xs uppercase tracking-widest text-white/30">Blue</p>
+                <p className="text-xs uppercase tracking-widest text-white/30">{teamName("blue")}</p>
                 <p className="text-3xl font-black" style={{ color: "#00B4DB" }}>{scores.blue}</p>
               </div>
             </div>

@@ -1,19 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateRoomCode } from "@/lib/inkarena";
 import GameSetupShell, { SetupStartButton, SetupLabel } from "@/components/GameSetupShell";
 
 export default function PictionaryPage() {
   const router = useRouter();
+  const [redName, setRedName] = useState("Red Team");
+  const [blueName, setBlueName] = useState("Blue Team");
 
   function handleLaunch() {
     const code = generateRoomCode();
     sessionStorage.setItem(
       `ink-arena:${code}`,
       JSON.stringify({
-        redName: "Red Team",
-        blueName: "Blue Team",
+        redName: redName.trim() || "Red Team",
+        blueName: blueName.trim() || "Blue Team",
         scores: { red: 0, blue: 0 },
         round: 0,
         history: [],
@@ -35,43 +38,39 @@ export default function PictionaryPage() {
     >
       {/* Teams */}
       <div className="mb-6">
-        <SetupLabel>Teams</SetupLabel>
+        <SetupLabel>Team Names</SetupLabel>
         <div className="grid grid-cols-2 gap-3">
+          {/* Red team */}
           <div
-            className="rounded-2xl border px-4 py-4 text-center"
-            style={{
-              borderColor: "rgba(255,65,108,0.35)",
-              background: "rgba(255,65,108,0.08)",
-            }}
+            className="rounded-2xl border px-4 py-3"
+            style={{ borderColor: "rgba(255,65,108,0.35)", background: "rgba(255,65,108,0.08)" }}
           >
-            <div
-              className="mx-auto mb-2 h-2.5 w-2.5 rounded-full"
-              style={{
-                background: "linear-gradient(135deg,#FF416C,#FF4B2B)",
-                boxShadow: "0 0 10px rgba(255,65,108,0.6)",
-              }}
+            <div className="mx-auto mb-2 h-2.5 w-2.5 rounded-full"
+              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: "0 0 10px rgba(255,65,108,0.6)" }} />
+            <input
+              value={redName}
+              onChange={(e) => setRedName(e.target.value)}
+              onFocus={(e) => { e.target.select(); setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 350); }}
+              className="w-full bg-transparent text-center text-sm font-black uppercase tracking-widest outline-none placeholder:text-white/20"
+              style={{ color: "#FF416C" }}
+              placeholder="Red Team"
             />
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#FF416C" }}>
-              Red Team
-            </p>
           </div>
+          {/* Blue team */}
           <div
-            className="rounded-2xl border px-4 py-4 text-center"
-            style={{
-              borderColor: "rgba(0,180,219,0.35)",
-              background: "rgba(0,180,219,0.08)",
-            }}
+            className="rounded-2xl border px-4 py-3"
+            style={{ borderColor: "rgba(0,180,219,0.35)", background: "rgba(0,180,219,0.08)" }}
           >
-            <div
-              className="mx-auto mb-2 h-2.5 w-2.5 rounded-full"
-              style={{
-                background: "linear-gradient(135deg,#00B4DB,#0083B0)",
-                boxShadow: "0 0 10px rgba(0,180,219,0.6)",
-              }}
+            <div className="mx-auto mb-2 h-2.5 w-2.5 rounded-full"
+              style={{ background: "linear-gradient(135deg,#00B4DB,#0083B0)", boxShadow: "0 0 10px rgba(0,180,219,0.6)" }} />
+            <input
+              value={blueName}
+              onChange={(e) => setBlueName(e.target.value)}
+              onFocus={(e) => { e.target.select(); setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 350); }}
+              className="w-full bg-transparent text-center text-sm font-black uppercase tracking-widest outline-none placeholder:text-white/20"
+              style={{ color: "#00B4DB" }}
+              placeholder="Blue Team"
             />
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#00B4DB" }}>
-              Blue Team
-            </p>
           </div>
         </div>
       </div>
@@ -84,25 +83,11 @@ export default function PictionaryPage() {
           style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
         >
           <ul className="space-y-2.5 text-xs leading-relaxed text-white/50">
-            <li>
-              <span className="mr-2">🖥️</span>
-              <strong className="text-white/70">TV / big screen</strong> — open this game URL here
-            </li>
-            <li>
-              <span className="mr-2">✏️</span>
-              <strong className="text-white/70">Drawer</strong> — scan the QR code, draw on their phone
-            </li>
-            <li>
-              <span className="mr-2">🎯</span>
-              <strong className="text-white/70">Guessers</strong> — scan the other QR, type guesses
-            </li>
-            <li>
-              <span className="mr-2">⚡</span>
-              <strong className="text-white/70">Steal</strong> — opposing team can steal points mid-round
-            </li>
-            <li>
-              <span className="mr-2">🏆</span>First to <strong className="text-white/70">1000 pts</strong> wins
-            </li>
+            <li><span className="mr-2">🖥️</span><strong className="text-white/70">TV / big screen</strong> — open this game URL here</li>
+            <li><span className="mr-2">✏️</span><strong className="text-white/70">Drawer</strong> — scan the QR code, draw on their phone</li>
+            <li><span className="mr-2">🎯</span><strong className="text-white/70">Guessers</strong> — scan the other QR, type guesses</li>
+            <li><span className="mr-2">⚡</span><strong className="text-white/70">Steal</strong> — opposing team can steal points mid-round</li>
+            <li><span className="mr-2">🏆</span>First to <strong className="text-white/70">1000 pts</strong> wins</li>
           </ul>
         </div>
       </div>
