@@ -376,7 +376,7 @@ export default function SnapQuizGamePage() {
             ) : (
               <motion.div key={countdown} initial={{ scale: 1.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 350, damping: 22 }}>
-                <Syne className="text-7xl leading-none" style={{ color: "#06B6D4" }}>{countdown > 0 ? countdown : "GO!"}</Syne>
+                <Syne className="text-5xl leading-none" style={{ color: "#06B6D4" }}>{countdown > 0 ? countdown : "GO!"}</Syne>
               </motion.div>
             )}
           </motion.div>
@@ -390,20 +390,20 @@ export default function SnapQuizGamePage() {
             className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-6">
             <motion.div initial={{ scale: 0.7, y: 40, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="w-full max-w-lg rounded-3xl border p-10 text-center"
+              className="w-full max-w-lg rounded-3xl border p-8 text-center"
               style={{ borderColor: TEAM_COLORS[winner.i % TEAM_COLORS.length].border, background: "rgba(11,14,20,0.97)", boxShadow: `0 0 80px ${TEAM_COLORS[winner.i % TEAM_COLORS.length].accent}44` }}>
-              <p className="text-7xl mb-4">🏆</p>
-              <p className="text-base uppercase tracking-widest text-white/40 mb-1">Winner</p>
-              <Syne className="text-5xl" style={{ color: TEAM_COLORS[winner.i % TEAM_COLORS.length].accent }}>{winner.name}</Syne>
-              <p className="mt-1 text-2xl font-black text-white/60">{winner.score} pts</p>
-              <div className="mt-6 space-y-3">
+              <p className="text-5xl mb-3">🏆</p>
+              <p className="text-xs uppercase tracking-widest text-white/40 mb-1">Winner</p>
+              <Syne className="text-3xl" style={{ color: TEAM_COLORS[winner.i % TEAM_COLORS.length].accent }}>{winner.name}</Syne>
+              <p className="mt-1 text-base font-black text-white/60">{winner.score} pts</p>
+              <div className="mt-4 space-y-2">
                 {leaderboard.map(({ name, score, i: ti }, rank) => {
                   const col = TEAM_COLORS[ti % TEAM_COLORS.length];
                   return (
-                    <div key={name} className="flex items-center justify-between rounded-2xl px-5 py-3"
+                    <div key={name} className="flex items-center justify-between rounded-xl px-4 py-2"
                       style={{ background: rank === 0 ? col.bg : "rgba(255,255,255,0.03)", borderLeft: `4px solid ${col.accent}` }}>
-                      <span className="text-lg text-white/70">{rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}</span>
-                      <Syne className="text-2xl" style={{ color: col.accent }}>{score}</Syne>
+                      <span className="text-sm text-white/70">{rank === 0 ? "🥇" : rank === 1 ? "🥈" : "🥉"} {name}</span>
+                      <Syne className="text-base" style={{ color: col.accent }}>{score}</Syne>
                     </div>
                   );
                 })}
@@ -435,11 +435,11 @@ export default function SnapQuizGamePage() {
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6"
             style={{ background: verdictResult === "correct" ? "linear-gradient(160deg,rgba(22,163,74,0.97),rgba(16,185,129,0.95))" : "linear-gradient(160deg,rgba(220,38,38,0.97),rgba(239,68,68,0.95))" }}>
             <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.05 }} className="text-[6rem] leading-none">
+              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.05 }} className="text-[4rem] leading-none">
               {verdictResult === "correct" ? "✅" : "❌"}
             </motion.div>
             <div className="text-center">
-              <Syne className="text-5xl text-white" style={{ textShadow: "0 2px 40px rgba(0,0,0,0.4)" }}>
+              <Syne className="text-3xl text-white" style={{ textShadow: "0 2px 40px rgba(0,0,0,0.4)" }}>
                 {verdictResult === "correct" ? "CORRECT!" : "WRONG!"}
               </Syne>
               {answeringTeam !== null && (
@@ -461,8 +461,8 @@ export default function SnapQuizGamePage() {
             transition={{ type: "spring", stiffness: 380, damping: 28 }}
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4"
             style={{ background: `linear-gradient(160deg,${activeCol.accent}22 0%,rgba(11,14,20,0.97) 60%)`, backdropFilter: "blur(4px)" }}>
-            <p className="text-base uppercase tracking-[0.35em] text-white/40">Passed to</p>
-            <Syne className="text-5xl" style={{ color: activeCol.accent, textShadow: `0 0 60px ${activeCol.accent}88` }}>{teams[activeTeam]}</Syne>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/40">Passed to</p>
+            <Syne className="text-3xl" style={{ color: activeCol.accent, textShadow: `0 0 60px ${activeCol.accent}88` }}>{teams[activeTeam]}</Syne>
           </motion.div>
         )}
       </AnimatePresence>
@@ -475,11 +475,11 @@ export default function SnapQuizGamePage() {
             <div className="pointer-events-none absolute inset-0"
               style={{ background: "radial-gradient(ellipse at 50% 30%,#06B6D41A 0%,transparent 65%)" }} />
             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 22 }} className="text-7xl">🏁</motion.div>
+              transition={{ type: "spring", stiffness: 300, damping: 22 }} className="text-5xl">🏁</motion.div>
             <div>
-              <p className="text-base uppercase tracking-[0.35em] text-white/30 mb-2">Round complete</p>
-              <Syne className="text-6xl text-white">Round {currentRound - 1} Done</Syne>
-              <p className="mt-2 text-xl text-white/40">Round {currentRound} of {totalRounds} up next</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-white/30 mb-1">Round complete</p>
+              <Syne className="text-3xl text-white">Round {currentRound - 1} Done</Syne>
+              <p className="mt-1 text-sm text-white/40">Round {currentRound} of {totalRounds} up next</p>
             </div>
             <div className="w-full max-w-lg space-y-3">
               {leaderboard.map(({ name, score, i: ti }, rank) => {
