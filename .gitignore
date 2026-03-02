@@ -47,3 +47,7 @@ yarn-error.log*
 *.keystore
 /android/
 next-env.d.ts
+
+# Upload scripts cache
+.wiki-cache/
+*.bak

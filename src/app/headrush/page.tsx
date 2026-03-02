@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { generateSeed, seedToSlug } from "@/lib/gamecodes";
-import { snapCategories } from "@/lib/snapquiz";
+import { snapCategories, IMAGES_PER_ROUND } from "@/lib/snapquiz";
 import GameSetupShell, {
   SetupLabel,
   SetupAddRow,
@@ -19,10 +19,9 @@ const difficultyOptions = [
 ];
 
 const roundOptions = [
-  { value: 2,  label: "2",  emoji: "✌️" },
-  { value: 4,  label: "4",  emoji: "🔥" },
-  { value: 6,  label: "6",  emoji: "💪" },
-  { value: 8,  label: "8",  emoji: "🏆" },
+  { value: 1, label: "1", desc: "10 images" },
+  { value: 2, label: "2", desc: "20 images" },
+  { value: 3, label: "3", desc: "30 images" },
 ];
 
 const categoryOptions = snapCategories.map((c) => ({
@@ -43,7 +42,7 @@ export default function SnapQuizSetupPage() {
   const [teams, setTeams] = useState<string[]>(["Team 1", "Team 2"]);
   const [inputTeam, setInputTeam] = useState("");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "extreme">("medium");
-  const [rounds, setRounds] = useState(4);
+  const [rounds, setRounds] = useState(2); // 2 rounds × 10 = 20 images
   const [category, setCategory] = useState("random");
 
   function handleAddTeam() {
@@ -145,7 +144,7 @@ export default function SnapQuizSetupPage() {
 
       {/* Rounds */}
       <div className="mb-5">
-        <SetupLabel>Images per Game</SetupLabel>
+        <SetupLabel>Rounds ({IMAGES_PER_ROUND} images each)</SetupLabel>
         <div className="flex flex-wrap gap-2">
           {roundOptions.map((opt) => (
             <SetupOptionPill
@@ -154,10 +153,13 @@ export default function SnapQuizSetupPage() {
               onClick={() => setRounds(opt.value)}
               accentColor="#06B6D4"
             >
-              {opt.emoji} {opt.label}
+              {opt.label}
             </SetupOptionPill>
           ))}
         </div>
+        <p className="mt-1.5 text-xs text-white/35">
+          {roundOptions.find((o) => o.value === rounds)?.desc} total
+        </p>
       </div>
 
       {/* Category */}
@@ -184,7 +186,7 @@ export default function SnapQuizSetupPage() {
         accentFrom="#06B6D4"
         accentTo="#0891B2"
       >
-        🖼️ Start Snap Quiz · {teams.length} Teams
+        🖼️ Start · {rounds} Round{rounds > 1 ? "s" : ""} · {rounds * IMAGES_PER_ROUND} Images
       </SetupStartButton>
     </GameSetupShell>
   );

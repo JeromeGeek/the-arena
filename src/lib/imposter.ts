@@ -30,7 +30,7 @@ export const categories: ImposterCategory[] = [
       "Margot Robbie", "Sydney Sweeney", "Florence Pugh", "Jacob Elordi",
       "Sabrina Carpenter", "Charli XCX", "Olivia Rodrigo", "SZA", "Travis Scott",
       "Simone Biles", "LeBron James", "Novak Djokovic", "Carlos Alcaraz",
-      "Elon Musk", "Jeff Bezos", "Mark Zuckerberg", "Tim Cook",
+      "Jeff Bezos", "Mark Zuckerberg", "Tim Cook",
     ],
   },
   {

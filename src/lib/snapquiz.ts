@@ -1,282 +1,653 @@
 // SnapQuiz — Image bank for the image-guessing party game
-// All images are sourced from Wikimedia Commons (public domain)
+// All images are served from Cloudinary: snap-lens/<difficulty>/<category>/<filename>
+// Run `node scripts/upload-to-cloudinary.mjs` once to populate your Cloudinary account.
+// 720 images total across 4 categories × 3 difficulties.
+// No duplicates. No text visible in images. Difficulty reflects visual recognisability.
 
-export type SnapCategory = "landmarks" | "movies" | "people" | "india" | "random";
+import { cldSnap } from "./cloudinary";
+
+export type SnapCategory = "random" | "flags" | "logos" | "landmarks" | "celebrities";
 export type SnapDifficulty = "easy" | "medium" | "extreme";
 
 export interface SnapImage {
   id: string;
   answer: string;
-  hint: string; // shown after wrong guess or pass
+  hint: string;
   url: string;
   category: SnapCategory;
 }
 
-// ── World Landmarks ──────────────────────────────────────────────────────────
+// Shorthand alias
+const c = cldSnap;
+
+// ─────────────────────────────────────────────
+// 🌍 WORLD LANDMARKS  (201 images: 66 easy + 69 medium + 66 extreme)
+// easy   = iconic global landmarks, front-on classic shots
+// medium = well-known but require geography knowledge
+// extreme = lesser-known or unusual/partial angles
+// ─────────────────────────────────────────────
 const landmarks: SnapImage[] = [
-  {
-    id: "lm01", answer: "Eiffel Tower", hint: "Paris, France",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Sightseeing_in_Paris.jpg/800px-Sightseeing_in_Paris.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm02", answer: "Taj Mahal", hint: "Agra, India",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Taj_Mahal_%28Edited%29.jpeg/1024px-Taj_Mahal_%28Edited%29.jpeg",
-    category: "landmarks",
-  },
-  {
-    id: "lm03", answer: "Colosseum", hint: "Rome, Italy",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/1024px-Colosseo_2020.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm04", answer: "Statue of Liberty", hint: "New York, USA",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Statue_of_Liberty_7.jpg/800px-Statue_of_Liberty_7.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm05", answer: "Burj Khalifa", hint: "Dubai, UAE",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Burj_Khalifa.jpg/800px-Burj_Khalifa.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm06", answer: "Big Ben", hint: "London, England",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Big_ben_postcard.jpg/800px-Big_ben_postcard.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm07", answer: "Great Wall of China", hint: "Northern China",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1024px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm08", answer: "Machu Picchu", hint: "Peru, South America",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Machu_Picchu%2C_Peru.jpg/1024px-Machu_Picchu%2C_Peru.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm09", answer: "Sydney Opera House", hint: "Sydney, Australia",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Sydney_Opera_House_-_Dec_2008.jpg/1024px-Sydney_Opera_House_-_Dec_2008.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm10", answer: "Pyramids of Giza", hint: "Egypt, Africa",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Kheops-Pyramid.jpg/1024px-Kheops-Pyramid.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm11", answer: "Stonehenge", hint: "Wiltshire, England",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Stonehenge2007_07_30.jpg/1024px-Stonehenge2007_07_30.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm12", answer: "Leaning Tower of Pisa", hint: "Pisa, Italy",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Leaning_tower_of_pisa_2.jpg/800px-Leaning_tower_of_pisa_2.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm13", answer: "Sagrada Família", hint: "Barcelona, Spain",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Sagrada_Familia_01.jpg/800px-Sagrada_Familia_01.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm14", answer: "Niagara Falls", hint: "USA / Canada border",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Niagara_falls_2009.jpg/1024px-Niagara_falls_2009.jpg",
-    category: "landmarks",
-  },
-  {
-    id: "lm15", answer: "Mount Fuji", hint: "Japan",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/080103_hakkai_fuji.jpg/1024px-080103_hakkai_fuji.jpg",
-    category: "landmarks",
-  },
+  // ── easy (66) ─────────────────────────────
+  { id:"lm001",  answer:"Eiffel Tower",              hint:"Paris, France",                       category:"landmarks", url:c("easy","landmarks","eiffel-tower") },
+  { id:"lm002",  answer:"Taj Mahal",                 hint:"Agra, India",                         category:"landmarks", url:c("easy","landmarks","taj-mahal") },
+  { id:"lm003",  answer:"Colosseum",                 hint:"Rome, Italy",                         category:"landmarks", url:c("easy","landmarks","colosseum") },
+  { id:"lm004",  answer:"Statue of Liberty",         hint:"New York, USA",                       category:"landmarks", url:c("easy","landmarks","statue-of-liberty") },
+  { id:"lm006",  answer:"Big Ben",                   hint:"London, England",                     category:"landmarks", url:c("easy","landmarks","big-ben") },
+  { id:"lm007",  answer:"Great Wall of China",       hint:"Northern China",                      category:"landmarks", url:c("easy","landmarks","great-wall") },
+  { id:"lm008",  answer:"Machu Picchu",              hint:"Peru, South America",                 category:"landmarks", url:c("easy","landmarks","machu-picchu") },
+  { id:"lm009",  answer:"Sydney Opera House",        hint:"Sydney, Australia",                   category:"landmarks", url:c("easy","landmarks","sydney-opera-house") },
+  { id:"lm010",  answer:"Pyramids of Giza",          hint:"Egypt",                               category:"landmarks", url:c("easy","landmarks","pyramids-giza") },
+  { id:"lm011",  answer:"Golden Gate Bridge",        hint:"San Francisco, USA",                  category:"landmarks", url:c("easy","landmarks","golden-gate") },
+  { id:"lm012",  answer:"Tower Bridge",              hint:"London, England",                     category:"landmarks", url:c("easy","landmarks","tower-bridge") },
+  { id:"lm014",  answer:"Mount Everest",             hint:"World's highest peak",                category:"landmarks", url:c("easy","landmarks","mount-everest") },
+  { id:"lm016",  answer:"Christ the Redeemer",       hint:"Rio de Janeiro, Brazil",              category:"landmarks", url:c("easy","landmarks","christ-redeemer") },
+  { id:"lm017",  answer:"Leaning Tower of Pisa",     hint:"Pisa, Italy",                         category:"landmarks", url:c("easy","landmarks","tower-of-pisa") },
+  { id:"lm018",  answer:"Stonehenge",                hint:"Wiltshire, England",                  category:"landmarks", url:c("easy","landmarks","stonehenge") },
+  { id:"lm021",  answer:"Mount Fuji",                hint:"Japan",                               category:"landmarks", url:c("easy","landmarks","mount-fuji") },
+  { id:"lm027",  answer:"Chichen Itza",              hint:"Yucatan, Mexico",                     category:"landmarks", url:c("easy","landmarks","chichen-itza") },
+  { id:"lm028",  answer:"Neuschwanstein Castle",     hint:"Bavaria, Germany",                    category:"landmarks", url:c("easy","landmarks","neuschwanstein") },
+  { id:"lm031",  answer:"Eiffel Tower at night",     hint:"Paris — light show",                  category:"landmarks", url:c("easy","landmarks","eiffel-night") },
+  { id:"lm036a", answer:"Aurora Borealis",           hint:"Northern Lights",                     category:"landmarks", url:c("easy","landmarks","aurora-borealis") },
+  { id:"lm036b", answer:"Sagrada Familia Towers",    hint:"Barcelona — tower detail",            category:"landmarks", url:c("easy","landmarks","sagrada-towers") },
+  { id:"lm036c", answer:"Big Ben & Westminster",     hint:"London — from the Thames",            category:"landmarks", url:c("easy","landmarks","big-ben-westminster") },
+  { id:"lm036d", answer:"Chichen Itza equinox",      hint:"Shadow serpent at equinox",           category:"landmarks", url:c("easy","landmarks","chichen-itza-equinox") },
+  { id:"lm036e", answer:"Machu Picchu aerial",       hint:"Peru — aerial view",                  category:"landmarks", url:c("easy","landmarks","machu-picchu-aerial") },
+  { id:"lme006", answer:"Buckingham Palace",         hint:"London royal residence",              category:"landmarks", url:c("easy","landmarks","buckingham-palace") },
+  { id:"lme018", answer:"Mount Rushmore",            hint:"Presidents carved in rock, USA",      category:"landmarks", url:c("easy","landmarks","mount-rushmore") },
+  // ── India easy landmarks ─────────────────
+  { id:"inl002", answer:"Red Fort",                  hint:"Old Delhi, India",                    category:"landmarks", url:c("easy","landmarks","red-fort") },
+  { id:"inl003", answer:"India Gate",                hint:"New Delhi war memorial",              category:"landmarks", url:c("easy","landmarks","india-gate") },
+  { id:"inl004", answer:"Golden Temple",             hint:"Amritsar, Punjab",                    category:"landmarks", url:c("easy","landmarks","golden-temple") },
+  { id:"inl005", answer:"Gateway of India",          hint:"Mumbai harbour",                      category:"landmarks", url:c("easy","landmarks","gateway-india") },
+  { id:"inl006", answer:"Lotus Temple",              hint:"New Delhi — Bahá'í House",            category:"landmarks", url:c("easy","landmarks","lotus-temple") },
+  { id:"inl007", answer:"Qutub Minar",               hint:"Delhi — tallest brick minaret",       category:"landmarks", url:c("easy","landmarks","qutub-minar") },
+  { id:"inl009", answer:"Mysore Palace",             hint:"Karnataka, South India",              category:"landmarks", url:c("easy","landmarks","mysore-palace") },
+  { id:"inl010", answer:"Meenakshi Temple",          hint:"Madurai, Tamil Nadu",                 category:"landmarks", url:c("easy","landmarks","meenakshi-temple") },
+  { id:"inl011", answer:"Charminar",                 hint:"Hyderabad, Telangana",                category:"landmarks", url:c("easy","landmarks","charminar") },
+  { id:"inl012", answer:"Victoria Memorial",         hint:"Kolkata, West Bengal",                category:"landmarks", url:c("easy","landmarks","victoria-memorial") },
+  { id:"inl013", answer:"Varanasi Ghats",            hint:"Ganges riverfront, Varanasi",         category:"landmarks", url:c("easy","landmarks","varanasi-ghats") },
+  // ── USA easy landmarks (new) ──────────────
+  { id:"usal001", answer:"Grand Canyon",             hint:"Colorado River, Arizona",             category:"landmarks", url:c("easy","landmarks","grand-canyon") },
+  { id:"usal002", answer:"Old Faithful",             hint:"Yellowstone geyser, Wyoming",         category:"landmarks", url:c("easy","landmarks","old-faithful") },
+  { id:"usal003", answer:"Mount Rushmore",           hint:"Four presidents, South Dakota",       category:"landmarks", url:c("easy","landmarks","mount-rushmore-wide") },
+  { id:"usal005", answer:"Hollywood Sign",           hint:"Los Angeles hills, California",       category:"landmarks", url:c("easy","landmarks","hollywood-sign") },
+  { id:"usal006", answer:"White House",              hint:"US President's residence, DC",        category:"landmarks", url:c("easy","landmarks","white-house") },
+  { id:"usal007", answer:"Niagara Falls",            hint:"USA side, New York",                  category:"landmarks", url:c("easy","landmarks","niagara-falls-usa") },
+  { id:"usal009", answer:"Las Vegas Strip",          hint:"Neon boulevard, Nevada",              category:"landmarks", url:c("easy","landmarks","las-vegas-strip") },
+  { id:"usal010", answer:"Hoover Dam",               hint:"Boulder City, Nevada",                category:"landmarks", url:c("easy","landmarks","hoover-dam") },
+  { id:"usal011", answer:"Lincoln Memorial",         hint:"National Mall, Washington DC",        category:"landmarks", url:c("easy","landmarks","lincoln-memorial") },
+
+  // ── medium (69) ───────────────────────────
+  { id:"lm055",  answer:"Cappadocia",                hint:"Hot air balloons, Turkey",            category:"landmarks", url:c("medium","landmarks","cappadocia") },
+  { id:"lm056",  answer:"Bagan Temples",             hint:"Ancient Myanmar plains",              category:"landmarks", url:c("medium","landmarks","bagan-temples") },
+  { id:"lm059",  answer:"Edinburgh Castle",          hint:"Castle Rock, Scotland",               category:"landmarks", url:c("medium","landmarks","edinburgh-castle") },
+  { id:"lm062",  answer:"Amalfi Coast",              hint:"Cliffside towns, Italy",              category:"landmarks", url:c("medium","landmarks","amalfi-coast") },
+  { id:"lm068",  answer:"Louvre Museum",             hint:"Glass pyramid, Paris",                category:"landmarks", url:c("medium","landmarks","louvre") },
+  { id:"lm070",  answer:"Arc de Triomphe",           hint:"Champs-Élysées, Paris",               category:"landmarks", url:c("medium","landmarks","arc-triomphe") },
+  { id:"lm073",  answer:"Iguazu Falls",              hint:"Argentina/Brazil border",             category:"landmarks", url:c("medium","landmarks","iguazu-falls") },
+  { id:"lm075",  answer:"Ha Long Bay",               hint:"Vietnam — limestone karsts",          category:"landmarks", url:c("medium","landmarks","halong-bay") },
+  { id:"lm075b", answer:"Ha Long Bay boats",         hint:"Vietnam — sailing karsts",            category:"landmarks", url:c("medium","landmarks","halong-boat") },
+  { id:"lm077",  answer:"Dead Sea",                  hint:"Lowest point on Earth, Jordan",       category:"landmarks", url:c("medium","landmarks","dead-sea") },
+  { id:"lm089",  answer:"Grand Canyon",              hint:"Colorado River, Arizona, USA",        category:"landmarks", url:c("medium","landmarks","grand-canyon") },
+  { id:"lm090",  answer:"Yellowstone",               hint:"Geyser, Wyoming, USA",                category:"landmarks", url:c("medium","landmarks","yellowstone") },
+  { id:"lm094",  answer:"Cologne Cathedral",         hint:"Gothic twin towers, Germany",         category:"landmarks", url:c("medium","landmarks","cologne-cathedral") },
+  { id:"lm095",  answer:"Palace of Versailles",      hint:"French royal palace gardens",         category:"landmarks", url:c("medium","landmarks","versailles") },
+  { id:"lm100",  answer:"Alcazar of Segovia",        hint:"Fairy-tale castle, Spain",            category:"landmarks", url:c("medium","landmarks","alcazar-segovia") },
+  { id:"lm100b", answer:"Great Sphinx",              hint:"Guard of the Pyramids, Egypt",        category:"landmarks", url:c("medium","landmarks","great-sphinx") },
+  { id:"lmm018", answer:"Mahabalipuram",             hint:"Shore Temple, Tamil Nadu",            category:"landmarks", url:c("medium","landmarks","mahabalipuram") },
+  // ── India medium landmarks ─────────────────
+  { id:"inl014", answer:"Ajanta Caves",              hint:"Buddhist rock-cut, Maharashtra",      category:"landmarks", url:c("medium","landmarks","ajanta-caves") },
+  { id:"inl015", answer:"Ellora Caves",              hint:"Rock temples, Maharashtra",           category:"landmarks", url:c("medium","landmarks","ellora-caves") },
+  { id:"inl016", answer:"Khajuraho Temples",         hint:"Madhya Pradesh sculptures",           category:"landmarks", url:c("medium","landmarks","khajuraho") },
+  { id:"inl017", answer:"Brihadeeswarar Temple",     hint:"Thanjavur, Tamil Nadu",               category:"landmarks", url:c("medium","landmarks","brihadeeswarar") },
+  { id:"inl018", answer:"Konark Sun Temple",         hint:"Odisha — chariot temple",             category:"landmarks", url:c("medium","landmarks","konark-sun") },
+  { id:"inl019", answer:"Hampi",                     hint:"Vijayanagara ruins, Karnataka",       category:"landmarks", url:c("medium","landmarks","hampi") },
+  { id:"inl020", answer:"Sanchi Stupa",              hint:"Buddhist stupa, Madhya Pradesh",      category:"landmarks", url:c("medium","landmarks","sanchi-stupa") },
+  { id:"inl021", answer:"Amber Fort",                hint:"Jaipur hills, Rajasthan",             category:"landmarks", url:c("medium","landmarks","amer-fort") },
+  { id:"inl022", answer:"Fatehpur Sikri",            hint:"Mughal ghost city, Agra",             category:"landmarks", url:c("medium","landmarks","fatehpur-sikri") },
+  { id:"inl026", answer:"Pattadakal",                hint:"Chalukya temples, Karnataka",         category:"landmarks", url:c("medium","landmarks","pattadakal") },
+  // ── USA medium landmarks (new) ────────────
+  { id:"usam003", answer:"Arches National Park",     hint:"Red rock arches, Utah",               category:"landmarks", url:c("medium","landmarks","arches") },
+  { id:"usam007", answer:"Half Dome",                hint:"Granite dome, Yosemite, California",  category:"landmarks", url:c("medium","landmarks","half-dome") },
+  { id:"usam010", answer:"Crater Lake",              hint:"Deepest lake in USA, Oregon",         category:"landmarks", url:c("medium","landmarks","crater-lake") },
+  { id:"usam015", answer:"US Capitol",               hint:"Congress building, Washington DC",    category:"landmarks", url:c("medium","landmarks","us-capitol") },
+  { id:"usam016", answer:"Brooklyn Bridge",          hint:"Spanning the East River, NYC",        category:"landmarks", url:c("medium","landmarks","brooklyn-bridge") },
+  { id:"usam020", answer:"The Alamo",                hint:"Historic mission, San Antonio, Texas", category:"landmarks", url:c("medium","landmarks","alamo") },
+  { id:"usam023", answer:"Multnomah Falls",          hint:"Columbia River Gorge, Oregon",        category:"landmarks", url:c("medium","landmarks","multnomah-falls") },
+
+  // ── extreme (66) ──────────────────────────
+  { id:"lm103",  answer:"Hallstatt",                 hint:"Austrian lakeside village",           category:"landmarks", url:c("extreme","landmarks","hallstatt") },
+  { id:"lm112",  answer:"Danakil Depression",        hint:"Hottest place, Ethiopia",             category:"landmarks", url:c("extreme","landmarks","danakil") },
+  { id:"lm116",  answer:"Bigar Waterfall",           hint:"Fairytale fall, Romania",             category:"landmarks", url:c("extreme","landmarks","bigar-waterfall") },
+  { id:"lm117",  answer:"Antelope Canyon",           hint:"Slot canyon, Arizona, USA",           category:"landmarks", url:c("extreme","landmarks","antelope-canyon") },
+  { id:"lm117b", answer:"Antelope Canyon beams",     hint:"Light beams, Arizona slot canyon",    category:"landmarks", url:c("extreme","landmarks","antelope-beam") },
+  { id:"lm120",  answer:"Door to Hell",              hint:"Gas crater, Turkmenistan",            category:"landmarks", url:c("extreme","landmarks","door-to-hell") },
+  { id:"lm127",  answer:"Fly Geyser",                hint:"Technicolor geyser, Nevada",          category:"landmarks", url:c("extreme","landmarks","fly-geyser") },
+  { id:"lm137",  answer:"Bryce Canyon",              hint:"Orange hoodoos, Utah, USA",           category:"landmarks", url:c("extreme","landmarks","bryce-canyon") },
+  { id:"lm138",  answer:"Vatnajokull Glacier",       hint:"Largest glacier, Iceland",            category:"landmarks", url:c("extreme","landmarks","vatnajokull") },
+  { id:"lm139",  answer:"Dolomites",                 hint:"Pink peaks, North Italy",             category:"landmarks", url:c("extreme","landmarks","dolomites") },
+  { id:"lm144",  answer:"Lençóis Maranhenses",       hint:"Lagoons in dunes, Brazil",            category:"landmarks", url:c("extreme","landmarks","lencois") },
+  { id:"lm149",  answer:"Torres del Paine",          hint:"Granite towers, Chile",               category:"landmarks", url:c("extreme","landmarks","torres-del-paine") },
+  { id:"lm149b", answer:"Patagonia Glacier",         hint:"Patagonia, ice and mountains",        category:"landmarks", url:c("extreme","landmarks","patagonia-glacier") },
+  { id:"lm149c", answer:"Salar de Uyuni",            hint:"World's largest salt flat, Bolivia",  category:"landmarks", url:c("extreme","landmarks","salar-uyuni") },
+  { id:"lm149d", answer:"Cappadocia balloons",       hint:"Hot air balloons, Turkey",            category:"landmarks", url:c("extreme","landmarks","cappadocia-balloon") },
+  { id:"lmx011", answer:"Gol Gumbaz",                hint:"Bijapur mausoleum, Karnataka",        category:"landmarks", url:c("extreme","landmarks","gol-gumbaz") },
+  { id:"lmx030", answer:"Ranakpur",                  hint:"Jain marble temple, Rajasthan",       category:"landmarks", url:c("extreme","landmarks","ranakpur") },
+  { id:"lmx031", answer:"Rani ki Vav",               hint:"Stepwell of Patan, Gujarat",          category:"landmarks", url:c("extreme","landmarks","rani-ki-vav") },
+  { id:"lmx036", answer:"Somnath Temple",            hint:"Jyotirlinga, Gujarat coastline",      category:"landmarks", url:c("extreme","landmarks","somnath-temple") },
+  { id:"lmx043", answer:"Vijay Stambha",             hint:"Victory tower, Chittorgarh",          category:"landmarks", url:c("extreme","landmarks","vijay-stambha") },
+  // ── India extreme landmarks ────────────────
+  { id:"inl040", answer:"Kamakhya Temple",           hint:"Tantric temple, Guwahati",            category:"landmarks", url:c("extreme","landmarks","kamakhya") },
+  // ── USA extreme landmarks (new) ───────────
+  { id:"usax002", answer:"Horseshoe Bend",           hint:"Colorado River meander, Arizona",     category:"landmarks", url:c("extreme","landmarks","horseshoe-bend") },
+  { id:"usax026", answer:"Delicate Arch",            hint:"Freestanding arch, Arches NP, Utah",  category:"landmarks", url:c("extreme","landmarks","delicate-arch") },
 ];
 
-// ── Famous People (all public domain / historical) ───────────────────────────
-const people: SnapImage[] = [
-  {
-    id: "pp01", answer: "Albert Einstein", hint: "Theory of Relativity",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/800px-Albert_Einstein_Head.jpg",
-    category: "people",
-  },
-  {
-    id: "pp02", answer: "Mahatma Gandhi", hint: "Father of the Nation",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Mahatma-Gandhi%2C_studio%2C_1931.jpg/800px-Mahatma-Gandhi%2C_studio%2C_1931.jpg",
-    category: "people",
-  },
-  {
-    id: "pp03", answer: "Leonardo da Vinci", hint: "Renaissance genius",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/800px-Leonardo_self.jpg",
-    category: "people",
-  },
-  {
-    id: "pp04", answer: "Nelson Mandela", hint: "South African president",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Nelson_Mandela_1994.jpg/800px-Nelson_Mandela_1994.jpg",
-    category: "people",
-  },
-  {
-    id: "pp05", answer: "Marie Curie", hint: "Nobel Prize in Physics & Chemistry",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Marie_Curie_c1920.jpg/800px-Marie_Curie_c1920.jpg",
-    category: "people",
-  },
-  {
-    id: "pp06", answer: "Abraham Lincoln", hint: "16th US President",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Abraham_Lincoln_O-77_matte_collodion_print.jpg/800px-Abraham_Lincoln_O-77_matte_collodion_print.jpg",
-    category: "people",
-  },
-  {
-    id: "pp07", answer: "Charles Darwin", hint: "Theory of Evolution",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Charles_Darwin_seated_crop.jpg/800px-Charles_Darwin_seated_crop.jpg",
-    category: "people",
-  },
-  {
-    id: "pp08", answer: "Isaac Newton", hint: "Laws of Motion & Gravity",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Portrait_of_Sir_Isaac_Newton%2C_1689.jpg/800px-Portrait_of_Sir_Isaac_Newton%2C_1689.jpg",
-    category: "people",
-  },
-  {
-    id: "pp09", answer: "Napoleon Bonaparte", hint: "French Emperor",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project_2.jpg/800px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project_2.jpg",
-    category: "people",
-  },
-  {
-    id: "pp10", answer: "Nikola Tesla", hint: "Invented AC electricity",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/N.Tesla.JPG/800px-N.Tesla.JPG",
-    category: "people",
-  },
-  {
-    id: "pp11", answer: "Cleopatra", hint: "Last pharaoh of Egypt",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/800px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg",
-    category: "people",
-  },
-  {
-    id: "pp12", answer: "William Shakespeare", hint: "Famous playwright",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Shakespeare.jpg/800px-Shakespeare.jpg",
-    category: "people",
-  },
+// ─────────────────────────────────────────────
+// 🏁 COUNTRY FLAGS  (150 images: 50+50+50)
+// easy   = very well-known flags with distinctive design
+// medium = recognisable with geography knowledge
+// extreme = uncommon or visually similar to others
+// ─────────────────────────────────────────────
+const flags: SnapImage[] = [
+  // ── easy (50) ─────────────────────────────
+  { id:"fl001", answer:"Japan",          hint:"Red circle on white",                category:"flags", url:c("easy","flags","japan") },
+  { id:"fl002", answer:"Brazil",         hint:"Green, yellow & blue globe",         category:"flags", url:c("easy","flags","brazil") },
+  { id:"fl003", answer:"Canada",         hint:"Red maple leaf",                     category:"flags", url:c("easy","flags","canada") },
+  { id:"fl004", answer:"India",          hint:"Tricolour with Ashoka Chakra",       category:"flags", url:c("easy","flags","india") },
+  { id:"fl005", answer:"United States",  hint:"Stars and Stripes",                  category:"flags", url:c("easy","flags","usa") },
+  { id:"fl006", answer:"United Kingdom", hint:"Union Jack",                         category:"flags", url:c("easy","flags","uk") },
+  { id:"fl007", answer:"Germany",        hint:"Black, red, gold",                   category:"flags", url:c("easy","flags","germany") },
+  { id:"fl008", answer:"France",         hint:"Blue, white, red vertical",          category:"flags", url:c("easy","flags","france") },
+  { id:"fl009", answer:"Australia",      hint:"Union Jack + Southern Cross",        category:"flags", url:c("easy","flags","australia") },
+  { id:"fl010", answer:"South Africa",   hint:"Rainbow Nation flag",                category:"flags", url:c("easy","flags","south-africa") },
+  { id:"fl011", answer:"Spain",          hint:"Red and yellow with coat of arms",   category:"flags", url:c("easy","flags","spain") },
+  { id:"fl012", answer:"Italy",          hint:"Green, white, red vertical",         category:"flags", url:c("easy","flags","italy") },
+  { id:"fl013", answer:"Russia",         hint:"White, blue, red horizontal",        category:"flags", url:c("easy","flags","russia") },
+  { id:"fl014", answer:"China",          hint:"Red flag with gold stars",           category:"flags", url:c("easy","flags","china") },
+  { id:"fl015", answer:"Mexico",         hint:"Eagle on a cactus, centre",          category:"flags", url:c("easy","flags","mexico") },
+  { id:"fl016", answer:"Argentina",      hint:"Light blue & white, sun in middle",  category:"flags", url:c("easy","flags","argentina") },
+  { id:"fl017", answer:"Sweden",         hint:"Yellow cross on blue",               category:"flags", url:c("easy","flags","sweden") },
+  { id:"fl018", answer:"Switzerland",    hint:"White cross on red square",          category:"flags", url:c("easy","flags","switzerland") },
+  { id:"fl019", answer:"Turkey",         hint:"Red flag with crescent and star",    category:"flags", url:c("easy","flags","turkey") },
+  { id:"fl020", answer:"South Korea",    hint:"Taegukgi, yin-yang and trigrams",    category:"flags", url:c("easy","flags","south-korea") },
+  { id:"fl021", answer:"Norway",         hint:"Red with blue and white cross",      category:"flags", url:c("easy","flags","norway") },
+  { id:"fl022", answer:"Greece",         hint:"Blue and white stripes with cross",  category:"flags", url:c("easy","flags","greece") },
+  { id:"fl023", answer:"Poland",         hint:"White over red",                     category:"flags", url:c("easy","flags","poland") },
+  { id:"fl024", answer:"Nepal",          hint:"Only non-rectangular national flag", category:"flags", url:c("easy","flags","nepal") },
+  { id:"fl025", answer:"Egypt",          hint:"Eagle of Saladin on white band",     category:"flags", url:c("easy","flags","egypt") },
+  { id:"fl026", answer:"Portugal",       hint:"Green & red with armillary sphere",  category:"flags", url:c("easy","flags","portugal") },
+  { id:"fl027", answer:"Netherlands",    hint:"Red, white, blue horizontal",        category:"flags", url:c("easy","flags","netherlands") },
+  { id:"fl028", answer:"Denmark",        hint:"White cross on red",                 category:"flags", url:c("easy","flags","denmark") },
+  { id:"fl029", answer:"Nigeria",        hint:"Green, white, green vertical",       category:"flags", url:c("easy","flags","nigeria") },
+  { id:"fl030", answer:"Indonesia",      hint:"Red over white",                     category:"flags", url:c("easy","flags","indonesia") },
+  { id:"fl031", answer:"Pakistan",       hint:"Green with white crescent & star",   category:"flags", url:c("easy","flags","pakistan") },
+  { id:"fl032", answer:"New Zealand",    hint:"Union Jack + Southern Cross (red)",  category:"flags", url:c("easy","flags","new-zealand") },
+  { id:"fl033", answer:"Ukraine",        hint:"Blue and yellow horizontal",         category:"flags", url:c("easy","flags","ukraine") },
+  { id:"fl034", answer:"Saudi Arabia",   hint:"Green with Arabic script & sword",   category:"flags", url:c("easy","flags","saudi-arabia") },
+  { id:"fl035", answer:"Kenya",          hint:"Maasai shield and spears",           category:"flags", url:c("easy","flags","kenya") },
+  { id:"fl036", answer:"Jamaica",        hint:"Black, gold, green diagonal cross",  category:"flags", url:c("easy","flags","jamaica") },
+  { id:"fl037", answer:"Iran",           hint:"Green, white, red + Allah script",   category:"flags", url:c("easy","flags","iran") },
+  { id:"fl038", answer:"Israel",         hint:"Blue Star of David on white",        category:"flags", url:c("easy","flags","israel") },
+  { id:"fl039", answer:"Ethiopia",       hint:"Green, yellow, red with blue star",  category:"flags", url:c("easy","flags","ethiopia") },
+  { id:"fl040", answer:"Thailand",       hint:"Red, white, blue, white, red",       category:"flags", url:c("easy","flags","thailand") },
+  { id:"fl041", answer:"Malaysia",       hint:"Stripes + crescent moon + star",     category:"flags", url:c("easy","flags","malaysia") },
+  { id:"fl042", answer:"Peru",           hint:"Red, white, red vertical stripes",   category:"flags", url:c("easy","flags","peru") },
+  { id:"fl043", answer:"Colombia",       hint:"Yellow, blue, red horizontal",       category:"flags", url:c("easy","flags","colombia") },
+  { id:"fl044", answer:"Bangladesh",     hint:"Red circle on green",                category:"flags", url:c("easy","flags","bangladesh") },
+  { id:"fl045", answer:"Ghana",          hint:"Red, gold, green + black star",      category:"flags", url:c("easy","flags","ghana") },
+  { id:"fl046", answer:"Myanmar",        hint:"Yellow, green, red + white star",    category:"flags", url:c("easy","flags","myanmar") },
+  { id:"fl047", answer:"Cambodia",       hint:"Angkor Wat temple on red & blue",    category:"flags", url:c("easy","flags","cambodia") },
+  { id:"fl048", answer:"Senegal",        hint:"Green, yellow, red + green star",    category:"flags", url:c("easy","flags","senegal") },
+  { id:"fl049", answer:"Cuba",           hint:"Red triangle + blue and white stripes", category:"flags", url:c("easy","flags","cuba") },
+  { id:"fl050", answer:"Iceland",        hint:"Blue with red cross on white cross", category:"flags", url:c("easy","flags","iceland") },
+  { id:"fl051", answer:"Finland",        hint:"Blue cross on white",                category:"flags", url:c("medium","flags","finland") },
+  { id:"fl052", answer:"Austria",        hint:"Red, white, red horizontal",         category:"flags", url:c("medium","flags","austria") },
+  { id:"fl053", answer:"Belgium",        hint:"Black, yellow, red vertical",        category:"flags", url:c("medium","flags","belgium") },
+  { id:"fl054", answer:"Ireland",        hint:"Green, white, orange vertical",      category:"flags", url:c("medium","flags","ireland") },
+  { id:"fl055", answer:"Hungary",        hint:"Red, white, green horizontal",       category:"flags", url:c("medium","flags","hungary") },
+  { id:"fl056", answer:"Czech Republic", hint:"Blue triangle + white and red",      category:"flags", url:c("medium","flags","czech-republic") },
+  { id:"fl057", answer:"Romania",        hint:"Blue, yellow, red vertical",         category:"flags", url:c("medium","flags","romania") },
+  { id:"fl058", answer:"Bulgaria",       hint:"White, green, red horizontal",       category:"flags", url:c("medium","flags","bulgaria") },
+  { id:"fl059", answer:"Croatia",        hint:"Red, white, blue + shield crest",    category:"flags", url:c("medium","flags","croatia") },
+  { id:"fl060", answer:"Slovakia",       hint:"White, blue, red + shield crest",    category:"flags", url:c("medium","flags","slovakia") },
+  { id:"fl061", answer:"Slovenia",       hint:"White, blue, red + mountain crest",  category:"flags", url:c("medium","flags","slovenia") },
+  { id:"fl062", answer:"Serbia",         hint:"Red, blue, white + eagle crest",     category:"flags", url:c("medium","flags","serbia") },
+  { id:"fl063", answer:"Albania",        hint:"Black double-headed eagle on red",   category:"flags", url:c("medium","flags","albania") },
+  { id:"fl064", answer:"Morocco",        hint:"Red with green pentagram",           category:"flags", url:c("medium","flags","morocco") },
+  { id:"fl065", answer:"Algeria",        hint:"Green, white + crescent and star",   category:"flags", url:c("medium","flags","algeria") },
+  { id:"fl066", answer:"Tunisia",        hint:"Red with white circle & crescent",   category:"flags", url:c("medium","flags","tunisia") },
+  { id:"fl068", answer:"Zimbabwe",       hint:"Green, yellow, red with Zimbabwe bird", category:"flags", url:c("medium","flags","zimbabwe") },
+  { id:"fl069", answer:"Uganda",         hint:"Crested crane on black, yellow, red",category:"flags", url:c("medium","flags","uganda") },
+  { id:"fl070", answer:"Tanzania",       hint:"Green, yellow, black diagonal",      category:"flags", url:c("medium","flags","tanzania") },
+  { id:"fl071", answer:"Mozambique",     hint:"AK-47, hoe, book on green/black",    category:"flags", url:c("medium","flags","mozambique") },
+  { id:"fl072", answer:"Angola",         hint:"Red, black + machete and cogwheel",  category:"flags", url:c("medium","flags","angola") },
+  { id:"fl074", answer:"Venezuela",      hint:"Yellow, blue, red + arc of stars",   category:"flags", url:c("medium","flags","venezuela") },
+  { id:"fl075", answer:"Chile",          hint:"Red, white + blue canton with star", category:"flags", url:c("medium","flags","chile") },
+  { id:"fl076", answer:"Ecuador",        hint:"Yellow, blue, red + coat of arms",   category:"flags", url:c("medium","flags","ecuador") },
+  { id:"fl077", answer:"Uruguay",        hint:"White stripes + sun on canton",      category:"flags", url:c("medium","flags","uruguay") },
+  { id:"fl078", answer:"Paraguay",       hint:"Red, white, blue + dual-sided seal", category:"flags", url:c("medium","flags","paraguay") },
+  { id:"fl079", answer:"Bolivia",        hint:"Red, yellow, green horizontal",      category:"flags", url:c("medium","flags","bolivia") },
+  { id:"fl080", answer:"Kazakhstan",     hint:"Light blue + yellow sun and eagle",  category:"flags", url:c("medium","flags","kazakhstan") },
+  { id:"fl081", answer:"Uzbekistan",     hint:"Blue, white, green + crescent",      category:"flags", url:c("medium","flags","uzbekistan") },
+  { id:"fl082", answer:"Afghanistan",    hint:"Black, red, green + mosque emblem",  category:"flags", url:c("medium","flags","afghanistan") },
+  { id:"fl083", answer:"Iraq",           hint:"Red, white, black + Arabic script",  category:"flags", url:c("medium","flags","iraq") },
+  { id:"fl084", answer:"Syria",          hint:"Red, white, black + two green stars",category:"flags", url:c("medium","flags","syria") },
+  { id:"fl085", answer:"Jordan",         hint:"Black, white, green + red star",     category:"flags", url:c("medium","flags","jordan") },
+  { id:"fl086", answer:"Lebanon",        hint:"Cedar tree on white and red",        category:"flags", url:c("medium","flags","lebanon") },
+  { id:"fl088", answer:"Vietnam",        hint:"Yellow star on red",                 category:"flags", url:c("medium","flags","vietnam") },
+  { id:"fl089", answer:"Philippines",    hint:"Blue, red + sun and stars on white", category:"flags", url:c("medium","flags","philippines") },
+  { id:"fl090", answer:"Sri Lanka",      hint:"Golden lion on dark red",            category:"flags", url:c("medium","flags","sri-lanka") },
+  { id:"fl091", answer:"Mongolia",       hint:"Red, blue, red + soyombo symbol",    category:"flags", url:c("medium","flags","mongolia") },
+  { id:"fl092", answer:"North Korea",    hint:"Red, blue, white + red star",        category:"flags", url:c("medium","flags","north-korea") },
+  { id:"fl093", answer:"Haiti",          hint:"Blue, red + palm tree coat of arms", category:"flags", url:c("medium","flags","haiti") },
+  { id:"fl094", answer:"Trinidad and Tobago", hint:"Red with black stripe",        category:"flags", url:c("medium","flags","trinidad") },
+  { id:"fl095", answer:"Sudan",          hint:"Red, white, black + green triangle", category:"flags", url:c("medium","flags","sudan") },
+  { id:"fl096", answer:"Somalia",        hint:"Light blue with white star",         category:"flags", url:c("medium","flags","somalia") },
+  { id:"fl097", answer:"Cameroon",       hint:"Green, red, yellow + star",          category:"flags", url:c("medium","flags","cameroon") },
+  { id:"fl098", answer:"Ivory Coast",    hint:"Orange, white, green vertical",      category:"flags", url:c("medium","flags","ivory-coast") },
+  { id:"fl099", answer:"Guatemala",      hint:"Blue, white, blue + quetzal bird",   category:"flags", url:c("medium","flags","guatemala") },
+  { id:"fl100", answer:"Panama",         hint:"White, red, blue, white + stars",    category:"flags", url:c("medium","flags","panama") },
+  { id:"fl100a",answer:"Costa Rica",    hint:"Blue, white, red, white, blue",      category:"flags", url:c("medium","flags","costa-rica") },
+  { id:"fl100b",answer:"Eritrea",       hint:"Green, blue, red + olive wreath",    category:"flags", url:c("medium","flags","eritrea") },
+  { id:"fl100c",answer:"Moldova",       hint:"Blue, yellow, red + coat of arms",   category:"flags", url:c("medium","flags","moldova") },
+  { id:"fl101", answer:"Bhutan",         hint:"Dragon on orange and yellow",        category:"flags", url:c("extreme","flags","bhutan") },
+  { id:"fl102", answer:"Kiribati",       hint:"Yellow frigate bird over rising sun",category:"flags", url:c("extreme","flags","kiribati") },
+  { id:"fl103", answer:"Papua New Guinea",hint:"Bird of paradise and stars",        category:"flags", url:c("extreme","flags","papua-new-guinea") },
+  { id:"fl104", answer:"Vanuatu",        hint:"Boar's tusk and fern, Melanesia",   category:"flags", url:c("extreme","flags","vanuatu") },
+  { id:"fl105", answer:"Fiji",           hint:"Light blue + Union Jack + shield",   category:"flags", url:c("extreme","flags","fiji") },
+  { id:"fl106", answer:"Solomon Islands",hint:"Blue, green, yellow diagonal + stars", category:"flags", url:c("extreme","flags","solomon-islands") },
+  { id:"fl107", answer:"Micronesia",     hint:"Light blue + four white stars",      category:"flags", url:c("extreme","flags","micronesia") },
+  { id:"fl108", answer:"Palau",          hint:"Yellow circle off-centre on blue",   category:"flags", url:c("extreme","flags","palau") },
+  { id:"fl109", answer:"Tuvalu",         hint:"Nine stars on light blue",           category:"flags", url:c("extreme","flags","tuvalu") },
+  { id:"fl110", answer:"Nauru",          hint:"White star on blue with gold stripe",category:"flags", url:c("extreme","flags","nauru") },
+  { id:"fl111", answer:"Maldives",       hint:"White crescent on green, red border",category:"flags", url:c("extreme","flags","maldives") },
+  { id:"fl112", answer:"Turkmenistan",   hint:"Teal with ornate carpet strip",      category:"flags", url:c("extreme","flags","turkmenistan") },
+  { id:"fl113", answer:"Tajikistan",     hint:"White, red, green + golden crown",   category:"flags", url:c("extreme","flags","tajikistan") },
+  { id:"fl114", answer:"Kyrgyzstan",     hint:"Red with stylised yurt top",         category:"flags", url:c("extreme","flags","kyrgyzstan") },
+  { id:"fl115", answer:"Azerbaijan",     hint:"Blue, red, green + crescent/star",   category:"flags", url:c("extreme","flags","azerbaijan") },
+  { id:"fl116", answer:"Georgia",        hint:"White with four red crosses",        category:"flags", url:c("extreme","flags","georgia") },
+  { id:"fl117", answer:"Armenia",        hint:"Red, blue, orange horizontal",       category:"flags", url:c("extreme","flags","armenia") },
+  { id:"fl118", answer:"Kosovo",         hint:"Blue with golden map and stars",     category:"flags", url:c("extreme","flags","kosovo") },
+  { id:"fl119", answer:"Montenegro",     hint:"Golden eagle on red, golden border", category:"flags", url:c("extreme","flags","montenegro") },
+  { id:"fl120", answer:"North Macedonia",hint:"Sun of Vergina on red",              category:"flags", url:c("extreme","flags","north-macedonia") },
+  { id:"fl121", answer:"Bosnia",         hint:"Blue diagonal with gold stars",      category:"flags", url:c("extreme","flags","bosnia") },
+  { id:"fl123", answer:"Belarus",        hint:"Red, green + ornate stripe",         category:"flags", url:c("extreme","flags","belarus") },
+  { id:"fl124", answer:"Burundi",        hint:"Three stars on white saltire",       category:"flags", url:c("extreme","flags","burundi") },
+  { id:"fl125", answer:"Rwanda",         hint:"Blue, yellow, green + rising sun",   category:"flags", url:c("extreme","flags","rwanda") },
+  { id:"fl126", answer:"Malawi",         hint:"Black, red, green + rising sun",     category:"flags", url:c("extreme","flags","malawi") },
+  { id:"fl127", answer:"Lesotho",        hint:"White, blue, green + straw hat",     category:"flags", url:c("extreme","flags","lesotho") },
+  { id:"fl128", answer:"Eswatini",       hint:"Blue, red, yellow + Swazi shield",   category:"flags", url:c("extreme","flags","eswatini") },
+  { id:"fl129", answer:"Mauritius",      hint:"Red, blue, yellow, green bands",     category:"flags", url:c("extreme","flags","mauritius") },
+  { id:"fl130", answer:"Cape Verde",     hint:"Blue with ring of ten stars",        category:"flags", url:c("extreme","flags","cape-verde") },
+  { id:"fl131", answer:"Comoros",        hint:"Green triangle with stars & crescent", category:"flags", url:c("extreme","flags","comoros") },
+  { id:"fl132", answer:"Djibouti",       hint:"Blue, green + white triangle & star",category:"flags", url:c("extreme","flags","djibouti") },
+  { id:"fl133", answer:"Gambia",         hint:"Red, blue, green with thin whites",  category:"flags", url:c("extreme","flags","gambia") },
+  { id:"fl134", answer:"Sierra Leone",   hint:"Green, white, blue horizontal",      category:"flags", url:c("extreme","flags","sierra-leone") },
+  { id:"fl135", answer:"Guinea",         hint:"Red, yellow, green vertical",        category:"flags", url:c("extreme","flags","guinea") },
+  { id:"fl136", answer:"Guinea-Bissau",  hint:"Red, yellow, green + black star",    category:"flags", url:c("extreme","flags","guinea-bissau") },
+  { id:"fl137", answer:"Sao Tome",       hint:"Green, yellow, red + black star",    category:"flags", url:c("extreme","flags","sao-tome") },
+  { id:"fl138", answer:"Equatorial Guinea", hint:"Green, white, red + coat of arms",category:"flags", url:c("extreme","flags","equatorial-guinea") },
+  { id:"fl139", answer:"Gabon",          hint:"Green, yellow, blue horizontal",     category:"flags", url:c("extreme","flags","gabon") },
+  { id:"fl140", answer:"Tonga",          hint:"Red with white canton and red cross",category:"flags", url:c("extreme","flags","tonga") },
+  { id:"fl141", answer:"Samoa",          hint:"Red with blue canton and white stars",category:"flags", url:c("extreme","flags","samoa") },
+  { id:"fl142", answer:"Togo",           hint:"Green/yellow stripes + red canton star", category:"flags", url:c("extreme","flags","togo") },
+  { id:"fl143", answer:"Benin",          hint:"Green, yellow, red vertical",        category:"flags", url:c("extreme","flags","benin") },
+  { id:"fl144", answer:"Niger",          hint:"Orange, white, green + orange circle", category:"flags", url:c("extreme","flags","niger") },
+  { id:"fl145", answer:"Mali",           hint:"Green, yellow, red vertical",        category:"flags", url:c("extreme","flags","mali") },
+  { id:"fl146", answer:"Burkina Faso",   hint:"Red, green horizontal + yellow star",category:"flags", url:c("extreme","flags","burkina-faso") },
+  { id:"fl147", answer:"Chad",           hint:"Blue, yellow, red vertical",         category:"flags", url:c("extreme","flags","chad") },
+  { id:"fl148", answer:"Central African Republic", hint:"Four horizontal bands + yellow star", category:"flags", url:c("extreme","flags","central-african-republic") },
+  { id:"fl149", answer:"Congo",          hint:"Green diagonal on blue and red",     category:"flags", url:c("extreme","flags","congo") },
+  { id:"fl150", answer:"DR Congo",       hint:"Blue with red diagonal + star",      category:"flags", url:c("extreme","flags","dr-congo") },
+  { id:"fl150a",answer:"East Timor",     hint:"Red with black triangle + star",     category:"flags", url:c("extreme","flags","east-timor") },
 ];
 
-// ── India ────────────────────────────────────────────────────────────────────
-const india: SnapImage[] = [
-  {
-    id: "in01", answer: "Taj Mahal", hint: "Symbol of love, Agra",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Taj_Mahal_%28Edited%29.jpeg/1024px-Taj_Mahal_%28Edited%29.jpeg",
-    category: "india",
-  },
-  {
-    id: "in02", answer: "Red Fort", hint: "Delhi, India",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/RedFortDelhi.jpg/1024px-RedFortDelhi.jpg",
-    category: "india",
-  },
-  {
-    id: "in03", answer: "Gateway of India", hint: "Mumbai harbour",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Mumbai_03-2016_30_Gateway_of_India.jpg/1024px-Mumbai_03-2016_30_Gateway_of_India.jpg",
-    category: "india",
-  },
-  {
-    id: "in04", answer: "Hawa Mahal", hint: "Palace of Winds, Jaipur",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Hawa_Mahal_Jaipur.jpg/800px-Hawa_Mahal_Jaipur.jpg",
-    category: "india",
-  },
-  {
-    id: "in05", answer: "Lotus Temple", hint: "New Delhi, India",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Lotus_Temple_New_Delhi.jpg/1024px-Lotus_Temple_New_Delhi.jpg",
-    category: "india",
-  },
-  {
-    id: "in06", answer: "Qutub Minar", hint: "Tallest brick minaret",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Qtub_Minar.jpg/800px-Qtub_Minar.jpg",
-    category: "india",
-  },
-  {
-    id: "in07", answer: "India Gate", hint: "War memorial, New Delhi",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/India_Gate_in_New_Delhi_03-2016.jpg/1024px-India_Gate_in_New_Delhi_03-2016.jpg",
-    category: "india",
-  },
-  {
-    id: "in08", answer: "Mysore Palace", hint: "Karnataka, India",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Mysore_Palace_Morning.jpg/1024px-Mysore_Palace_Morning.jpg",
-    category: "india",
-  },
-  {
-    id: "in09", answer: "Hampi", hint: "UNESCO site, Karnataka",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Hampi_virupaksha_temple.jpg/1024px-Hampi_virupaksha_temple.jpg",
-    category: "india",
-  },
-  {
-    id: "in10", answer: "Golden Temple", hint: "Amritsar, Punjab",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Golden_Temple_Amritsar_2019.jpg/1024px-Golden_Temple_Amritsar_2019.jpg",
-    category: "india",
-  },
-  {
-    id: "in11", answer: "Meenakshi Temple", hint: "Madurai, Tamil Nadu",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Meenakshi_Amman_Temple_Madurai.jpg/800px-Meenakshi_Amman_Temple_Madurai.jpg",
-    category: "india",
-  },
-  {
-    id: "in12", answer: "Ajanta Caves", hint: "Rock-cut Buddhist caves, Maharashtra",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Ajanta_cave9.jpg/1024px-Ajanta_cave9.jpg",
-    category: "india",
-  },
+// ─────────────────────────────────────────────
+// 🏷️ BRAND / ORG LOGOS  (152 images: 51 easy + 50 medium + 51 extreme)
+// easy   = globally iconic, instantly recognised icons
+// medium = tech/culture literate audience
+// extreme = niche, developer or specialist communities
+// ALL images: icon/symbol only — NO brand name text visible
+// ─────────────────────────────────────────────
+const logos: SnapImage[] = [
+  // ── easy (51) ─────────────────────────────
+  { id:"lg002",  answer:"Wikipedia",              hint:"Globe puzzle piece icon",                category:"logos", url:c("easy","logos","wikipedia") },
+  { id:"lg009",  answer:"Android",                hint:"Green robot icon",                       category:"logos", url:c("easy","logos","android") },
+  { id:"lg011",  answer:"Apple",                  hint:"Bitten apple silhouette",                category:"logos", url:c("easy","logos","apple") },
+  { id:"lg012",  answer:"Google Chrome",          hint:"Colourful circle with blue centre",      category:"logos", url:c("easy","logos","chrome") },
+  { id:"lg013",  answer:"YouTube",                hint:"Red play button",                        category:"logos", url:c("easy","logos","youtube") },
+  { id:"lg014",  answer:"Twitter / X",            hint:"Blue bird or X symbol",                  category:"logos", url:c("easy","logos","twitter") },
+  { id:"lg015",  answer:"Facebook",               hint:"Lowercase f in blue circle",             category:"logos", url:c("easy","logos","facebook") },
+  { id:"lg016",  answer:"Instagram",              hint:"Colourful gradient camera icon",         category:"logos", url:c("easy","logos","instagram") },
+  { id:"lg017",  answer:"WhatsApp",               hint:"White phone in green speech bubble",     category:"logos", url:c("easy","logos","whatsapp") },
+  { id:"lg018",  answer:"Spotify",                hint:"Three curved lines in green circle",     category:"logos", url:c("easy","logos","spotify") },
+  { id:"lg020",  answer:"Netflix",                hint:"Red N on black",                         category:"logos", url:c("easy","logos","netflix") },
+  { id:"lg021",  answer:"McDonald's",             hint:"Golden arches, yellow M",                category:"logos", url:c("easy","logos","mcdonalds") },
+  { id:"lg022",  answer:"Nike",                   hint:"Simple swoosh check",                    category:"logos", url:c("easy","logos","nike") },
+  { id:"lg023",  answer:"Adidas",                 hint:"Three stripes or trefoil",               category:"logos", url:c("easy","logos","adidas") },
+  { id:"lg025",  answer:"BMW",                    hint:"Blue and white propeller roundel",       category:"logos", url:c("easy","logos","bmw") },
+  { id:"lg029",  answer:"Target",                 hint:"Red bullseye circles",                   category:"logos", url:c("easy","logos","target") },
+  { id:"lg030",  answer:"Shell",                  hint:"Red and yellow scallop shell",           category:"logos", url:c("easy","logos","shell") },
+  { id:"lg031",  answer:"Ferrari",                hint:"Yellow shield with rearing black horse", category:"logos", url:c("easy","logos","ferrari") },
+  { id:"lg032",  answer:"Lamborghini",            hint:"Gold bull on black shield",              category:"logos", url:c("easy","logos","lamborghini") },
+  { id:"lg033",  answer:"Puma",                   hint:"Leaping puma cat silhouette",            category:"logos", url:c("easy","logos","puma") },
+  { id:"lg038",  answer:"PlayStation",            hint:"P S symbols in coloured circles",        category:"logos", url:c("easy","logos","playstation") },
+  { id:"lg041",  answer:"Audi",                   hint:"Four interlocking silver rings",         category:"logos", url:c("easy","logos","audi") },
+  { id:"lg042",  answer:"Toyota",                 hint:"Three overlapping ovals",                category:"logos", url:c("easy","logos","toyota") },
+  { id:"lg043",  answer:"Honda",                  hint:"Stylised H emblem",                      category:"logos", url:c("easy","logos","honda") },
+  { id:"lg044",  answer:"Mastercard",             hint:"Two overlapping circles, red & orange",  category:"logos", url:c("easy","logos","mastercard") },
+  { id:"lg047",  answer:"Snapchat",               hint:"Yellow ghost icon",                      category:"logos", url:c("easy","logos","snapchat") },
+  { id:"lg048",  answer:"TikTok",                 hint:"Musical note on black",                  category:"logos", url:c("easy","logos","tiktok") },
+  { id:"lg050",  answer:"Starbucks",              hint:"Twin-tailed green mermaid",              category:"logos", url:c("easy","logos","starbucks") },
+  { id:"lg050b", answer:"Reddit",                 hint:"Orange alien mascot",                    category:"logos", url:c("easy","logos","reddit") },
+  { id:"lg050c", answer:"Pinterest",              hint:"Stylised red P",                         category:"logos", url:c("easy","logos","pinterest") },
+  { id:"lg050d", answer:"PayPal",                 hint:"Two overlapping P's in blue",            category:"logos", url:c("easy","logos","paypal") },
+  { id:"lg050e", answer:"Airbnb",                 hint:"Pink people/place/love symbol",          category:"logos", url:c("easy","logos","airbnb") },
+  { id:"lg050f", answer:"Volkswagen",             hint:"German car brand, V over W circle",      category:"logos", url:c("easy","logos","volkswagen") },
+  { id:"lg050g", answer:"Discord",                hint:"White game controller face on purple",   category:"logos", url:c("easy","logos","discord") },
+  { id:"lg050h", answer:"Uber",                   hint:"Black U in circle",                      category:"logos", url:c("easy","logos","uber") },
+  { id:"lg050i", answer:"Linux (Tux)",            hint:"Open-source OS, penguin mascot",         category:"logos", url:c("easy","logos","linux") },
+  { id:"lg050j", answer:"WordPress",              hint:"Most popular CMS W circle",              category:"logos", url:c("easy","logos","wordpress") },
+  { id:"lg050k", answer:"Trello",                 hint:"Kanban board app, blue columns",         category:"logos", url:c("easy","logos","trello") },
+  { id:"lge005", answer:"Firefox",                hint:"Orange fox around blue globe",           category:"logos", url:c("easy","logos","firefox") },
+  // ── new easy logos ────────────────────────
+  { id:"lge016", answer:"Microsoft",              hint:"Four-colour Windows grid",               category:"logos", url:c("easy","logos","microsoft") },
+  { id:"lge019", answer:"Telegram",               hint:"Blue paper plane circle",                category:"logos", url:c("easy","logos","telegram") },
+  { id:"lge020", answer:"Signal",                 hint:"White speech bubble on gradient blue",   category:"logos", url:c("easy","logos","signal") },
+  { id:"lge022", answer:"Figma",                  hint:"Coloured interlocking circles",          category:"logos", url:c("easy","logos","figma") },
+
+  // ── medium (50) ───────────────────────────
+  { id:"lg051",  answer:"Bluetooth",              hint:"Runic B symbol, blue",                   category:"logos", url:c("medium","logos","bluetooth") },
+  { id:"lg056",  answer:"Python",                 hint:"Programming language, two snakes",       category:"logos", url:c("medium","logos","python") },
+  { id:"lg057",  answer:"Git",                    hint:"Version control diamond branch icon",    category:"logos", url:c("medium","logos","git") },
+  { id:"lg058",  answer:"Debian",                 hint:"Linux distro, red swirl",                category:"logos", url:c("medium","logos","debian") },
+  { id:"lg060",  answer:"Dropbox",                hint:"Blue open box",                          category:"logos", url:c("medium","logos","dropbox") },
+  { id:"lg063",  answer:"Twitch",                 hint:"Purple speech bubble",                   category:"logos", url:c("medium","logos","twitch") },
+  { id:"lg067",  answer:"Signal",                 hint:"White speech bubble on blue",            category:"logos", url:c("medium","logos","signal") },
+  { id:"lg068",  answer:"Telegram",               hint:"Blue paper plane",                       category:"logos", url:c("medium","logos","telegram") },
+  { id:"lg071",  answer:"Docker",                 hint:"Blue whale carrying containers",         category:"logos", url:c("medium","logos","docker") },
+  { id:"lg072",  answer:"React",                  hint:"Atom symbol with blue orbits",           category:"logos", url:c("medium","logos","react") },
+  { id:"lg073",  answer:"Node.js",                hint:"Green hexagon, JS in centre",            category:"logos", url:c("medium","logos","nodejs") },
+  { id:"lg074",  answer:"TypeScript",             hint:"Blue square with TS",                    category:"logos", url:c("medium","logos","typescript") },
+  { id:"lg075",  answer:"GitHub",                 hint:"Octocat on black background",            category:"logos", url:c("medium","logos","github") },
+  { id:"lg076",  answer:"GitLab",                 hint:"Orange fox-face tanuki",                 category:"logos", url:c("medium","logos","gitlab") },
+  { id:"lg077",  answer:"Stack Overflow",         hint:"Orange stacked squares",                 category:"logos", url:c("medium","logos","stackoverflow") },
+  { id:"lg079",  answer:"Figma",                  hint:"Coloured petal grid",                    category:"logos", url:c("medium","logos","figma") },
+  { id:"lg080",  answer:"Notion",                 hint:"Simple N on white",                      category:"logos", url:c("medium","logos","notion") },
+  { id:"lg081",  answer:"Vercel",                 hint:"Black triangle pointing up",             category:"logos", url:c("medium","logos","vercel") },
+  { id:"lg082",  answer:"Netlify",                hint:"Teal layered N hexagon",                 category:"logos", url:c("medium","logos","netlify") },
+  { id:"lg083",  answer:"Firebase",               hint:"Orange flame on yellow",                 category:"logos", url:c("medium","logos","firebase") },
+  { id:"lg084",  answer:"MongoDB",                hint:"Green leaf",                             category:"logos", url:c("medium","logos","mongodb") },
+  { id:"lg085",  answer:"Redis",                  hint:"Red plus-sign die icon",                 category:"logos", url:c("medium","logos","redis") },
+  { id:"lg086",  answer:"Kubernetes",             hint:"Blue steering wheel",                    category:"logos", url:c("medium","logos","kubernetes") },
+  { id:"lg088",  answer:"Swift",                  hint:"Swift bird on orange-red gradient",      category:"logos", url:c("medium","logos","swift") },
+  { id:"lg089",  answer:"Rust",                   hint:"Cog-wheel with R, dark",                 category:"logos", url:c("medium","logos","rust") },
+  { id:"lg090",  answer:"Flutter",                hint:"Blue diamond shards",                    category:"logos", url:c("medium","logos","flutter") },
+  { id:"lg091",  answer:"Vue.js",                 hint:"Two V shapes, green and teal",           category:"logos", url:c("medium","logos","vue") },
+  { id:"lg092",  answer:"Angular",                hint:"Red shield with A",                      category:"logos", url:c("medium","logos","angular") },
+  { id:"lg093",  answer:"Sass",                   hint:"Pink ribbon S",                          category:"logos", url:c("medium","logos","sass") },
+  { id:"lg094",  answer:"GraphQL",                hint:"Pink hexagon with nodes",                category:"logos", url:c("medium","logos","graphql") },
+  { id:"lg095",  answer:"Cloudinary",             hint:"Blue cloud upload icon",                 category:"logos", url:c("medium","logos","cloudinary") },
+  { id:"lg096",  answer:"Stripe",                 hint:"Gradient purple S",                      category:"logos", url:c("medium","logos","stripe") },
+  { id:"lg097",  answer:"Shopify",                hint:"Green shopping bag with S",              category:"logos", url:c("medium","logos","shopify") },
+  { id:"lg099",  answer:"Lyft",                   hint:"Hot pink L",                             category:"logos", url:c("medium","logos","lyft") },
+  { id:"lg148l", answer:"Atlassian",              hint:"Blue A with gradient",                   category:"logos", url:c("medium","logos","atlassian") },
+  { id:"lg148m", answer:"HuggingFace",            hint:"Yellow smiley face, AI models",          category:"logos", url:c("medium","logos","huggingface") },
+  { id:"lg148n", answer:"Jira",                   hint:"Blue J, Atlassian project tracker",      category:"logos", url:c("medium","logos","jira") },
+  { id:"lg148o", answer:"Kafka",                  hint:"Data streaming platform icon",           category:"logos", url:c("medium","logos","kafka") },
+  { id:"lg148p", answer:"Kotlin",                 hint:"Gradient K language icon",               category:"logos", url:c("medium","logos","kotlin") },
+  { id:"lg148q", answer:"Dart",                   hint:"Light blue kite-like D",                 category:"logos", url:c("medium","logos","dart") },
+  { id:"lg148r", answer:"Go (Golang)",            hint:"Light blue cloud-like gopher",           category:"logos", url:c("medium","logos","golang") },
+  { id:"lg148s", answer:"Scala",                  hint:"Red S on dark background",               category:"logos", url:c("medium","logos","scala") },
+  { id:"lg148t", answer:"Supabase",               hint:"Lightning bolt in green-teal",           category:"logos", url:c("medium","logos","supabase") },
+  { id:"lg148u", answer:"PyTorch",                hint:"Flame icon, ML framework",               category:"logos", url:c("medium","logos","pytorch") },
+  { id:"lg148v", answer:"TensorFlow",             hint:"Orange T hexagon, ML framework",         category:"logos", url:c("medium","logos","tensorflow") },
+  { id:"lg148w", answer:"Next.js",                hint:"Black N triangle, React framework",      category:"logos", url:c("medium","logos","nextjs") },
+  { id:"lg148x", answer:"Tailwind CSS",           hint:"Blue wave icon, utility CSS",            category:"logos", url:c("medium","logos","tailwind") },
+  { id:"lg148y", answer:"Prisma",                 hint:"Triangle gradient, ORM tool",            category:"logos", url:c("medium","logos","prisma") },
+  { id:"lgm001", answer:"Grafana",                hint:"Orange diamond hexagon",                 category:"logos", url:c("medium","logos","grafana") },
+  { id:"lgm002", answer:"Nginx",                  hint:"Green N, web server",                    category:"logos", url:c("medium","logos","nginx") },
+
+  // ── extreme (51) ──────────────────────────
+  { id:"lg104",  answer:"Open Source Initiative", hint:"OSI keyhole on circle",                  category:"logos", url:c("extreme","logos","osi") },
+  { id:"lg105",  answer:"Raspberry Pi",           hint:"Raspberry fruit symbol",                 category:"logos", url:c("extreme","logos","raspberry-pi") },
+  { id:"lg106",  answer:"Tor Project",            hint:"Concentric onion rings",                 category:"logos", url:c("extreme","logos","tor") },
+  { id:"lg107",  answer:"VLC",                    hint:"Orange traffic cone",                    category:"logos", url:c("extreme","logos","vlc") },
+  { id:"lg108",  answer:"Ubuntu",                 hint:"Three people in circle of friends",      category:"logos", url:c("extreme","logos","ubuntu") },
+  { id:"lg109",  answer:"Internet Archive",       hint:"Colonnaded Corinthian building icon",    category:"logos", url:c("extreme","logos","internet-archive") },
+  { id:"lg110",  answer:"OpenStreetMap",          hint:"Green road network on globe",            category:"logos", url:c("extreme","logos","openstreetmap") },
+  { id:"lg111",  answer:"GNOME",                  hint:"Footprint with shoe toe marks",          category:"logos", url:c("extreme","logos","gnome") },
+  { id:"lg112",  answer:"KDE",                    hint:"Blue K with gear spiral",                category:"logos", url:c("extreme","logos","kde") },
+  { id:"lg113",  answer:"GIMP",                   hint:"Dog with hat, art tool icon",            category:"logos", url:c("extreme","logos","gimp") },
+  { id:"lg114",  answer:"LibreOffice",            hint:"Stylised L with triangle",               category:"logos", url:c("extreme","logos","libreoffice") },
+  { id:"lg115",  answer:"Kali Linux",             hint:"Dragon on white, hacker distro",         category:"logos", url:c("extreme","logos","kali") },
+  { id:"lg116",  answer:"Arch Linux",             hint:"Blue upside-down V arch",                category:"logos", url:c("extreme","logos","arch-linux") },
+  { id:"lg117",  answer:"Gentoo",                 hint:"Stylised g letter, penguin-like",        category:"logos", url:c("extreme","logos","gentoo") },
+  { id:"lg118",  answer:"NixOS",                  hint:"Snowflake of arrows",                    category:"logos", url:c("extreme","logos","nixos") },
+  { id:"lg119",  answer:"Fedora",                 hint:"Blue infinity / F icon",                 category:"logos", url:c("extreme","logos","fedora") },
+  { id:"lg120",  answer:"OpenBSD",                hint:"Puffy fish logo",                        category:"logos", url:c("extreme","logos","openbsd") },
+  { id:"lg121",  answer:"FreeBSD",                hint:"Red devil mascot Beastie",               category:"logos", url:c("extreme","logos","freebsd") },
+  { id:"lg122",  answer:"Vim",                    hint:"Green diamond V shape",                  category:"logos", url:c("extreme","logos","vim") },
+  { id:"lg123",  answer:"Emacs",                  hint:"Gnu wildebeest head",                    category:"logos", url:c("extreme","logos","emacs") },
+  { id:"lg124",  answer:"Neovim",                 hint:"Green and purple N hexagon",             category:"logos", url:c("extreme","logos","neovim") },
+  { id:"lg125",  answer:"Haskell",                hint:"Lambda and greater-than symbol",         category:"logos", url:c("extreme","logos","haskell") },
+  { id:"lg126",  answer:"Elixir",                 hint:"Purple gem / potion drop",               category:"logos", url:c("extreme","logos","elixir") },
+  { id:"lg127",  answer:"Erlang",                 hint:"Dark blue abstract atom symbol",         category:"logos", url:c("extreme","logos","erlang") },
+  { id:"lg128",  answer:"Clojure",                hint:"Three-leaf shamrock on dark blue",       category:"logos", url:c("extreme","logos","clojure") },
+  { id:"lg129",  answer:"Julia",                  hint:"Three coloured dots triangle",           category:"logos", url:c("extreme","logos","julia") },
+  { id:"lg134",  answer:"Lua",                    hint:"Blue circle with moon cutout",           category:"logos", url:c("extreme","logos","lua") },
+  { id:"lg135",  answer:"Perl",                   hint:"Onion icon",                             category:"logos", url:c("extreme","logos","perl") },
+  { id:"lg136",  answer:"R (language)",           hint:"Blue R with grey leg",                   category:"logos", url:c("extreme","logos","r-lang") },
+  { id:"lg137",  answer:"Apache",                 hint:"Red feather",                            category:"logos", url:c("extreme","logos","apache") },
+  { id:"lg138",  answer:"Nginx",                  hint:"Green N, web server",                    category:"logos", url:c("extreme","logos","nginx") },
+  { id:"lg139",  answer:"Ansible",                hint:"Red A radiating lines",                  category:"logos", url:c("extreme","logos","ansible") },
+  { id:"lg140",  answer:"Terraform",              hint:"Purple T mountain icon",                 category:"logos", url:c("extreme","logos","terraform") },
+  { id:"lg141",  answer:"HashiCorp",              hint:"Black H in diamond",                     category:"logos", url:c("extreme","logos","hashicorp") },
+  { id:"lg142",  answer:"Prometheus",             hint:"Orange flame on dark",                   category:"logos", url:c("extreme","logos","prometheus") },
+  { id:"lg142b", answer:"Prometheus alt",         hint:"Alternative Prometheus icon",            category:"logos", url:c("extreme","logos","prometheus2") },
+  { id:"lg143",  answer:"Grafana",                hint:"Orange diamond hexagon",                 category:"logos", url:c("extreme","logos","grafana") },
+  { id:"lg144",  answer:"Elasticsearch",          hint:"Yellow E lightning circle",              category:"logos", url:c("extreme","logos","elasticsearch") },
+  { id:"lg146",  answer:"RabbitMQ",               hint:"Orange rabbit head",                     category:"logos", url:c("extreme","logos","rabbitmq") },
+  { id:"lg147",  answer:"Cassandra",              hint:"Orange eye with horizontal line",        category:"logos", url:c("extreme","logos","cassandra") },
+  { id:"lg148",  answer:"Neo4j",                  hint:"Blue graph nodes and edges",             category:"logos", url:c("extreme","logos","neo4j") },
+  { id:"lg148b", answer:"Deno",                   hint:"Dinosaur mascot, JS runtime",            category:"logos", url:c("extreme","logos","deno") },
+  { id:"lg148c", answer:"Blender",                hint:"3D creation suite, orange triangle",     category:"logos", url:c("extreme","logos","blender") },
+  { id:"lg148d", answer:"Inkscape",               hint:"Vector graphics, flower icon",           category:"logos", url:c("extreme","logos","inkscape") },
+  { id:"lg148e", answer:"Audacity",               hint:"Audio editor, blue wave icon",           category:"logos", url:c("extreme","logos","audacity") },
+  { id:"lg148f", answer:"Mastodon",               hint:"Fediverse elephant icon",                category:"logos", url:c("extreme","logos","mastodon") },
+  { id:"lg148g", answer:"Matrix",                 hint:"Decentralised chat brackets icon",       category:"logos", url:c("extreme","logos","matrix") },
+  { id:"lg148h", answer:"United Nations",         hint:"Globe and olive branches emblem",        category:"logos", url:c("extreme","logos","unitednations") },
+  { id:"lg148i", answer:"Wikipedia (extreme)",    hint:"Globe puzzle piece, extreme variant",    category:"logos", url:c("extreme","logos","wikipedia") },
+  { id:"lg148j", answer:"WebAssembly",            hint:"Purple W in square",                     category:"logos", url:c("extreme","logos","webassembly") },
+  { id:"lg148k", answer:"PostgreSQL",             hint:"Blue elephant, open-source DB",          category:"logos", url:c("extreme","logos","postgresql") },
 ];
 
-// ── Movies (public domain posters / famous artworks used as stills) ──────────
-const movies: SnapImage[] = [
-  {
-    id: "mv01", answer: "Metropolis", hint: "1927 German silent sci-fi",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Metropolis_Poster.jpg/800px-Metropolis_Poster.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv02", answer: "Nosferatu", hint: "1922 German horror",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Nosferatu_eine_Symphonie_des_Grauens_poster.jpg/800px-Nosferatu_eine_Symphonie_des_Grauens_poster.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv03", answer: "The General", hint: "1926 Buster Keaton comedy",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Buster_Keaton_The_General_1926.jpg/1024px-Buster_Keaton_The_General_1926.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv04", answer: "Battleship Potemkin", hint: "1925 Soviet classic",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Battleship_Potemkin_poster.jpg/800px-Battleship_Potemkin_poster.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv05", answer: "City Lights", hint: "1931 Charlie Chaplin",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Charlie_Chaplin_City_Lights.jpg/800px-Charlie_Chaplin_City_Lights.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv06", answer: "Gone with the Wind", hint: "1939 Civil War epic",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Gone_with_the_Wind_poster.jpg/800px-Gone_with_the_Wind_poster.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv07", answer: "Casablanca", hint: "1942 Humphrey Bogart",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Casablanca_poster.jpg/800px-Casablanca_poster.jpg",
-    category: "movies",
-  },
-  {
-    id: "mv08", answer: "Citizen Kane", hint: "1941 Orson Welles",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Citizen_Kane_poster%2C_1941_%28Style_B%2C_unrestored%29.jpg/800px-Citizen_Kane_poster%2C_1941_%28Style_B%2C_unrestored%29.jpg",
-    category: "movies",
-  },
+// ─────────────────────────────────────────────
+// 🌟 CELEBRITIES  (217 images: 78 easy + 73 medium + 66 extreme)
+// easy   = most recognisable historical figures, iconic photos
+// medium = well-known but less photographed
+// extreme = historical figures from non-Western context or unusual images
+// ─────────────────────────────────────────────
+const celebrities: SnapImage[] = [
+  // ── easy (78) ─────────────────────────────
+  { id:"ce001",  answer:"Albert Einstein",          hint:"Theory of Relativity",                  category:"celebrities", url:c("easy","celebrities","einstein") },
+  { id:"ce002",  answer:"Mahatma Gandhi",           hint:"Father of the Indian Nation",           category:"celebrities", url:c("easy","celebrities","gandhi") },
+  { id:"ce003",  answer:"Nelson Mandela",           hint:"South Africa's first Black president",  category:"celebrities", url:c("easy","celebrities","mandela") },
+  { id:"ce005",  answer:"Abraham Lincoln",          hint:"16th US President",                     category:"celebrities", url:c("easy","celebrities","lincoln") },
+  { id:"ce007",  answer:"Nikola Tesla",             hint:"Inventor of AC electricity",            category:"celebrities", url:c("easy","celebrities","tesla") },
+  { id:"ce008",  answer:"Isaac Newton",             hint:"Laws of Motion and Gravity",            category:"celebrities", url:c("easy","celebrities","newton") },
+  { id:"ce010",  answer:"Napoleon Bonaparte",       hint:"Emperor of France",                     category:"celebrities", url:c("easy","celebrities","napoleon") },
+  { id:"ce011",  answer:"William Shakespeare",      hint:"Famous Elizabethan playwright",         category:"celebrities", url:c("easy","celebrities","shakespeare") },
+  { id:"ce017",  answer:"Martin Luther King Jr.",   hint:"I Have a Dream speech",                 category:"celebrities", url:c("easy","celebrities","mlk") },
+  { id:"ce018",  answer:"Charlie Chaplin",          hint:"Silent film era comedian",              category:"celebrities", url:c("easy","celebrities","chaplin") },
+  { id:"ce026",  answer:"George Washington",        hint:"1st US President",                      category:"celebrities", url:c("easy","celebrities","washington") },
+  { id:"ce033",  answer:"Queen Elizabeth II",       hint:"Longest-reigning British monarch",      category:"celebrities", url:c("easy","celebrities","queen-elizabeth") },
+  { id:"ce034",  answer:"Princess Diana",           hint:"Princess of Wales",                     category:"celebrities", url:c("easy","celebrities","princess-diana") },
+  { id:"ce036",  answer:"Mother Teresa",            hint:"Saint of Calcutta",                     category:"celebrities", url:c("easy","celebrities","mother-teresa") },
+  { id:"ce044",  answer:"The Beatles",              hint:"Fab Four from Liverpool",               category:"celebrities", url:c("easy","celebrities","beatles") },
+  { id:"ce045",  answer:"Michael Jackson",          hint:"King of Pop",                           category:"celebrities", url:c("easy","celebrities","michael-jackson") },
+  { id:"ce046",  answer:"Muhammad Ali",             hint:"The Greatest, boxing champion",         category:"celebrities", url:c("easy","celebrities","muhammad-ali") },
+  { id:"ce049",  answer:"Neil Armstrong",           hint:"First man on the Moon",                 category:"celebrities", url:c("easy","celebrities","neil-armstrong") },
+  { id:"ce049b", answer:"Oprah Winfrey",            hint:"Media mogul and TV host",               category:"celebrities", url:c("easy","celebrities","oprah") },
+  { id:"ce049c", answer:"APJ Abdul Kalam",          hint:"Missile Man — 11th President",          category:"celebrities", url:c("easy","celebrities","apj-kalam") },
+  { id:"ce049d", answer:"B. R. Ambedkar",           hint:"Architect of the Indian Constitution",  category:"celebrities", url:c("easy","celebrities","ambedkar") },
+  { id:"ce049e", answer:"Subhas Chandra Bose",      hint:"Netaji, INA leader",                    category:"celebrities", url:c("easy","celebrities","subhas-bose") },
+  { id:"ce049f", answer:"Indira Gandhi",            hint:"First woman PM of India",               category:"celebrities", url:c("easy","celebrities","indira-gandhi") },
+  { id:"ce049g", answer:"Jawaharlal Nehru",         hint:"First PM of India",                     category:"celebrities", url:c("easy","celebrities","nehru") },
+  { id:"ce049h", answer:"Rabindranath Tagore",      hint:"First Asian Nobel laureate",            category:"celebrities", url:c("easy","celebrities","rabindranath-tagore") },
+  { id:"ce049i", answer:"Rajiv Gandhi",             hint:"Youngest PM of India",                  category:"celebrities", url:c("easy","celebrities","rajiv-gandhi") },
+  { id:"ce049j", answer:"Ratan Tata",               hint:"Tata Group philanthropist",             category:"celebrities", url:c("easy","celebrities","ratan-tata") },
+  { id:"ce049k", answer:"Sachin Tendulkar",         hint:"God of Cricket",                        category:"celebrities", url:c("easy","celebrities","sachin-tendulkar") },
+  { id:"ce049l", answer:"Swami Vivekananda",        hint:"Chicago Parliament of Religions",       category:"celebrities", url:c("easy","celebrities","swami-vivekananda") },
+  { id:"ce049n", answer:"Mahatma Gandhi",           hint:"March to the sea, 1930",                category:"celebrities", url:c("easy","celebrities","mahatma-gandhi") },
+  { id:"ce049o", answer:"Marie Curie",              hint:"Nobel Prize in Physics & Chemistry",    category:"celebrities", url:c("easy","celebrities","marie-curie") },
+  { id:"cee003", answer:"Arnold Schwarzenegger",    hint:"The Terminator, California Governor",   category:"celebrities", url:c("easy","celebrities","arnold-schwarzenegger") },
+  { id:"cee007", answer:"Bill Gates",               hint:"Microsoft co-founder",                  category:"celebrities", url:c("easy","celebrities","bill-gates") },
+  { id:"cee011", answer:"Cristiano Ronaldo",        hint:"Portuguese football superstar",         category:"celebrities", url:c("easy","celebrities","cristiano-ronaldo") },
+  { id:"cee013", answer:"Dalai Lama",               hint:"Tibetan Buddhist spiritual leader",     category:"celebrities", url:c("easy","celebrities","dalai-lama") },
+  { id:"cee016", answer:"Deepika Padukone",         hint:"Bollywood actress, global icon",        category:"celebrities", url:c("easy","celebrities","deepika-padukone") },
+  { id:"cee017", answer:"Elon Musk",                hint:"Tesla and SpaceX CEO",                  category:"celebrities", url:c("easy","celebrities","elon-musk") },
+  { id:"cee026", answer:"LeBron James",             hint:"NBA basketball legend",                 category:"celebrities", url:c("easy","celebrities","lebron-james") },
+  { id:"cee027", answer:"Lionel Messi",             hint:"Argentine football legend",             category:"celebrities", url:c("easy","celebrities","lionel-messi") },
+  { id:"cee030", answer:"Mark Zuckerberg",          hint:"Facebook / Meta founder",               category:"celebrities", url:c("easy","celebrities","mark-zuckerberg") },
+  { id:"cee031", answer:"Michael Jordan",           hint:"Chicago Bulls basketball GOAT",         category:"celebrities", url:c("easy","celebrities","michael-jordan") },
+  { id:"cee034", answer:"MS Dhoni",                 hint:"Captain Cool, World Cup 2011",          category:"celebrities", url:c("easy","celebrities","ms-dhoni") },
+  { id:"cee036", answer:"Barack Obama",             hint:"44th US President",                     category:"celebrities", url:c("easy","celebrities","obama") },
+  { id:"cee037", answer:"Pope Francis",             hint:"First Latin American pope",             category:"celebrities", url:c("easy","celebrities","pope-francis") },
+  { id:"cee039", answer:"Roger Federer",            hint:"Swiss tennis legend, 20 Grand Slams",   category:"celebrities", url:c("easy","celebrities","roger-federer") },
+  { id:"cee041", answer:"Serena Williams",          hint:"23 Grand Slam tennis champion",         category:"celebrities", url:c("easy","celebrities","serena-williams") },
+  { id:"cee044", answer:"Steve Jobs",               hint:"Apple co-founder, iPhone creator",      category:"celebrities", url:c("easy","celebrities","steve-jobs") },
+  { id:"cee046", answer:"Usain Bolt",               hint:"World's fastest man",                   category:"celebrities", url:c("easy","celebrities","usain-bolt") },
+  // ── Indian easy celebrities (new) ────────
+  { id:"ince002", answer:"Priyanka Chopra",         hint:"Bollywood star turned global icon",     category:"celebrities", url:c("easy","celebrities","priyanka-chopra") },
+  // ── South Indian easy celebrities (new) ──
+  { id:"sine001", answer:"AR Rahman",               hint:"Oscar-winning composer, Chennai",       category:"celebrities", url:c("easy","celebrities","ar-rahman") },
+  { id:"sine002", answer:"Rajinikanth",             hint:"Superstar of Tamil cinema",             category:"celebrities", url:c("easy","celebrities","rajinikanth") },
+
+  // ── medium (73) ───────────────────────────
+  { id:"ce051",  answer:"Genghis Khan",             hint:"Founder of the Mongol Empire",          category:"celebrities", url:c("medium","celebrities","genghis-khan") },
+  { id:"ce053",  answer:"Christopher Columbus",     hint:"Sailed to the Americas, 1492",          category:"celebrities", url:c("medium","celebrities","columbus") },
+  { id:"ce080",  answer:"Siddhartha Gautama",       hint:"The Buddha",                            category:"celebrities", url:c("medium","celebrities","buddha") },
+  { id:"ce091",  answer:"Marie Curie (lab)",        hint:"In her laboratory",                     category:"celebrities", url:c("medium","celebrities","curie-lab") },
+  { id:"ce091b", answer:"Sardar Vallabhbhai Patel", hint:"Iron Man of India",                     category:"celebrities", url:c("medium","celebrities","sardar-patel") },
+  { id:"ce091c", answer:"Bhagat Singh",             hint:"Revolutionary freedom fighter",         category:"celebrities", url:c("medium","celebrities","bhagat-singh") },
+  { id:"ce091d", answer:"Lal Bahadur Shastri",      hint:"Jai Jawan Jai Kisan",                   category:"celebrities", url:c("medium","celebrities","lal-bahadur") },
+  { id:"ce091f", answer:"C. V. Raman",              hint:"Nobel — Raman Effect",                  category:"celebrities", url:c("medium","celebrities","cv-raman") },
+  { id:"ce091h", answer:"Sarojini Naidu",           hint:"Nightingale of India",                  category:"celebrities", url:c("medium","celebrities","sarojini-naidu") },
+  { id:"ce091k", answer:"Mirabai",                  hint:"Bhakti poet-saint, Rajasthan",          category:"celebrities", url:c("medium","celebrities","mirabai") },
+  { id:"ce091l", answer:"Homi Bhabha",              hint:"Father of Indian nuclear program",      category:"celebrities", url:c("medium","celebrities","homi-bhabha") },
+  { id:"ce100",  answer:"Virat Kohli",              hint:"Run machine, India captain",            category:"celebrities", url:c("medium","celebrities","virat-kohli") },
+  { id:"ce100b", answer:"Nero",                     hint:"Roman emperor, fiddled as Rome burned", category:"celebrities", url:c("medium","celebrities","nero") },
+  { id:"cem027", answer:"Galileo Galilei (portrait)",hint:"Heliocentrism, Inquisition trial",     category:"celebrities", url:c("medium","celebrities","galileo-portrait") },
+  { id:"cem046", answer:"Pablo Picasso",            hint:"Cubism founder, Guernica painter",      category:"celebrities", url:c("medium","celebrities","pablo-picasso") },
+  { id:"cem060", answer:"Julius Caesar (medium)",   hint:"Roman dictator — medium variant",       category:"celebrities", url:c("medium","celebrities","julius-caesar") },
+  // ── Indian modern medium celebrities (new) ─
+  { id:"incm002", answer:"Jasprit Bumrah",          hint:"India's premier fast bowler",           category:"celebrities", url:c("medium","celebrities","jasprit-bumrah") },
+  { id:"incm004", answer:"Neeraj Chopra",           hint:"Olympic gold javelin, India",           category:"celebrities", url:c("medium","celebrities","neeraj-chopra") },
+  { id:"incm005", answer:"Sania Mirza",             hint:"India's tennis Grand Slam star",        category:"celebrities", url:c("medium","celebrities","sania-mirza") },
+  { id:"incm006", answer:"Mary Kom",                hint:"Six-time boxing world champion, India", category:"celebrities", url:c("medium","celebrities","mary-kom") },
+  { id:"incm007", answer:"Mithali Raj",             hint:"India women's cricket legend",          category:"celebrities", url:c("medium","celebrities","mithali-raj") },
+  { id:"incm008", answer:"Saina Nehwal",            hint:"Badminton Olympic bronze, India",       category:"celebrities", url:c("medium","celebrities","saina-nehwal") },
+  { id:"incm009", answer:"Leander Paes",            hint:"India's Davis Cup tennis legend",       category:"celebrities", url:c("medium","celebrities","leander-paes") },
+  { id:"incm010", answer:"Shah Rukh Khan",          hint:"King of Bollywood",                     category:"celebrities", url:c("medium","celebrities","shah-rukh-khan") },
+  { id:"incm011", answer:"Amitabh Bachchan",        hint:"Big B, Bollywood megastar",             category:"celebrities", url:c("medium","celebrities","amitabh-bachchan") },
+  { id:"incm012", answer:"Aamir Khan",              hint:"Mr Perfectionist, Bollywood",           category:"celebrities", url:c("medium","celebrities","aamir-khan") },
+  { id:"incm013", answer:"Ranveer Singh",           hint:"Energetic Bollywood actor",             category:"celebrities", url:c("medium","celebrities","ranveer-singh") },
+  { id:"incm015", answer:"Katrina Kaif",            hint:"Bollywood actress, dance icon",         category:"celebrities", url:c("medium","celebrities","katrina-kaif") },
+  { id:"incm020", answer:"Sundar Pichai",           hint:"Google CEO, Tamil Nadu origin",         category:"celebrities", url:c("medium","celebrities","sundar-pichai") },
+  { id:"incm021", answer:"Satya Nadella",           hint:"Microsoft CEO, Hyderabad origin",       category:"celebrities", url:c("medium","celebrities","satya-nadella") },
+  { id:"incm022", answer:"Bajrang Punia",           hint:"Olympic wrestling medallist, India",    category:"celebrities", url:c("medium","celebrities","bajrang-punia") },
+  { id:"incm023", answer:"Taapsee Pannu",           hint:"Bollywood actress, Pink / Thappad",     category:"celebrities", url:c("medium","celebrities","taapsee-pannu") },
+  { id:"incm024", answer:"Deepika Padukone",        hint:"Bollywood star, global ambassador",     category:"celebrities", url:c("medium","celebrities","deepika-padukone-m") },
+  { id:"incm026", answer:"Ashish Chanchlani",       hint:"Indian YouTuber & comedian",            category:"celebrities", url:c("medium","celebrities","ashish-chanchlani") },
+  { id:"incm027", answer:"Zakir Khan",              hint:"Sakht Launda comedian",                 category:"celebrities", url:c("medium","celebrities","zakir-khan") },
+  { id:"incm028", answer:"Kunal Kamra",             hint:"Indian stand-up comedian",              category:"celebrities", url:c("medium","celebrities","kunal-kamra") },
+  { id:"incm030", answer:"Sonia Gandhi",            hint:"Congress president, India",             category:"celebrities", url:c("medium","celebrities","sonia-gandhi") },
+  { id:"incm031", answer:"CarryMinati",             hint:"Indian roaster & YouTuber",             category:"celebrities", url:c("medium","celebrities","carry-minati") },
+  { id:"incm032", answer:"Madhuri Dixit",           hint:"Bollywood dancing queen, Dhak Dhak",   category:"celebrities", url:c("medium","celebrities","madhuri-dixit") },
+  { id:"incm033", answer:"Virender Sehwag",         hint:"Nawab of Najafgarh, India opener",      category:"celebrities", url:c("medium","celebrities","virender-sehwag") },
+  // ── South Indian medium celebrities (new) ─
+  { id:"sinm001", answer:"Vijay",                   hint:"Thalapathy, Tamil blockbuster hero",    category:"celebrities", url:c("medium","celebrities","vijay-thalapathy") },
+  { id:"sinm002", answer:"Samantha Ruth Prabhu",    hint:"OTT queen, Telugu/Tamil actress",       category:"celebrities", url:c("medium","celebrities","samantha") },
+  { id:"sinm003", answer:"Nayanthara",              hint:"Lady Superstar of Tamil cinema",        category:"celebrities", url:c("medium","celebrities","nayanthara") },
+  { id:"sinm004", answer:"Mohanlal",                hint:"Complete actor, Malayalam superstar",   category:"celebrities", url:c("medium","celebrities","mohanlal") },
+  { id:"sinm005", answer:"Mammootty",               hint:"Malayalam cinema legend",               category:"celebrities", url:c("medium","celebrities","mammootty") },
+  { id:"sinm006", answer:"MGR",                     hint:"Tamil Nadu CM and film icon",           category:"celebrities", url:c("medium","celebrities","mgr") },
+  { id:"sinm007", answer:"Jayalalithaa",            hint:"Amma, Tamil Nadu Chief Minister",       category:"celebrities", url:c("medium","celebrities","jayalalithaa") },
+  // ── Global musicians (new) ────────────────
+  { id:"musm002", answer:"Rihanna",                 hint:"Barbadian pop and fashion mogul",       category:"celebrities", url:c("medium","celebrities","rihanna") },
+  { id:"musm003", answer:"Ed Sheeran",              hint:"Shape of You, UK singer-songwriter",    category:"celebrities", url:c("medium","celebrities","ed-sheeran") },
+  { id:"musm004", answer:"Eminem",                  hint:"Rap God, Detroit rapper",               category:"celebrities", url:c("medium","celebrities","eminem") },
+
+  // ── extreme (66) ──────────────────────────
+  { id:"ce132",  answer:"Jawaharlal Nehru",         hint:"First Prime Minister of India",         category:"celebrities", url:c("extreme","celebrities","nehru") },
+  { id:"ce143",  answer:"Indira Gandhi",            hint:"First female PM of India",              category:"celebrities", url:c("extreme","celebrities","indira-gandhi") },
+  { id:"ce143b", answer:"Maharana Pratap",          hint:"Rajput king of Mewar",                  category:"celebrities", url:c("extreme","celebrities","maharana-pratap") },
+  { id:"ce143c", answer:"Chhatrapati Shivaji",      hint:"Maratha Empire founder",                category:"celebrities", url:c("extreme","celebrities","shivaji") },
+  { id:"ce143e", answer:"Tipu Sultan",              hint:"Tiger of Mysore",                       category:"celebrities", url:c("extreme","celebrities","tipu-sultan") },
+  { id:"ce143f", answer:"Aryabhata",                hint:"Ancient Indian mathematician",          category:"celebrities", url:c("extreme","celebrities","aryabhata") },
+  { id:"ce143j", answer:"Periyar",                  hint:"Tamil social reformer, EVR",            category:"celebrities", url:c("extreme","celebrities","periyar") },
+  { id:"cex003", answer:"Yasser Arafat",            hint:"PLO chairman, Nobel Peace Prize",       category:"celebrities", url:c("extreme","celebrities","arafat") },
+  { id:"cex017", answer:"Genghis Khan (extreme)",   hint:"Mongol Empire — different image",       category:"celebrities", url:c("extreme","celebrities","genghis-khan") },
+  { id:"cex024", answer:"Ho Chi Minh",              hint:"Vietnamese revolutionary leader",       category:"celebrities", url:c("extreme","celebrities","ho-chi-minh") },
+  { id:"cex045", answer:"Simone de Beauvoir",       hint:"French feminist, The Second Sex",       category:"celebrities", url:c("extreme","celebrities","simone-beauvoir") },
+  // ── Indian modern extreme celebrities (new) ─
+  { id:"incx002", answer:"Smriti Mandhana",         hint:"India women's cricket opener",          category:"celebrities", url:c("extreme","celebrities","smriti-mandhana") },
+  { id:"incx003", answer:"Shubman Gill",            hint:"Young India batting star",              category:"celebrities", url:c("extreme","celebrities","shubman-gill") },
+  { id:"incx004", answer:"Yashasvi Jaiswal",        hint:"India's batting prodigy",               category:"celebrities", url:c("extreme","celebrities","yashasvi-jaiswal") },
+  { id:"incx005", answer:"Abhinav Bindra",          hint:"India's first individual Olympic gold", category:"celebrities", url:c("extreme","celebrities","abhinav-bindra") },
+  { id:"incx006", answer:"Hima Das",                hint:"Dhing Express, India sprint gold",      category:"celebrities", url:c("extreme","celebrities","hima-das") },
+  { id:"incx007", answer:"Mirabai Chanu",           hint:"Olympic silver weightlifter, India",    category:"celebrities", url:c("extreme","celebrities","mirabai-chanu") },
+  { id:"incx008", answer:"Ravi Dahiya",             hint:"Olympic silver wrestler, India",        category:"celebrities", url:c("extreme","celebrities","ravi-dahiya") },
+  { id:"incx010", answer:"Harbhajan Singh",         hint:"Turbanator, India off-spinner",         category:"celebrities", url:c("extreme","celebrities","harbhajan-singh") },
+  { id:"incx011", answer:"Sourav Ganguly",          hint:"Dada, Prince of Calcutta, India captain",category:"celebrities", url:c("extreme","celebrities","sourav-ganguly") },
+  { id:"incx012", answer:"Anil Kapoor",             hint:"Mr India Bollywood actor",              category:"celebrities", url:c("extreme","celebrities","anil-kapoor") },
+  { id:"incx013", answer:"Ajay Devgn",              hint:"Phool aur Kaante Bollywood actor",      category:"celebrities", url:c("extreme","celebrities","ajay-devgn") },
+  { id:"incx014", answer:"Vidya Balan",             hint:"Kahaani Bollywood actress",             category:"celebrities", url:c("extreme","celebrities","vidya-balan") },
+  { id:"incx015", answer:"Nawazuddin Siddiqui",     hint:"Gangs of Wasseypur Bollywood actor",    category:"celebrities", url:c("extreme","celebrities","nawazuddin") },
+  { id:"incx016", answer:"Pankaj Tripathi",         hint:"Mirzapur Bollywood character actor",    category:"celebrities", url:c("extreme","celebrities","pankaj-tripathi") },
+  { id:"incx017", answer:"Rajkummar Rao",           hint:"Newton / Stree Bollywood actor",        category:"celebrities", url:c("extreme","celebrities","rajkummar-rao") },
+  { id:"incx018", answer:"Alia Bhatt",              hint:"Gangubai / Highway Bollywood actress",  category:"celebrities", url:c("extreme","celebrities","alia-bhatt") },
+  { id:"incx019", answer:"Varun Dhawan",            hint:"ABCD / Dilwale Bollywood actor",        category:"celebrities", url:c("extreme","celebrities","varun-dhawan") },
+  { id:"incx020", answer:"Nora Fatehi",             hint:"Dilbar dance sensation, Morocco-Canada", category:"celebrities", url:c("extreme","celebrities","nora-fatehi") },
+  { id:"incx021", answer:"Irrfan Khan",             hint:"Piku / The Lunchbox — legend",          category:"celebrities", url:c("extreme","celebrities","irrfan-khan") },
+  { id:"incx022", answer:"Rekha",                   hint:"Umrao Jaan Bollywood icon",             category:"celebrities", url:c("extreme","celebrities","rekha") },
+  { id:"incx023", answer:"Milkha Singh",            hint:"Flying Sikh, India sprint legend",      category:"celebrities", url:c("extreme","celebrities","milkha-singh") },
+  { id:"incx024", answer:"Dipa Karmakar",           hint:"India's first Olympic gymnastics finalist",category:"celebrities", url:c("extreme","celebrities","dipa-karmakar") },
+  { id:"incx026", answer:"Chetan Bhagat",           hint:"2 States / 3 Idiots novelist India",    category:"celebrities", url:c("extreme","celebrities","chetan-bhagat") },
+  { id:"incx027", answer:"Lilly Singh",             hint:"IISuperwomanII YouTube star, Indo-Canadian",category:"celebrities", url:c("extreme","celebrities","lilly-singh") },
+  { id:"incx028", answer:"Radhika Apte",            hint:"Andhadhun / Sacred Games actress",      category:"celebrities", url:c("extreme","celebrities","radhika-apte") },
+  { id:"incx029", answer:"Yami Gautam",             hint:"Vicky Donor / Uri Bollywood actress",   category:"celebrities", url:c("extreme","celebrities","yami-gautam") },
+  { id:"incx030", answer:"Hema Malini",             hint:"Dream Girl of Bollywood",               category:"celebrities", url:c("extreme","celebrities","hema-malini") },
+  { id:"incx031", answer:"Faye D'Souza",            hint:"India's straight-talk news anchor",     category:"celebrities", url:c("extreme","celebrities","faye-dsouza") },
+  { id:"incx033", answer:"Rahul Dravid",            hint:"The Wall of Indian cricket",            category:"celebrities", url:c("extreme","celebrities","rahul-dravid") },
+  { id:"incx034", answer:"VVS Laxman",              hint:"Very Very Special Laxman, India cricket",category:"celebrities", url:c("extreme","celebrities","vvs-laxman") },
+  { id:"incx035", answer:"Aishwarya Rai",           hint:"Miss World 1994, Bollywood queen",      category:"celebrities", url:c("extreme","celebrities","aishwarya-rai") },
+  { id:"incx036", answer:"Shabana Azmi",            hint:"Parallel cinema icon, India",           category:"celebrities", url:c("extreme","celebrities","shabana-azmi") },
+  { id:"incx037", answer:"Gulzar",                  hint:"Legendary lyricist and poet, India",    category:"celebrities", url:c("extreme","celebrities","gulzar") },
+  // ── South Indian extreme celebrities (new) ─
+  { id:"sinx004", answer:"Pullela Gopichand",       hint:"Badminton coach, Hyderabad",            category:"celebrities", url:c("extreme","celebrities","pullela-gopichand") },
+  { id:"sinx005", answer:"Sudha Chandran",          hint:"Bharatanatyam dancer, prosthetic leg",  category:"celebrities", url:c("extreme","celebrities","sudha-chandran") },
+  // ── Global DJs (new) ─────────────────────
+  { id:"djx001", answer:"David Guetta",             hint:"French EDM DJ superstar",               category:"celebrities", url:c("extreme","celebrities","david-guetta") },
+  { id:"djx002", answer:"Calvin Harris",            hint:"Scottish DJ, Summer",                   category:"celebrities", url:c("extreme","celebrities","calvin-harris") },
 ];
 
-// ── All images combined ───────────────────────────────────────────────────────
+// ── All images combined
 export const allSnapImages: SnapImage[] = [
   ...landmarks,
-  ...people,
-  ...india,
-  ...movies,
+  ...flags,
+  ...logos,
+  ...celebrities,
 ];
 
 export const snapCategories = [
-  { id: "random",    label: "Random Mix",       emoji: "🎲", images: allSnapImages },
-  { id: "landmarks", label: "World Landmarks",  emoji: "🌍", images: landmarks },
-  { id: "people",    label: "Famous People",    emoji: "⭐", images: people },
-  { id: "india",     label: "India",            emoji: "🇮🇳", images: india },
-  { id: "movies",    label: "Movie Posters",    emoji: "🎬", images: movies },
+  { id: "random",      label: "Random Mix",      emoji: "🎲", images: allSnapImages },
+  { id: "flags",       label: "Country Flags",   emoji: "🏁", images: flags },
+  { id: "logos",       label: "Brand Logos",     emoji: "🏷️", images: logos },
+  { id: "landmarks",   label: "World Landmarks", emoji: "🌍", images: landmarks },
+  { id: "celebrities", label: "Celebrities",     emoji: "🌟", images: celebrities },
 ] as const;
 
 export const difficultyConfig = {
@@ -286,17 +657,31 @@ export const difficultyConfig = {
 } as const;
 
 export const POINTS_PER_CORRECT = 5;
+export const IMAGES_PER_ROUND = 10;
 
 export function getSnapImages(
   categoryId: string,
   count: number,
   random: () => number,
+  difficulty?: SnapDifficulty,
 ): SnapImage[] {
   const cat = snapCategories.find((c) => c.id === categoryId);
-  const pool = cat ? [...cat.images] : [...allSnapImages];
-  const shuffled = pool.sort(() => random() - 0.5);
-  // Cycle if not enough images
+  let pool = [...(cat ? cat.images : allSnapImages)];
+
+  // Filter by difficulty when specified — difficulty is encoded in the URL path
+  // e.g. ".../snap-lens/easy/..." — no need for a separate field on SnapImage
+  if (difficulty) {
+    pool = pool.filter((img) => img.url.includes(`/snap-lens/${difficulty}/`));
+  }
+
+  // Fisher-Yates shuffle — deterministic per seed, unique per round
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  // Cycle through pool if count exceeds pool size
   const result: SnapImage[] = [];
-  while (result.length < count) result.push(...shuffled);
+  while (result.length < count) result.push(...pool);
   return result.slice(0, count);
 }

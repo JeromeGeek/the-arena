@@ -17,8 +17,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
+    "cloudinary": "^2.9.0",
     "framer-motion": "^12.34.0",
     "next": "16.1.6",
+    "next-cloudinary": "^6.17.5",
     "partykit": "^0.0.115",
     "partysocket": "^1.1.14",
     "qrcode.react": "^4.2.0",

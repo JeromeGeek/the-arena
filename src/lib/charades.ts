@@ -66,7 +66,7 @@ export const charadesCategories: CharadesCategory[] = [
       "Salamander", "Axolotl", "Piranha", "Clownfish", "Pufferfish",
       "Starfish", "Jellyfish", "Sea Horse", "Lobster", "Squid",
       "Praying Mantis", "Scorpion", "Tarantula", "Dragonfly", "Firefly",
-      "Hummingbird", "Kiwi", "Cassowary", "Albatross", "Pelican",
+      "Hummingbird", "Kiwi", "Cassowary", "Albatross", "Frigatebird",
       // Indian animals
       "Indian Elephant", "Bengal Tiger", "Indian Cobra", "King Cobra",
       "Indian Peacock", "Indian Rhinoceros", "Ganges River Dolphin",
@@ -207,10 +207,10 @@ export const charadesCategories: CharadesCategory[] = [
       "Projector", "Whiteboard", "Stapler", "Paper Shredder", "Laminator",
       "Cash Register", "Credit Card Machine", "Ticket Machine",
       "Surfboard", "Wakeboard", "Snowboard", "Snowshoes", "Ski Poles",
-      "Sleeping Bag", "Tent", "Compass", "Canteen", "Backpack",
+      "Sleeping Bag", "Tent", "Canteen", "Backpack",
       "Life Jacket", "Snorkel", "Flippers", "Wetsuit", "Diving Tank",
       "Lightsaber", "Wand", "Staff", "Trident", "Crossbow", "Slingshot",
-      "Handcuffs", "Magnifying Glass", "Blueprint", "Treasure Map",
+      "Handcuffs", "Blueprint", "Treasure Map",
       "Spinning Wheel", "Loom", "Pottery Wheel", "Kiln", "Anvil",
       // Indian objects
       "Dhol", "Sitar", "Tabla", "Harmonium", "Veena", "Dholak",
@@ -252,7 +252,7 @@ export const charadesCategories: CharadesCategory[] = [
       "Kabaddi", "Kho-Kho", "Gilli-Danda", "Pittu", "Lagori",
       "Pehlwani Wrestling", "Mallakhamba", "Silambam",
       "Cricket IPL", "Pro Kabaddi League", "Badminton Premier League",
-      "Polo", "Tent Pegging",
+      "Tent Pegging",
     ],
   },
   {
@@ -272,12 +272,12 @@ export const charadesCategories: CharadesCategory[] = [
       // More international food
       "Tacos Al Pastor", "Elote", "Guacamole", "Churros", "Empanada",
       "Poutine", "Butter Tart", "Nanaimo Bar",
-      "Peking Duck", "Dim Sum", "Kung Pao Chicken", "Mapo Tofu",
+      "Peking Duck", "Kung Pao Chicken", "Mapo Tofu",
       "Kimchi", "Bibimbap", "Korean BBQ", "Japchae", "Tteokbokki",
       "Hummus", "Pita", "Tzatziki", "Spanakopita", "Moussaka",
       "Wiener Schnitzel", "Pretzels", "Currywurst", "Black Forest Cake",
       "Croissant", "Baguette", "Escargot", "Bouillabaisse", "Crêpes Suzette",
-      "Fish and Chips", "Shepherd's Pie", "Yorkshire Pudding", "Spotted Dick",
+      "Shepherd's Pie", "Yorkshire Pudding", "Spotted Dick",
       "Pasta Carbonara", "Risotto", "Osso Buco", "Cannoli", "Panna Cotta",
       "Achari Chicken", "Lamb Rogan Josh", "Chicken Tikka Masala",
       // Indian food & drink

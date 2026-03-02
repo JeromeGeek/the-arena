@@ -538,6 +538,75 @@ export function speak(text: string, rate = 0.82, pitch = 0.9): Promise<void> {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════
+ *  SNAP QUIZ
+ * ═══════════════════════════════════════════════════════════ */
+
+/** New image appears — soft camera shutter click */
+export function playSnapRevealStart() {
+  playNoise(0.04, 0.12);
+  playTone(1800, 0.04, "sine", 0.06);
+  setTimeout(() => playTone(1200, 0.06, "sine", 0.05), 40);
+}
+
+/** Image fully reveals — satisfying "ta-da" shimmer */
+export function playSnapFullReveal() {
+  playSequence([
+    { freq: 660, dur: 0.08, delay: 0 },
+    { freq: 880, dur: 0.1,  delay: 0.07 },
+    { freq: 1100, dur: 0.14, delay: 0.16 },
+  ], "triangle", 0.1);
+}
+
+/** "Answer" button tapped — decisive buzz-in thud */
+export function playSnapBuzzIn() {
+  playTone(500, 0.06, "square", 0.1);
+  playNoise(0.05, 0.07);
+  setTimeout(() => playTone(700, 0.08, "sine", 0.08), 50);
+}
+
+/** Pass — swoosh to next team */
+export function playSnapPass() {
+  playNoise(0.12, 0.05);
+  playTone(440, 0.08, "sine", 0.05);
+  setTimeout(() => playTone(330, 0.1, "sine", 0.04), 80);
+}
+
+/** Correct answer — bright ascending ding (distinct from generic correct) */
+export function playSnapCorrect() {
+  playTone(659, 0.07, "triangle", 0.12);
+  setTimeout(() => playTone(880, 0.09, "triangle", 0.12), 65);
+  setTimeout(() => playTone(1175, 0.18, "triangle", 0.14), 140);
+}
+
+/** Wrong answer — descending thud */
+export function playSnapWrong() {
+  playTone(350, 0.1, "sawtooth", 0.1);
+  setTimeout(() => playTone(250, 0.15, "sawtooth", 0.08), 90);
+  playNoise(0.12, 0.05);
+}
+
+/** Round break — triumphant short fanfare */
+export function playSnapRoundBreak() {
+  playSequence([
+    { freq: 523, dur: 0.1,  delay: 0 },
+    { freq: 659, dur: 0.1,  delay: 0.1 },
+    { freq: 784, dur: 0.1,  delay: 0.2 },
+    { freq: 1047, dur: 0.3, delay: 0.32 },
+  ], "triangle", 0.14);
+}
+
+/** Countdown tick (3, 2, 1) */
+export function playSnapCountdownTick() {
+  playTone(880, 0.05, "sine", 0.1);
+}
+
+/** Countdown "GO!" */
+export function playSnapCountdownGo() {
+  playTone(1047, 0.06, "sine", 0.12);
+  setTimeout(() => playTone(1319, 0.1, "triangle", 0.14), 55);
+}
+
 /** Stop any ongoing narration + ambient */
 export function stopSpeaking() {
   if (isSpeechSupported()) {
