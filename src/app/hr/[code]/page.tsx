@@ -339,7 +339,8 @@ export default function SnapQuizGamePage() {
   const activeCol = TEAM_COLORS[activeTeam % TEAM_COLORS.length];
 
   return (
-    <main className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
+    <div className="flex h-[100dvh] items-center justify-center bg-[#07090D]">
+    <main className="relative flex h-[100dvh] w-full max-w-[480px] max-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
 
       {/* ── LOBBY ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -677,6 +678,7 @@ export default function SnapQuizGamePage() {
         )}
       </div>
     </main>
+    </div>
   );
 }
 
