@@ -8,12 +8,12 @@ import { slugToSeed, seededRandom } from "@/lib/gamecodes";
 import { getSnapImages, IMAGES_PER_ROUND, SnapImage, SnapDifficulty } from "@/lib/snapquiz";
 import SoundToggle from "@/components/SoundToggle";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
-import { playGameOverFanfare, playSnapRevealStart, playSnapFullReveal, playSnapBuzzIn, playSnapPass, playSnapCorrect, playSnapWrong, playSnapRoundBreak, playSnapCountdownTick, playSnapCountdownGo } from "@/lib/sounds";
+import { playGameOverFanfare, playSnapRevealStart, playSnapFullReveal, playSnapTimeUp, playSnapBuzzIn, playSnapPass, playSnapCorrect, playSnapWrong, playSnapRoundBreak, playSnapCountdownTick, playSnapCountdownGo } from "@/lib/sounds";
 
 // ── Scoring ───────────────────────────────────────────────────────────────────
-const POINTS_BLURRED  = 10; // answered while timer still running
+const POINTS_BLURRED  = 10; // answered while image still blurred
 const POINTS_REVEALED = 5;  // answered after full reveal
-const POINTS_WRONG    = -5; // wrong answer penalty
+const POINTS_WRONG    = -10; // wrong answer penalty (harsher)
 
 // ── Timing (ms) ───────────────────────────────────────────────────────────────
 const REVEAL_MS: Record<SnapDifficulty, number> = {
@@ -22,11 +22,11 @@ const REVEAL_MS: Record<SnapDifficulty, number> = {
   extreme: 5000,
 };
 
-// ── Blur (px) ─────────────────────────────────────────────────────────────────
+// ── Blur (px) — same for all difficulties, just enough to obscure ────────────
 const BLUR_PX: Record<SnapDifficulty, number> = {
-  easy:    14,
-  medium:  28,
-  extreme: 48,
+  easy:    4,
+  medium:  4,
+  extreme: 4,
 };
 
 const DIFFICULTY_LABEL: Record<SnapDifficulty, string> = {
@@ -84,8 +84,14 @@ function Syne({ children, className = "", style }: { children: React.ReactNode; 
 
 // ── Blur-reveal image ─────────────────────────────────────────────────────────
 function BlurImage({ image, blurPx, revealMs, revealed }: { image: SnapImage; blurPx: number; revealMs: number; revealed: boolean }) {
+  // Logo images often have transparent backgrounds — give them a white canvas
+  // so they're visible against the dark game background.
+  const isLogo = image.url.includes("/logos/") || image.category === "logos";
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="relative h-full w-full"
+      style={isLogo ? { background: "#ffffff" } : undefined}
+    >
       <motion.img
         key={image.id}
         src={image.url}
@@ -94,6 +100,7 @@ function BlurImage({ image, blurPx, revealMs, revealed }: { image: SnapImage; bl
         animate={{ filter: revealed ? "blur(0px)" : `blur(${blurPx}px)` }}
         transition={revealed ? { duration: revealMs / 1000, ease: "easeOut" } : { duration: 0 }}
         className="absolute inset-0 h-full w-full object-contain"
+        style={isLogo ? { padding: "12%" } : undefined}
       />
     </div>
   );
@@ -117,13 +124,12 @@ export default function SnapQuizGamePage() {
 
   const images = useMemo(() => {
     if (!parsed) return [];
-    const allImages: SnapImage[] = [];
-    for (let r = 0; r < parsed.rounds; r++) {
-      const roundSeed = parsed.baseSeed + (rematchCount * 99991) + (r * 7919);
-      const random = seededRandom(roundSeed);
-      allImages.push(...getSnapImages(parsed.category, IMAGES_PER_ROUND, random, parsed.difficulty));
-    }
-    return allImages;
+    // Shuffle the entire pool ONCE per game (not once per round).
+    // Then slice out consecutive non-overlapping windows so each round
+    // gets a unique set of images — no repeats across rounds.
+    const totalNeeded = parsed.rounds * IMAGES_PER_ROUND;
+    const gameSeed = parsed.baseSeed + (rematchCount * 99991);
+    return getSnapImages(parsed.category, totalNeeded, seededRandom(gameSeed), parsed.difficulty);
   }, [parsed, rematchCount]);
 
   const teams       = parsed?.teamNames ?? [];
@@ -185,10 +191,15 @@ export default function SnapQuizGamePage() {
   }, []);
 
   const endImage = useCallback(() => {
+    // Stop the reveal timer in case it's still running
+    if (revealTimerRef.current) { clearTimeout(revealTimerRef.current); revealTimerRef.current = null; }
+    barControls.stop();
     setRevealed(true);
+    setPassedTeams([]); // clear so "passed" effect can't re-trigger
+    setAnsweringTeam(null);
     setLastScorer(null);
     setPhase("answered");
-  }, []);
+  }, [barControls]);
 
   // ── Countdown ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -226,7 +237,7 @@ export default function SnapQuizGamePage() {
     barControls.start({ scaleX: 1, transition: { duration: remaining / 1000, ease: "linear" } });
     revealTimerRef.current = setTimeout(() => {
       setRevealed(true);
-      if (soundEnabled) playSnapFullReveal();
+      if (soundEnabled) playSnapTimeUp();
     }, remaining);
 
     return () => {
@@ -298,16 +309,10 @@ export default function SnapQuizGamePage() {
       setScores((prev) => { const n = [...prev]; n[team] = (n[team] ?? 0) + POINTS_WRONG; return n; });
       setVerdictResult(null);
       setAnsweringTeam(null);
-      const newPassed = [...passedTeams, team];
-      setPassedTeams(newPassed);
-      const nextTeam = findNextTeam(team, teams.length, newPassed);
-      if (nextTeam === null) { endImage(); return; }
-      setRevealed(false);
-      elapsedMsRef.current = 0;
-      setActiveTeam(nextTeam);
-      setPhase("passed");
+      // Wrong answer ends the image — no second chances for other teams
+      endImage();
     }, 1200);
-  }, [answeringTeam, passedTeams, teams.length, soundEnabled, endImage]);
+  }, [answeringTeam, soundEnabled, endImage]);
 
   const handleNext = useCallback(() => {
     const nextIdx = imgIndex + 1;
@@ -339,17 +344,29 @@ export default function SnapQuizGamePage() {
   const activeCol = TEAM_COLORS[activeTeam % TEAM_COLORS.length];
 
   return (
-    <main className="relative flex h-[100dvh] w-full max-h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
+    <main
+      className="relative flex w-full flex-col bg-[#0B0E14]"
+      style={{ height: "100dvh", maxHeight: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}
+    >
 
       {/* ── LOBBY ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {phase === "lobby" && (
           <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }}
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-[#0B0E14] px-8 text-center">
+            {/* Back button */}
+            <Link href="/headrush"
+              className="absolute left-5 top-5 flex items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors">
+              ← Back
+            </Link>
             <div className="pointer-events-none absolute inset-0"
               style={{ background: "radial-gradient(ellipse at 50% 35%,#06B6D41A 0%,transparent 65%)" }} />
             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 280, damping: 20 }} className="text-6xl">🖼️</motion.div>
+              transition={{ type: "spring", stiffness: 280, damping: 20 }}
+              className="flex h-20 w-20 items-center justify-center rounded-3xl text-5xl"
+              style={{ background: "linear-gradient(135deg,#06B6D4,#0891B2)", boxShadow: "0 0 40px #06B6D466" }}>
+              🖼️
+            </motion.div>
             <div>
               <Syne className="text-3xl text-white">Snap Quiz</Syne>
               <p className="mt-2 text-sm text-white/40">{totalRounds} round{totalRounds > 1 ? "s" : ""} · {totalImages} images · {DIFFICULTY_LABEL[difficulty]} · {teams.length} teams</p>
@@ -510,7 +527,7 @@ export default function SnapQuizGamePage() {
 
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <header className="relative z-10 flex shrink-0 items-center justify-between px-5 py-3">
-        <Link href="/" className="text-sm font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white/60 transition-colors">← Arena</Link>
+        <Link href="/headrush" className="text-sm font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white/60 transition-colors">← Back</Link>
         <Syne className="text-sm text-white/40" style={{ letterSpacing: "0.25em" }}>R{currentRound}/{totalRounds} · {imgInRound}/{IMAGES_PER_ROUND}</Syne>
         <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
       </header>
@@ -539,7 +556,7 @@ export default function SnapQuizGamePage() {
       </div>
 
       {/* ── IMAGE AREA ────────────────────────────────────────────────────── */}
-      <div className="relative z-10 flex-1 overflow-hidden rounded-2xl mx-3 min-h-0 bg-black/40">
+      <div className="relative z-10 mx-3 flex-1 overflow-hidden rounded-2xl bg-black/40" style={{ minHeight: "200px" }}>
         <AnimatePresence mode="wait">
           <motion.div key={imgIndex} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="relative h-full w-full">
@@ -615,7 +632,10 @@ export default function SnapQuizGamePage() {
       </div>
 
       {/* ── BOTTOM CONTROLS ───────────────────────────────────────────────── */}
-      <div className="relative z-10 shrink-0 px-4 pt-3 pb-5 space-y-3">
+      <div
+        className="relative z-10 shrink-0 px-4 pt-3 space-y-3"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+      >
 
         {/* REVEALING — active team: Answer or Pass */}
         {phase === "revealing" && (

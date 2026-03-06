@@ -64,7 +64,6 @@ export default function SnapQuizSetupPage() {
     <GameSetupShell
       title="SNAP QUIZ"
       emoji="🖼️"
-      subtitle="See It · Shout It · Score"
       flavour="Image appears blurred · Reveals slowly · First to shout wins"
       accentFrom="#06B6D4"
       accentTo="#0891B2"

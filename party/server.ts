@@ -6,7 +6,9 @@ import type * as Party from "partykit/server";
 
 interface RoundState {
   word: string;
-  drawingTeam: "red" | "blue";
+  drawingTeamIdx: number;
+  teamNames: string[];
+  teamCount: number;
   roundNumber: number;
   phase: "lobby" | "drawing" | "round_over" | "game_over";
   timeLeft: number;
@@ -15,6 +17,8 @@ interface RoundState {
 
 export default class InkArenaServer implements Party.Server {
   private round: RoundState | null = null;
+  // Map connectionId → role: "tv" | "drawer" | "guesser"
+  private roles = new Map<string, "tv" | "drawer" | "guesser">();
 
   constructor(readonly room: Party.Room) {}
 
@@ -22,14 +26,24 @@ export default class InkArenaServer implements Party.Server {
     try {
       const msg = JSON.parse(message) as Record<string, unknown>;
 
+      // Register role so we know who is who on disconnect
+      if (msg.type === "register_role") {
+        const role = msg.role as "tv" | "drawer" | "guesser";
+        this.roles.set(sender.id, role);
+        // Don't broadcast role registration
+        return;
+      }
+
       // Track server-side round state so late joiners can sync
       if (msg.type === "round_start") {
         this.round = {
           word: msg.word as string,
-          drawingTeam: msg.drawingTeam as "red" | "blue",
+          drawingTeamIdx: msg.drawingTeamIdx as number ?? 0,
+          teamNames: (msg.teamNames as string[]) ?? [],
+          teamCount: (msg.teamCount as number) ?? 2,
           roundNumber: msg.roundNumber as number,
           phase: "drawing",
-          timeLeft: msg.timeLeft as number ?? 45,
+          timeLeft: msg.timeLeft as number ?? 60,
           startedAt: Date.now(),
         };
       }
@@ -38,6 +52,10 @@ export default class InkArenaServer implements Party.Server {
       }
       if (msg.type === "game_over") {
         if (this.round) this.round.phase = "game_over";
+      }
+      if (msg.type === "game_ended") {
+        // TV force-ended the game mid-session
+        this.round = null;
       }
       if (msg.type === "lobby_reset") {
         this.round = null;
@@ -59,7 +77,7 @@ export default class InkArenaServer implements Party.Server {
     this.room.broadcast(countMsg);
     conn.send(countMsg);
 
-    // If a round was paused, resume it now that someone reconnected
+    // If a round was active and TV/drawer reconnects, resume
     if (this.round && this.round.phase === "drawing") {
       this.round.startedAt = Date.now(); // reset elapsed clock
       this.room.broadcast(JSON.stringify({ type: "game_resumed" }));
@@ -71,28 +89,47 @@ export default class InkArenaServer implements Party.Server {
         JSON.stringify({
           type: "round_catchup",
           word: this.round.word,
-          drawingTeam: this.round.drawingTeam,
+          drawingTeamIdx: this.round.drawingTeamIdx,
+          teamNames: this.round.teamNames,
+          teamCount: this.round.teamCount,
           roundNumber: this.round.roundNumber,
           timeLeft: this.round.timeLeft,
         }),
       );
     }
+
+    // If game was ended by TV, tell new connection
+    if (this.round && this.round.phase === "game_over") {
+      conn.send(JSON.stringify({ type: "game_over" }));
+    }
   }
 
   onClose(conn: Party.Connection) {
+    const role = this.roles.get(conn.id) ?? "guesser";
+    this.roles.delete(conn.id);
+
     const count = [...this.room.getConnections()].length;
-    this.room.broadcast(
-      JSON.stringify({ type: "connection_count", count }),
-    );
-    // Pause the game if someone disconnects while a round is active
-    if (this.round && this.round.phase === "drawing") {
+    this.room.broadcast(JSON.stringify({ type: "connection_count", count }));
+
+    if (!this.round || this.round.phase !== "drawing") return;
+
+    if (role === "tv") {
+      // TV disconnected — pause everything, phones should wait
       this.round.timeLeft = Math.max(
         0,
         this.round.timeLeft - Math.floor((Date.now() - this.round.startedAt) / 1000),
       );
       this.round.startedAt = Date.now();
-      this.room.broadcast(JSON.stringify({ type: "game_paused" }));
+      this.room.broadcast(JSON.stringify({ type: "game_paused", reason: "tv" }));
+    } else if (role === "drawer") {
+      // Drawer closed browser — skip the current turn so guessers don't hang
+      if (this.round) this.round.phase = "round_over";
+      this.room.broadcast(JSON.stringify({
+        type: "drawer_disconnected",
+        drawingTeamIdx: this.round.drawingTeamIdx,
+      }));
     }
+    // Guesser disconnect — do nothing, game continues
   }
 
   onError(conn: Party.Connection, err: Error) {

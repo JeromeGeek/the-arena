@@ -45,7 +45,6 @@ export default function CodenamesPage() {
     <GameSetupShell
       title="CODENAMES"
       emoji="🕵️"
-      subtitle="Tactical Word Espionage"
       flavour="2 Teams · 20 Cards · 1 Assassin · Give one-word clues"
       accentFrom="#FF416C"
       accentTo="#FF4B2B"

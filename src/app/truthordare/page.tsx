@@ -68,7 +68,6 @@ export default function TruthOrDarePage() {
     <GameSetupShell
       title="TRUTH OR DARE"
       emoji="🔥"
-      subtitle="Confess or Face It"
       flavour="Choose your intensity · Confess or face the dare"
       accentFrom="#A855F7"
       accentTo="#7C3AED"

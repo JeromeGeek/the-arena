@@ -63,7 +63,6 @@ export default function MafiaSetupPage() {
     <GameSetupShell
       title="MAFIA"
       emoji="🔪"
-      subtitle="Night Falls. Trust No One."
       flavour="The town sleeps · Someone among you is deadly"
       accentFrom="#EC4899"
       accentTo="#BE185D"

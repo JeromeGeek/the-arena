@@ -668,20 +668,31 @@ export function getSnapImages(
   const cat = snapCategories.find((c) => c.id === categoryId);
   let pool = [...(cat ? cat.images : allSnapImages)];
 
-  // Filter by difficulty when specified — difficulty is encoded in the URL path
-  // e.g. ".../snap-lens/easy/..." — no need for a separate field on SnapImage
+  // Filter by difficulty when specified
   if (difficulty) {
     pool = pool.filter((img) => img.url.includes(`/snap-lens/${difficulty}/`));
   }
 
-  // Fisher-Yates shuffle — deterministic per seed, unique per round
+  // Fisher-Yates shuffle — deterministic per seed
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
 
-  // Cycle through pool if count exceeds pool size
+  if (pool.length === 0) return [];
+
+  // If we need more images than the pool has, re-shuffle remaining slices
+  // so we never serve the same ordered chunk twice in a row.
   const result: SnapImage[] = [];
-  while (result.length < count) result.push(...pool);
+  while (result.length < count) {
+    const remaining = [...pool];
+    // Shuffle each extra pass with a fresh derived seed so it differs from
+    // the first pass even when pool is small.
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
+    result.push(...remaining);
+  }
   return result.slice(0, count);
 }

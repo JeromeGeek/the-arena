@@ -97,7 +97,6 @@ export default function CharadesPage() {
     <GameSetupShell
       title="CHARADES"
       emoji="🎬"
-      subtitle="Act It Out"
       flavour="Create teams · Act it out · No talking allowed"
       accentFrom="#FB923C"
       accentTo="#EA580C"

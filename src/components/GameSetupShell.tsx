@@ -10,7 +10,7 @@ interface GameSetupShellProps {
   /** Large emoji icon for the hero section */
   emoji: string;
   /** Subtitle/tagline e.g. "Social Deception Engine" */
-  subtitle: string;
+  subtitle?: string;
   /** Short flavour line shown under the emoji */
   flavour: string;
   /** Primary accent colour hex e.g. "#00B4DB" */
@@ -66,32 +66,23 @@ export default function GameSetupShell({
         <div className="w-[72px]" />
       </header>
 
-      {/* ── Mobile top bar — just the game title, centered ── */}
-      <div className="relative z-10 flex items-center justify-center px-4 py-3 sm:hidden">
+      {/* ── Mobile top bar — back button left + title centered ── */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 sm:hidden">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35 active:text-white/60"
+        >
+          <span>←</span>
+          <span>Back</span>
+        </Link>
         <p
           className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/30"
           style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
         >
           {title}
         </p>
-      </div>
-
-      {/* ── Mobile bottom back — slim pill, thumb-zone, unobtrusive ── */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 pt-8 sm:hidden"
-        style={{ background: "linear-gradient(to top, rgba(6,6,10,0.98) 50%, transparent 100%)" }}
-      >
-        <Link
-          href="/"
-          className="flex items-center gap-2 rounded-full px-5 py-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 transition-colors active:text-white/50"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <span className="text-[10px]">←</span>
-          <span>The Arena</span>
-        </Link>
+        {/* Spacer to keep title centered */}
+        <div className="w-[64px]" />
       </div>
 
       {/* ── Hero section ── */}
@@ -127,17 +118,19 @@ export default function GameSetupShell({
           </h1>
 
           {/* Subtitle */}
-          <p
-            className="mt-1 text-sm font-bold uppercase tracking-[0.22em] sm:text-base"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${accentFrom}cc, ${accentTo}99)`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            {subtitle}
-          </p>
+          {subtitle && (
+            <p
+              className="mt-1 text-sm font-bold uppercase tracking-[0.22em] sm:text-base"
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${accentFrom}cc, ${accentTo}99)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              {subtitle}
+            </p>
+          )}
 
           {/* Flavour line */}
           <p className="mt-1.5 text-[11px] text-white/35 sm:text-xs">{flavour}</p>

@@ -1046,7 +1046,7 @@ export default function HomePage() {
 
   return (
     <main className="grain-overlay relative flex flex-col px-3 py-2 sm:px-6 sm:py-3 md:py-4 lg:py-5 xl:py-6"
-      style={{ minHeight: "100dvh", overscrollBehavior: "none" }}
+      style={{ minHeight: "100dvh" }}
     >
 
       {/* First-time username modal */}
@@ -1108,7 +1108,7 @@ export default function HomePage() {
       </div>
 
       {/* Center Content */}
-      <div className="relative z-10 flex w-full flex-1 flex-col items-center" style={{ minHeight: 0 }}>
+      <div className="relative z-10 flex w-full flex-col items-center">
         {/* Hero Heading */}
         <motion.div
           variants={fadeUp}
@@ -1143,16 +1143,16 @@ export default function HomePage() {
 
         </motion.div>
 
-        {/* Mobile Game List — single column, scrollable within viewport, phone only */}
-        <div className="flex w-full flex-1 flex-col items-center gap-2.5 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-8 sm:hidden">
+        {/* Mobile Game List — single column, natural page scroll, phone only */}
+        <div className="flex w-full flex-col items-center gap-2.5 overflow-x-hidden px-4 pb-16 sm:hidden">
           {games.map((game, i) => (
             <MobileGameTile key={game.id} game={game} index={i} />
           ))}
         </div>
 
-        {/* Desktop/Tablet Game Cards — hidden on phone, responsive columns, fills remaining height */}
+        {/* Desktop/Tablet Game Cards — hidden on phone, responsive columns */}
         <div
-          className="hidden w-full max-w-7xl flex-1 grid-cols-2 gap-2 overflow-y-auto px-2 pb-6 sm:grid md:grid-cols-2 md:gap-3 md:px-4 lg:grid-cols-4 lg:gap-2 lg:px-0 xl:gap-3"
+          className="hidden w-full max-w-7xl grid-cols-2 gap-2 px-2 pb-6 sm:grid md:grid-cols-2 md:gap-3 md:px-4 lg:grid-cols-4 lg:gap-2 lg:px-0 xl:gap-3"
           style={{ gridTemplateRows: "auto auto" }}
         >
           {games.map((game, i) => (
@@ -1161,12 +1161,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Footer — absolute so it doesn't affect layout height */}
+      {/* Footer */}
       <motion.div
         initial={mounted ? { opacity: 0 } : false}
         animate={mounted ? { opacity: 1 } : false}
         transition={{ delay: 1.4, duration: 1.2 }}
-        className="absolute bottom-2 left-0 right-0 z-10 flex flex-col items-center gap-1 text-center sm:bottom-3"
+        className="relative z-10 flex flex-col items-center gap-1 py-4 text-center sm:py-6"
       >
         <p
           className="text-[9px] tracking-[0.3em] text-white/10"

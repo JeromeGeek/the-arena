@@ -21,6 +21,7 @@ import {
   narrateNightDone,
   narrateWakeUp,
   stopSpeaking,
+  stopMafiaAmbient,
 } from "@/lib/sounds";
 
 /*
@@ -144,19 +145,28 @@ function PrivacyWall({ role, onReady, soundEnabled }: { role: NightRole; onReady
     detective: { emoji: "🔍", who: "Detective", instruction: "Detective, silently open your eyes and pick up the phone." },
   };
   const info = labels[role];
-  const [narrating, setNarrating] = useState(true);
+  // narrating = true once the role player has tapped "I'm the [role]" and narration begins
+  const [narrating, setNarrating] = useState(false);
+  const [tapped, setTapped] = useState(false);
 
-  useEffect(() => {
+  // Handle the tap — narration begins only now (phone is in their hands)
+  const handleTap = useCallback(() => {
+    if (tapped) return;
+    setTapped(true);
     if (!soundEnabled) {
-      setTimeout(() => setNarrating(false), 0);
+      onReady();
       return;
     }
+    setNarrating(true);
     let cancelled = false;
     narratePrivacyWall(role, () => {
-      if (!cancelled) setNarrating(false);
+      if (!cancelled) {
+        setNarrating(false);
+        onReady();
+      }
     });
     return () => { cancelled = true; stopSpeaking(); };
-  }, [role, soundEnabled]);
+  }, [tapped, soundEnabled, role, onReady]);
 
   return (
     <motion.div
@@ -190,25 +200,25 @@ function PrivacyWall({ role, onReady, soundEnabled }: { role: NightRole; onReady
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white/30" />
           Narrating...
         </motion.div>
-      ) : (
+      ) : !tapped ? (
         <>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-[10px] text-white/25 sm:text-xs"
           >
-            Only the {info.who} should be looking at the phone
+            Only the {info.who} should pick up the phone now
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <ActionButton onClick={onReady}>
+            <ActionButton onClick={handleTap}>
               I&apos;m the {info.who} — Continue
             </ActionButton>
           </motion.div>
         </>
-      )}
+      ) : null}
     </motion.div>
   );
 }
@@ -226,8 +236,8 @@ export default function MafiaGamePage() {
   const parsed = useMemo(() => parseCode(code, namesList), [code, namesList]);
   const { soundEnabled, toggleSound } = useSoundEnabled();
 
-  // Stop any ongoing narration on unmount
-  useEffect(() => () => { stopSpeaking(); }, []);
+  // Stop any ongoing narration + ambient on unmount
+  useEffect(() => () => { stopSpeaking(); stopMafiaAmbient(); }, []);
 
   const [phase, setPhase] = useState<GamePhase>("roleReveal");
   const [players, setPlayers] = useState<MafiaPlayer[]>(() => parsed?.players ?? []);

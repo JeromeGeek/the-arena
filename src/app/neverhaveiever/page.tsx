@@ -64,7 +64,6 @@ export default function NeverHaveIEverPage() {
     <GameSetupShell
       title="NEVER HAVE I EVER"
       emoji="🍺"
-      subtitle="Secrets & Confessions"
       flavour="Put a finger down · Spill the tea"
       accentFrom="#22C55E"
       accentTo="#16A34A"

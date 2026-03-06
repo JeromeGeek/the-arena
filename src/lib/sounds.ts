@@ -607,6 +607,16 @@ export function playSnapCountdownGo() {
   setTimeout(() => playTone(1319, 0.1, "triangle", 0.14), 55);
 }
 
+/** Time's up beep — sharp alarm buzz when the reveal timer expires */
+export function playSnapTimeUp() {
+  // Three rapid descending beeps — urgent alarm feel
+  playTone(880, 0.08, "square", 0.13);
+  setTimeout(() => playTone(740, 0.08, "square", 0.13), 120);
+  setTimeout(() => playTone(587, 0.16, "square", 0.15), 240);
+  // Low noise burst underneath
+  setTimeout(() => playNoise(0.12, 0.06), 0);
+}
+
 /** Stop any ongoing narration + ambient */
 export function stopSpeaking() {
   if (isSpeechSupported()) {
@@ -615,21 +625,39 @@ export function stopSpeaking() {
   stopHeavenlyPad();
 }
 
-/** Narrate night announcement with dark ambient drone */
+/** Explicitly stop the Mafia ambient pad (e.g. on page unmount) */
+export function stopMafiaAmbient() {
+  stopHeavenlyPad();
+}
+
+/** Narrate night announcement with dark ambient drone.
+ *  Waits 2 s (phone is being placed in center) before the ambient fades in,
+ *  then narrates, then stops ambient and calls onDone.
+ */
 export async function narrateNightAnnounce(onDone: () => void) {
+  // 2-second silence so the person next to the active player
+  // doesn't hear audio starting while they're still holding the phone
+  await new Promise((r) => setTimeout(r, 2000));
   startHeavenlyPad();
+  await new Promise((r) => setTimeout(r, 800)); // let pad fade in before speaking
   await speak("Night falls upon the town. Everyone... close your eyes. Do not open them, until you are called upon.");
   await new Promise((r) => setTimeout(r, 1000));
   stopHeavenlyPad();
   onDone();
 }
 
-/** Narrate the privacy wall for a specific role */
+/** Narrate the privacy wall for a specific role.
+ *  The ambient pad starts only AFTER the player has tapped "I'm the [role]"
+ *  (i.e. they have the phone in their hands, away from the group).
+ *  During the privacy-wall screen itself the room is silent.
+ */
 export async function narratePrivacyWall(
   role: "mafia" | "doctor" | "detective",
   onReady: () => void
 ) {
+  // Ambient starts NOW — the role player has the phone, others can't hear
   startHeavenlyPad();
+  await new Promise((r) => setTimeout(r, 600)); // brief pad intro before voice
   const lines: Record<string, string> = {
     mafia:     "Mafia. Open your eyes. Look around the table. Silently... choose your target for tonight. You have a few moments.",
     doctor:    "Doctor. Open your eyes. Someone in this town is in danger tonight. Think carefully... who will you protect?",
@@ -641,9 +669,16 @@ export async function narratePrivacyWall(
   onReady();
 }
 
-/** Narrate "close your eyes" after a night action */
+/** Narrate "close your eyes" after a night action.
+ *  A 3-second countdown in the UI precedes this call, giving the player
+ *  time to set the phone face-down before the audio starts.
+ *  We add an extra 1 s silence on top so nearby players can't identify
+ *  the role from the audio beginning the instant the phone is placed.
+ */
 export async function narrateNightDone(role: "mafia" | "doctor" | "detective") {
+  await new Promise((r) => setTimeout(r, 1000)); // extra silence buffer
   startHeavenlyPad();
+  await new Promise((r) => setTimeout(r, 600));
   const lines: Record<string, string> = {
     mafia:     "Mafia... close your eyes. Return to the darkness. Your deed... is done.",
     doctor:    "Doctor... close your eyes. You have done what you can. Rest now, and hope it was enough.",

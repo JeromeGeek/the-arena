@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 import { createInkSocket, sendMessage } from "@/lib/partykit";
 import type PartySocket from "partysocket";
 import type { DrawStroke } from "@/lib/inkarena";
+import { TEAM_COLORS, DEFAULT_TEAM_NAMES } from "@/lib/inkarena";
 
 // Essential colours only
 const COLORS = ["#000000", "#FFFFFF", "#FF416C", "#00B4DB", "#22C55E", "#F97316"];
@@ -28,7 +29,8 @@ export default function DrawerPage() {
   const [brushSize, setBrushSize] = useState(10);
   const [isEraser, setIsEraser] = useState(false);
   const [currentWord, setCurrentWord] = useState<string | null>(null);
-  const [drawingTeam, setDrawingTeam] = useState<"red" | "blue" | null>(null);
+  const [drawingTeamIdx, setDrawingTeamIdx] = useState<number>(0);
+  const [teamNames, setTeamNames] = useState<string[]>(DEFAULT_TEAM_NAMES);
   const [roundNumber, setRoundNumber] = useState(0);
   const [paused, setPaused] = useState(false);
   const [waitingForRound, setWaitingForRound] = useState(true);
@@ -42,9 +44,10 @@ export default function DrawerPage() {
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
 
-      const handleRoundBegin = (payload: { word: string; drawingTeam: "red" | "blue"; roundNumber: number }) => {
+      const handleRoundBegin = (payload: { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number }) => {
         setCurrentWord(payload.word);
-        setDrawingTeam(payload.drawingTeam);
+        setDrawingTeamIdx(payload.drawingTeamIdx ?? 0);
+        if (payload.teamNames) setTeamNames(payload.teamNames);
         setRoundNumber(payload.roundNumber);
         setWaitingForRound(false);
         const canvas = canvasRef.current;
@@ -55,12 +58,12 @@ export default function DrawerPage() {
       };
 
       if (msg.type === "round_start") {
-        handleRoundBegin(msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number });
+        handleRoundBegin(msg as { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number });
       }
 
       // Late-joiner catchup from server
       if (msg.type === "round_catchup") {
-        handleRoundBegin(msg as { word: string; drawingTeam: "red" | "blue"; roundNumber: number });
+        handleRoundBegin(msg as { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number });
       }
 
       if (msg.type === "correct_guess" || msg.type === "time_up" || msg.type === "round_over") {
@@ -89,9 +92,17 @@ export default function DrawerPage() {
       if (msg.type === "game_resumed") {
         setPaused(false);
       }
+      if (msg.type === "game_ended" || msg.type === "game_over") {
+        setWaitingForRound(true);
+        setCurrentWord(null);
+        isDrawingRef.current = false;
+        lastPointRef.current = null;
+      }
     });
     socketRef.current = socket;
     sendMessage(socket, { type: "player_join", name: playerName, team: "drawer", role: "drawer" });
+    // Register as drawer so server knows to skip turn on disconnect
+    sendMessage(socket, { type: "register_role", role: "drawer" });
     return () => { socket.close(); };
   }, [code, playerName]);
 
@@ -195,11 +206,8 @@ export default function DrawerPage() {
     broadcastStroke(stroke);
   }, [broadcastStroke]);
 
-  const teamColor = drawingTeam === "red" ? "#FF416C" : "#00B4DB";
-  const teamGradient =
-    drawingTeam === "red"
-      ? "linear-gradient(135deg, #FF416C, #FF4B2B)"
-      : "linear-gradient(135deg, #00B4DB, #0083B0)";
+  const teamColor = TEAM_COLORS[drawingTeamIdx % TEAM_COLORS.length].accent;
+  const teamGradient = TEAM_COLORS[drawingTeamIdx % TEAM_COLORS.length].gradient;
 
   return (
     <main

@@ -91,7 +91,6 @@ export default function ImposterPage() {
     <GameSetupShell
       title="IMPOSTER"
       emoji="🎭"
-      subtitle="Social Deception Engine"
       flavour="Assemble your crew · Someone among you is a fraud"
       accentFrom="#00B4DB"
       accentTo="#0083B0"
