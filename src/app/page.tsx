@@ -246,113 +246,14 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
   );
 }
 
-/* ─── Per-game desktop idle animations ─── */
-const desktopIdleAnimations: Record<string, { animate: object; transition: object }> = {
-  codenames: {
-    animate: { x: [0, -1.5, 1.5, 0] },
-    transition: { duration: 7, repeat: Infinity, ease: "easeInOut" },
-  },
-  imposter: {
-    animate: { opacity: [1, 0.9, 1], scale: [1, 1.005, 1] },
-    transition: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
-  },
-  truthordare: {
-    animate: { y: [0, -2, 1, 0] },
-    transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-  },
-  neverhaveiever: {
-    animate: { rotate: [0, 0.3, -0.2, 0], y: [0, -1.5, 0] },
-    transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-  },
-  charades: {
-    animate: { skewX: [0, 0.4, -0.3, 0], y: [0, -1, 0] },
-    transition: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
-  },
-  mafia: {
-    animate: { opacity: [1, 0.84, 1] },
-    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-  },
-  inkarena: {
-    animate: { rotate: [0, 0.5, -0.5, 0], scale: [1, 1.006, 1] },
-    transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-  },
-  headrush: {
-    animate: { y: [0, -3, 1, 0], scale: [1, 1.008, 1] },
-    transition: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
-  },
-};
+/* ─── Per-game desktop idle animations — disabled for performance ─── */
+const desktopIdleAnimations: Record<string, { animate: object; transition: object }> = {};
 
-/* ─── Per-game emoji idle animations (desktop cards) ─── */
-const desktopEmojiAnimations: Record<string, { animate: object; transition: object }> = {
-  codenames: {
-    animate: { rotate: [0, -5, 5, 0] },
-    transition: { duration: 6, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
-  },
-  imposter: {
-    animate: { scale: [1, 1.15, 1], opacity: [1, 0.8, 1] },
-    transition: { duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" },
-  },
-  truthordare: {
-    animate: { scale: [1, 1.2, 1], rotate: [0, 8, -4, 0] },
-    transition: { duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" },
-  },
-  neverhaveiever: {
-    animate: { rotate: [0, -10, 10, -5, 0] },
-    transition: { duration: 1.5, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" },
-  },
-  charades: {
-    animate: { y: [0, -4, 1, 0], rotate: [0, -5, 5, 0] },
-    transition: { duration: 1.8, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" },
-  },
-  mafia: {
-    animate: { scale: [1, 1.1, 0.95, 1], opacity: [1, 0.7, 1] },
-    transition: { duration: 3, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
-  },
-  inkarena: {
-    animate: { rotate: [0, -8, 8, -4, 4, 0], scale: [1, 1.1, 1] },
-    transition: { duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
-  },
-  headrush: {
-    animate: { y: [0, -6, 2, 0], rotate: [0, -6, 6, 0] },
-    transition: { duration: 1.6, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" },
-  },
-};
+/* ─── Per-game emoji idle animations — disabled for performance ─── */
+const desktopEmojiAnimations: Record<string, { animate: object; transition: object }> = {};
 
-/* ─── Per-card unique idle animations (mobile) ─── */
-const mobileIdleAnimations: Record<string, { animate: object; transition: object }> = {
-  codenames: {
-    animate: { x: [0, -2, 2, 0] },
-    transition: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-  },
-  imposter: {
-    animate: { opacity: [1, 0.88, 1], scale: [1, 1.008, 1] },
-    transition: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
-  },
-  truthordare: {
-    animate: { x: [0, 2, -1, 0] },
-    transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-  },
-  neverhaveiever: {
-    animate: { y: [0, -3, 0], rotate: [0, 0.4, -0.2, 0] },
-    transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-  },
-  charades: {
-    animate: { rotateY: [0, 3, 0], rotateX: [0, 1.5, 0] },
-    transition: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
-  },
-  mafia: {
-    animate: { opacity: [1, 0.82, 1] },
-    transition: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
-  },
-  inkarena: {
-    animate: { backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] },
-    transition: { duration: 4, repeat: Infinity, ease: "linear" },
-  },
-  headrush: {
-    animate: { y: [0, -4, 1, 0], scale: [1, 1.012, 1] },
-    transition: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
-  },
-};
+/* ─── Per-card unique idle animations (mobile) — DISABLED for performance ─── */
+const mobileIdleAnimations: Record<string, { animate: object; transition: object }> = {};
 
 /* ─── Per-card entrance animations ─── */
 const mobileEntranceVariants: Record<string, object> = {
@@ -378,7 +279,6 @@ function MobileGameTile({
   useEffect(() => { setMounted(true); }, []);
 
   const entranceVariant = mobileEntranceVariants[game.variant] ?? mobileEntranceVariants.codenames;
-  const idle = mobileIdleAnimations[game.variant] ?? mobileIdleAnimations.codenames;
 
   const entranceTransition = {
     delay: index * 0.07 + 0.1,
@@ -394,23 +294,14 @@ function MobileGameTile({
       animate={mounted ? "visible" : false}
       transition={entranceTransition}
       className="relative mx-auto w-full max-w-[420px]"
-      style={{ perspective: 800 }}
     >
       <Link href={game.href} className="block">
-        {/* Outer layer: idle looping tween animation (keyframes) */}
-        <motion.div
-          animate={mounted ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined}
-          transition={idle.transition as Parameters<typeof motion.div>[0]["transition"]}
-        >
-        {/* Inner layer: tap spring — spring only ever animates to a single target */}
         <motion.div
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 420, damping: 28 }}
           className="group relative overflow-hidden rounded-[20px]"
           style={{
-            background: "rgba(12,12,18,0.90)",
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
+            background: "rgba(12,12,18,0.92)",
             border: "1px solid rgba(255,255,255,0.07)",
             borderBottom: "1px solid rgba(255,255,255,0.03)",
             boxShadow: "0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 48px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.4)",
@@ -499,15 +390,13 @@ function MobileGameTile({
               </p>
             </div>
 
-            {/* Chevron — refined, not arrow */}
-            <motion.span
+            {/* Chevron — static */}
+            <span
               className="shrink-0 text-base"
               style={{ color: "rgba(255,255,255,0.18)" }}
-              animate={{ x: [0, 3, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
             >
               ›
-            </motion.span>
+            </span>
           </div>
 
           {/* Bottom separator — barely-there */}
@@ -515,7 +404,6 @@ function MobileGameTile({
             className="absolute bottom-0 left-[20%] right-[20%] h-px"
             style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)" }}
           />
-        </motion.div>
         </motion.div>
       </Link>
 
@@ -547,14 +435,14 @@ function GameCard({
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
-  const idle = desktopIdleAnimations[game.variant] ?? desktopIdleAnimations.codenames;
-  const emojiIdle = desktopEmojiAnimations[game.variant] ?? desktopEmojiAnimations.codenames;
+  const idle = desktopIdleAnimations[game.variant];
+  const emojiIdle = desktopEmojiAnimations[game.variant];
 
-  // On TV/large screens skip all looping idle animations — they're the main lag source
-  const idleAnimate = (mounted && !reducedMotion) ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
-  const idleTransition = !reducedMotion ? (idle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
-  const emojiIdleAnimate = (mounted && !reducedMotion) ? (emojiIdle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
-  const emojiIdleTransition = !reducedMotion ? (emojiIdle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
+  // All idle animations disabled for performance — these are undefined
+  const idleAnimate = (mounted && !reducedMotion && idle) ? (idle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
+  const idleTransition = (!reducedMotion && idle) ? (idle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
+  const emojiIdleAnimate = (mounted && !reducedMotion && emojiIdle) ? (emojiIdle.animate as Parameters<typeof motion.div>[0]["animate"]) : undefined;
+  const emojiIdleTransition = (!reducedMotion && emojiIdle) ? (emojiIdle.transition as Parameters<typeof motion.div>[0]["transition"]) : undefined;
 
   const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
@@ -648,7 +536,7 @@ function GameCard({
               }}
               transition={{ type: "spring", stiffness: 180, damping: 28 }}
               whileTap={{ scale: 0.98 }}
-              style={{ perspective: 1200, transformStyle: "preserve-3d", willChange: "transform" }}
+              style={{ perspective: 1200, transformStyle: "preserve-3d" }}
               className="group relative h-full cursor-pointer"
             >
               {/* Soft outer corona — not harsh glow, just a warm breath */}
@@ -722,7 +610,6 @@ function GameCard({
                       style={{
                         background: `linear-gradient(135deg, ${game.accentFrom}1c, ${game.accentTo}0e)`,
                         border: `1px solid ${game.accentFrom}30`,
-                        backdropFilter: "blur(12px)",
                         boxShadow: isHovered
                           ? `0 0 20px ${game.accentFrom}30, inset 0 1px 0 rgba(255,255,255,0.1)`
                           : `inset 0 1px 0 rgba(255,255,255,0.06)`,
@@ -856,7 +743,7 @@ function GameCard({
             }}
             transition={{ type: "spring", stiffness: 220, damping: 22 }}
             whileTap={{ scale: 0.97 }}
-            style={{ perspective: 1000, transformStyle: "preserve-3d", willChange: "transform" }}
+            style={{ perspective: 1000, transformStyle: "preserve-3d" }}
             className="group relative h-full cursor-pointer"
           >
             {/* Soft outer light breath on hover — replaces harsh box-shadow glow */}
@@ -900,7 +787,6 @@ function GameCard({
                 style={{
                   background: `linear-gradient(135deg, ${game.accentFrom}18, ${game.accentTo}0e)`,
                   border: `1px solid ${game.accentFrom}30`,
-                  backdropFilter: "blur(8px)",
                   transition: "box-shadow 0.4s ease",
                   boxShadow: isHovered ? `0 0 20px ${game.accentFrom}40, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
                 }}
@@ -1061,32 +947,26 @@ export default function HomePage() {
           style={{ background: "linear-gradient(160deg, #09090f 0%, #080b11 45%, #060810 100%)" }}
         />
 
-        {/* Layer 1: Large slow-drifting colour fields — very low opacity, luxury not harsh */}
-        <motion.div
+        {/* Layer 1: Static colour fields — same look, zero animation cost */}
+        <div
           className="absolute"
-          style={{ top: "-10%", left: "-5%", width: "65%", height: "70%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(255,65,108,0.055) 0%, transparent 68%)", filter: "blur(60px)", willChange: "transform" }}
-          animate={{ x: [0, 18, -8, 0], y: [0, -12, 8, 0], scale: [1, 1.04, 0.98, 1] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          style={{ top: "-10%", left: "-5%", width: "65%", height: "70%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(255,65,108,0.055) 0%, transparent 68%)", filter: "blur(60px)" }}
         />
-        <motion.div
+        <div
           className="absolute"
-          style={{ bottom: "-5%", right: "-8%", width: "60%", height: "65%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(0,180,219,0.048) 0%, transparent 65%)", filter: "blur(70px)", willChange: "transform" }}
-          animate={{ x: [0, -14, 10, 0], y: [0, 10, -6, 0], scale: [1, 0.97, 1.03, 1] }}
-          transition={{ duration: 26, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          style={{ bottom: "-5%", right: "-8%", width: "60%", height: "65%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(0,180,219,0.048) 0%, transparent 65%)", filter: "blur(70px)" }}
         />
-        <motion.div
+        <div
           className="absolute"
-          style={{ top: "20%", left: "30%", width: "50%", height: "55%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(168,85,247,0.038) 0%, transparent 60%)", filter: "blur(80px)", willChange: "transform" }}
-          animate={{ x: [0, 10, -16, 0], y: [0, -8, 12, 0] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+          style={{ top: "20%", left: "30%", width: "50%", height: "55%", borderRadius: "50%", background: "radial-gradient(ellipse at center, rgba(168,85,247,0.038) 0%, transparent 60%)", filter: "blur(80px)" }}
         />
 
-        {/* Layer 2: Smaller accent orbs — mid-depth */}
+        {/* Layer 2: Smaller accent orbs — static */}
         <div className="absolute left-[15%] top-[40%] h-[280px] w-[280px] rounded-full bg-[rgba(34,197,94,0.028)] blur-[55px]" />
         <div className="absolute bottom-[25%] right-[20%] h-[240px] w-[240px] rounded-full bg-[rgba(249,115,22,0.025)] blur-[50px]" />
         <div className="absolute right-[40%] top-[55%] h-[200px] w-[200px] rounded-full bg-[rgba(192,38,211,0.03)] blur-[45px]" />
 
-        {/* Layer 3: Fine grain texture — adds luxury tactility */}
+        {/* Layer 3: Static grain texture — no animation */}
         <div
           className="absolute inset-0 opacity-[0.022]"
           style={{

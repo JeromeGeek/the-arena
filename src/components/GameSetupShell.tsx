@@ -35,7 +35,7 @@ export default function GameSetupShell({
   children,
 }: GameSetupShellProps) {
   return (
-    <main className="grain-overlay relative min-h-[100dvh] overflow-x-hidden overflow-y-auto pb-28 sm:pb-16" style={{ overscrollBehavior: "contain" }}>
+    <main className="grain-overlay relative min-h-[100dvh] pb-28 sm:pb-16">
       {/* ── Ambient background glows (match homepage) ── */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
