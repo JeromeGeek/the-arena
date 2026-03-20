@@ -153,6 +153,8 @@ export default function SnapQuizGamePage() {
   const [countdownActive, setCountdownActive] = useState(false);
   const [lastScorer, setLastScorer]         = useState<number | null>(null);
   const [imageLoaded, setImageLoaded]       = useState(false);
+  // Track whether the current image was passed (preserved across endImage→handleNext)
+  const wasPassedRef                        = useRef(false);
 
   const barControls      = useAnimationControls();
   const revealTimerRef   = useRef<NodeJS.Timeout | null>(null);
@@ -189,6 +191,7 @@ export default function SnapQuizGamePage() {
     setShowHint(false);
     setLastScorer(null);
     setImageLoaded(false);
+    wasPassedRef.current = false;
   }, []);
 
   const endImage = useCallback(() => {
@@ -276,6 +279,7 @@ export default function SnapQuizGamePage() {
     if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
     barControls.stop();
 
+    wasPassedRef.current = true;
     const newPassed = [...passedTeams, activeTeam];
     setPassedTeams(newPassed);
     const nextTeam = findNextTeam(activeTeam, teams.length, newPassed);
@@ -304,19 +308,18 @@ export default function SnapQuizGamePage() {
     if (answeringTeam === null) return;
     if (soundEnabled) playSnapWrong();
     const team = answeringTeam;
-    const wasPassed = passedTeams.length > 0;
     setVerdictResult("wrong");
     setPhase("verdict");
     setTimeout(() => {
       // Only apply -10 penalty if the original team got it wrong (not after a pass)
-      if (!wasPassed) {
+      if (!wasPassedRef.current) {
         setScores((prev) => { const n = [...prev]; n[team] = (n[team] ?? 0) + POINTS_WRONG; return n; });
       }
       setVerdictResult(null);
       setAnsweringTeam(null);
       endImage();
     }, 1200);
-  }, [answeringTeam, passedTeams.length, soundEnabled, endImage]);
+  }, [answeringTeam, soundEnabled, endImage]);
 
   const handleNext = useCallback(() => {
     const nextIdx = imgIndex + 1;
@@ -327,13 +330,12 @@ export default function SnapQuizGamePage() {
     }
     const isEndOfRound   = nextIdx % IMAGES_PER_ROUND === 0;
     // If the current image was passed, the passing team still "owns" the next image
-    // (they shouldn't lose their turn for passing). Otherwise, rotate normally.
-    const wasPassed = passedTeams.length > 0;
-    const nextActiveTeam = wasPassed ? passedTeams[0] : (activeTeam + 1) % teams.length;
+    // (they shouldn't lose their turn). Otherwise, rotate normally.
+    const nextActiveTeam = wasPassedRef.current ? activeTeam : (activeTeam + 1) % teams.length;
     resetForNewImage(nextIdx, nextActiveTeam);
     if (isEndOfRound && soundEnabled) setTimeout(() => playSnapRoundBreak(), 300);
     setPhase(isEndOfRound ? "roundbreak" : "revealing");
-  }, [imgIndex, totalImages, activeTeam, passedTeams, teams.length, soundEnabled, resetForNewImage]);
+  }, [imgIndex, totalImages, activeTeam, teams.length, soundEnabled, resetForNewImage]);
 
   // ── Invalid code guard ────────────────────────────────────────────────────
   if (!parsed || !currentImage) {
@@ -470,7 +472,9 @@ export default function SnapQuizGamePage() {
                 <p className="mt-3 text-base font-bold text-white/90">
                   {verdictResult === "correct"
                     ? `+${answeredBlurred ? POINTS_BLURRED : POINTS_REVEALED} pts → ${teams[answeringTeam]}`
-                    : `${POINTS_WRONG} pts · ${teams[answeringTeam]}`}
+                    : wasPassedRef.current
+                      ? `No penalty · ${teams[answeringTeam]}`
+                      : `${POINTS_WRONG} pts · ${teams[answeringTeam]}`}
                 </p>
               )}
             </div>
