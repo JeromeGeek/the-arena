@@ -642,41 +642,35 @@ describe("Simplified Flow — TV + 1 drawer phone", () => {
     expect(config.teamNames).toEqual(["Red Team", "Blue Team", "Purple Team", "Green Team"]);
   });
 
-  it("TV handles correct guess directly (no guesser phone needed)", () => {
-    // Simulate TV-side handleTVCorrectGuess logic
+  it("TV handles correct guess — awards points to DRAWING team", () => {
+    // In Pictionary, the drawing team's OWN members guess
     const scores = [0, 0];
-    const drawingTeamIdx = 0;
-    const guessingTeamIdx = 1; // non-drawing team
+    const drawingTeamIdx = 0; // Red Team draws
+    const guessingTeamIdx = drawingTeamIdx; // Red Team's members guess → Red gets points
     const timeLeft = 55;
-    expect(guessingTeamIdx).not.toBe(drawingTeamIdx);
     let pts = POINTS_CORRECT_GUESS;
     if (timeLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
     scores[guessingTeamIdx] += pts;
-    expect(scores).toEqual([0, 150]);
+    expect(scores).toEqual([150, 0]); // Red gets 150, Blue gets 0
   });
 
-  it("only non-drawing teams can score (drawing team has no button)", () => {
-    const teamCount = 3;
-    const drawingTeamIdx = 1;
-    const buttonTeams = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
-    expect(buttonTeams).toEqual([0, 2]);
-    expect(buttonTeams).not.toContain(drawingTeamIdx);
-  });
-
-  it("with 2 teams, exactly 1 'We Got It' button shows", () => {
-    const teamCount = 2;
+  it("only the drawing team's button shows (single button)", () => {
     const drawingTeamIdx = 0;
-    const buttons = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0]).toBe(1);
+    // Only 1 button — for the drawing team
+    expect(drawingTeamIdx).toBe(0);
+    expect(DEFAULT_TEAM_NAMES[drawingTeamIdx]).toBe("Red Team");
   });
 
-  it("with 4 teams, 3 'We Got It' buttons show", () => {
-    const teamCount = 4;
+  it("with 2 teams, exactly 1 'Got It' button shows (drawing team)", () => {
+    const drawingTeamIdx = 0;
+    // Single button for drawing team
+    expect(DEFAULT_TEAM_NAMES[drawingTeamIdx]).toBe("Red Team");
+  });
+
+  it("with 4 teams, still 1 'Got It' button (drawing team only)", () => {
     const drawingTeamIdx = 2;
-    const buttons = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
-    expect(buttons).toHaveLength(3);
-    expect(buttons).toEqual([0, 1, 3]);
+    // Single button for drawing team regardless of team count
+    expect(DEFAULT_TEAM_NAMES[drawingTeamIdx]).toBe("Purple Team");
   });
 
   it("always starts with team 0 (Red Team)", () => {

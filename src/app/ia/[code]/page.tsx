@@ -521,27 +521,20 @@ export default function InkArenaTVPage() {
                   </div>
                 </div>
 
-                {/* "We Got It!" buttons — one per NON-drawing team */}
-                <div className="mt-2 flex gap-2">
-                  {scores.map((_, i) => {
-                    if (i === drawingTeamIdx) return null;
-                    const col = teamColor(i);
-                    return (
-                      <motion.button
-                        key={i}
-                        whileTap={{ scale: 0.93 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        onClick={() => handleTVCorrectGuess(i)}
-                        className="flex-1 rounded-xl py-3 text-sm font-black uppercase tracking-widest text-white"
-                        style={{
-                          backgroundImage: col.gradient,
-                          boxShadow: `0 0 24px ${col.accent}44`,
-                        }}
-                      >
-                        ✅ {teamName(i)} Got It!
-                      </motion.button>
-                    );
-                  })}
+                {/* "Correct!" button — awards points to the DRAWING team (their teammates guessed it) */}
+                <div className="mt-2">
+                  <motion.button
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    onClick={() => handleTVCorrectGuess(drawingTeamIdx)}
+                    className="w-full rounded-xl py-3.5 text-base font-black uppercase tracking-widest text-white"
+                    style={{
+                      backgroundImage: teamColor(drawingTeamIdx).gradient,
+                      boxShadow: `0 0 30px ${teamColor(drawingTeamIdx).accent}55`,
+                    }}
+                  >
+                    ✅ {teamName(drawingTeamIdx)} Got It!
+                  </motion.button>
                 </div>
               </div>
             )}
