@@ -1,4 +1,4 @@
-// Game code system — each slug is a unique funny word with a baked-in difficulty + seed
+// Game code system — each slug encodes a difficulty + unique seed
 // Sharing a slug shares the exact game state deterministically
 
 export type SlugDifficulty = "easy" | "medium" | "hard";
@@ -8,7 +8,37 @@ interface SlugEntry {
   seed: number;
 }
 
-// Each slug is pre-assigned a difficulty and unique seed
+// ── Adjective + Noun combinator for unique slugs ──
+// Each difficulty uses different adjective sets → no overlap
+const easyAdj = [
+  "angry", "bold", "calm", "cozy", "epic", "fast", "fizzy", "goofy",
+  "happy", "jolly", "keen", "lazy", "lucky", "mild", "neat", "odd",
+  "pink", "quiet", "round", "silly", "tiny", "warm", "witty", "yolo",
+  "zany", "bumpy", "curly", "dizzy", "easy", "fuzzy",
+];
+
+const medAdj = [
+  "brave", "clever", "dark", "fiery", "grim", "hype", "icy", "jumpy",
+  "loud", "mad", "nosy", "proud", "quick", "raw", "sly", "tough",
+  "ultra", "vast", "wild", "zesty", "chief", "crisp", "dusty", "fancy",
+  "grand", "harsh", "mega", "noble", "prime", "rusty",
+];
+
+const hardAdj = [
+  "bleak", "cold", "cruel", "dire", "dread", "eerie", "fatal", "grit",
+  "heavy", "iron", "jade", "lunar", "manic", "neon", "onyx", "pale",
+  "rogue", "sharp", "stark", "super", "toxic", "venom", "void", "warp",
+  "zero", "ashen", "brute", "chaos", "doom", "frost",
+];
+
+const nouns = [
+  "ape", "bear", "crow", "duck", "eel", "fox", "goat", "hawk",
+  "ibis", "jay", "koala", "lynx", "mole", "newt", "owl", "pug",
+  "quail", "ram", "seal", "toad", "urchin", "vole", "wolf", "yak",
+  "zebra", "cobra", "drake", "eagle", "finch", "gecko",
+];
+
+// Build slug registry — 900 per difficulty = 2700 total, all unique
 const slugRegistry: Record<string, SlugEntry> = {};
 const slugsByDifficulty: Record<SlugDifficulty, string[]> = {
   easy: [],
@@ -16,50 +46,23 @@ const slugsByDifficulty: Record<SlugDifficulty, string[]> = {
   hard: [],
 };
 
-// ── Easy slugs ──
-const easySlugs = [
-  "iamgay", "shutup", "lmao", "bruh", "noob", "oops", "mybad", "chill",
-  "vibes", "cozy", "sleepy", "zzz", "blessed", "goofed", "fumbled",
-  "flopped", "yolo", "sorry", "noway", "oof", "halp", "plsno",
-  "gonzo", "dipped", "poof", "vanish", "ghost", "ded", "rip",
-  "flung", "punted", "booted", "muted", "ayoo", "nahhh", "sheesh",
-  "frfr", "lolno", "nocap", "ripme", "sendit", "panik", "wompwomp",
-  "afk", "lagged", "bugged", "toastd", "burnt", "dried", "washed",
-];
+const adjByDiff: Record<SlugDifficulty, string[]> = {
+  easy: easyAdj,
+  medium: medAdj,
+  hard: hardAdj,
+};
 
-// ── Medium slugs ──
-const mediumSlugs = [
-  "wth", "ggez", "ligma", "rekt", "yikes", "cope", "salty", "ratio",
-  "cringe", "lowiq", "clown", "bozo", "deez", "sus", "cooked",
-  "trolled", "baited", "rolled", "owned", "smoked", "dusted", "bodied",
-  "griefed", "jebaited", "kekw", "monkas", "based", "mid", "nerfed",
-  "buffed", "choked", "threw", "tanked", "rigged", "scammed", "jinxed",
-  "glitchd", "nuked", "yeeted", "banned", "silenced", "exposed", "busted",
-  "ripbozo", "savage", "toxic", "tilted", "hacked", "capped", "farmed",
-];
-
-// ── Hard slugs ──
-const hardSlugs = [
-  "gitgud", "tryhard", "sadge", "malding", "pepega", "inting", "noskill",
-  "freewin", "ggwp", "umad", "gotcha", "deadaf", "sofake", "caught",
-  "snitch", "goated", "whatif", "ulose", "unhinged", "chaotic", "feral",
-  "gremlin", "menace", "villain", "devious", "sneaky", "sketch", "shady",
-  "sussy", "sike", "finesse", "clutch", "diff", "gapped", "ratiod",
-  "packed", "folded", "humbled", "cursed", "demoted", "benched", "lost",
-  "doomed", "clueless", "faded", "zoinks", "phantom", "dced", "siren",
-];
-
-// Register all slugs
-function registerSlugs(slugs: string[], difficulty: SlugDifficulty) {
-  slugs.forEach((slug, i) => {
-    slugRegistry[slug] = { difficulty, seed: i };
-    slugsByDifficulty[difficulty].push(slug);
-  });
+for (const diff of (["easy", "medium", "hard"] as SlugDifficulty[])) {
+  let seed = 0;
+  for (const adj of adjByDiff[diff]) {
+    for (const noun of nouns) {
+      const slug = `${adj}${noun}`;
+      slugRegistry[slug] = { difficulty: diff, seed };
+      slugsByDifficulty[diff].push(slug);
+      seed++;
+    }
+  }
 }
-
-registerSlugs(easySlugs, "easy");
-registerSlugs(mediumSlugs, "medium");
-registerSlugs(hardSlugs, "hard");
 
 /**
  * Look up a slug → { difficulty, seed } or null if not found
@@ -77,18 +80,18 @@ export function getRandomSlug(difficulty: SlugDifficulty): string {
 }
 
 /**
- * Encode a numeric seed into a slug (for imposter — generic use)
+ * Encode a numeric seed into a slug (for imposter & other games — generic use)
  */
-const allSlugs = [...easySlugs, ...mediumSlugs, ...hardSlugs];
+const allSlugs = [...slugsByDifficulty.easy, ...slugsByDifficulty.medium, ...slugsByDifficulty.hard];
 
 export function seedToSlug(seed: number): string {
-  return allSlugs[seed % allSlugs.length];
+  return allSlugs[Math.abs(seed) % allSlugs.length];
 }
 
 export function slugToSeed(slug: string): number | null {
-  const index = allSlugs.indexOf(slug);
-  if (index === -1) return null;
-  return index;
+  const entry = slugRegistry[slug];
+  if (!entry) return null;
+  return entry.seed;
 }
 
 export function generateSeed(): number {

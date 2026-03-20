@@ -35,7 +35,7 @@ export default function GameSetupShell({
   children,
 }: GameSetupShellProps) {
   return (
-    <main className="grain-overlay relative min-h-[100dvh] pb-28 sm:pb-16">
+    <main className="grain-overlay relative flex min-h-[100dvh] flex-col pb-28 sm:pb-16">
       {/* ── Ambient background glows (match homepage) ── */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
@@ -49,7 +49,7 @@ export default function GameSetupShell({
       </div>
 
       {/* ── Desktop header — top bar, hidden on mobile ── */}
-      <header className="relative z-10 hidden items-center justify-between px-6 py-4 sm:flex">
+      <header className="relative z-10 hidden shrink-0 items-center justify-between px-6 py-4 sm:flex">
         <Link
           href="/"
           className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors hover:text-white/60"
@@ -67,7 +67,7 @@ export default function GameSetupShell({
       </header>
 
       {/* ── Mobile top bar — back button left + title centered ── */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 sm:hidden">
+      <div className="relative z-10 flex shrink-0 items-center justify-between px-4 py-3 sm:hidden">
         <Link
           href="/"
           className="flex items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35 active:text-white/60"
@@ -85,8 +85,8 @@ export default function GameSetupShell({
         <div className="w-[64px]" />
       </div>
 
-      {/* ── Hero section ── */}
-      <div className="relative z-10 mx-auto max-w-2xl px-4 pt-2 sm:px-6 sm:pt-4">
+      {/* ── Hero section — vertically centered via flex-1 ── */}
+      <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

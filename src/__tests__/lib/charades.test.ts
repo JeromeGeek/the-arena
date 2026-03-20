@@ -45,13 +45,13 @@ describe("charades", () => {
     });
 
     it("uses specified category", () => {
-      const { category } = setupCharadesGame(players, "Movies");
-      expect(category).toBe("Movies");
+      const { category } = setupCharadesGame(players, "Movies & TV");
+      expect(category).toBe("Movies & TV");
     });
 
     it("words from specified category belong to that category", () => {
-      const { words } = setupCharadesGame(players, "Animals");
-      const pool = new Set(charadesCategories.find((c) => c.name === "Animals")!.words);
+      const { words } = setupCharadesGame(players, "Food & Animals");
+      const pool = new Set(charadesCategories.find((c) => c.name === "Food & Animals")!.words);
       words.forEach((w) => expect(pool.has(w)).toBe(true));
     });
 
@@ -65,11 +65,13 @@ describe("charades", () => {
       expect(new Set(words).size).toBe(words.length);
     });
 
-    it("is deterministic with seeded random", () => {
+    it("is deterministic with seeded random (fresh session)", () => {
+      sessionStorage.clear();
       const rng1 = seededRandom(42);
+      const game1 = setupCharadesGame(players, "Movies & TV", rng1);
+      sessionStorage.clear();
       const rng2 = seededRandom(42);
-      const game1 = setupCharadesGame(players, "Movies", rng1);
-      const game2 = setupCharadesGame(players, "Movies", rng2);
+      const game2 = setupCharadesGame(players, "Movies & TV", rng2);
       expect(game1.words).toEqual(game2.words);
       expect(game1.category).toEqual(game2.category);
     });

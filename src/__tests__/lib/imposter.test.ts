@@ -76,13 +76,13 @@ describe("imposter", () => {
     });
 
     it("uses specified category", () => {
-      const { category } = setupImposterGame(players, 1, Math.random, "Objects");
-      expect(category).toBe("Objects");
+      const { category } = setupImposterGame(players, 1, Math.random, "Famous People");
+      expect(category).toBe("Famous People");
     });
 
     it("handles URL-slug category names", () => {
-      const { category } = setupImposterGame(players, 1, Math.random, "countries-cities");
-      expect(category).toBe("Countries & Cities");
+      const { category } = setupImposterGame(players, 1, Math.random, "food-sports");
+      expect(category).toBe("Food & Sports");
     });
 
     it("is deterministic with seeded random (fresh session)", () => {

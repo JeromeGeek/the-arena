@@ -13,16 +13,11 @@ import GameSetupShell, {
 } from "@/components/GameSetupShell";
 
 const categoryEmojis: Record<string, string> = {
-  Movies: "🎬",
-  Animals: "🐾",
-  Actions: "🏃",
-  Celebrities: "⭐",
-  Professions: "👨‍⚕️",
-  Objects: "📦",
-  Sports: "⚽",
-  "Food & Drink": "🍕",
-  Places: "🗺️",
-  "TV Shows": "📺",
+  "Act It Out": "🏃",
+  "Movies & TV": "🎬",
+  "Famous People": "⭐",
+  "Things & Places": "🗺️",
+  "Food & Animals": "🍕",
 };
 
 function categoryToSlug(name: string): string {

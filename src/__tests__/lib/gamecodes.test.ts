@@ -11,20 +11,20 @@ import {
 describe("gamecodes", () => {
   describe("lookupSlug", () => {
     it("returns entry for valid easy slug", () => {
-      const entry = lookupSlug("lmao");
+      const entry = lookupSlug("angryape");
       expect(entry).not.toBeNull();
       expect(entry!.difficulty).toBe("easy");
       expect(typeof entry!.seed).toBe("number");
     });
 
     it("returns entry for valid medium slug", () => {
-      const entry = lookupSlug("rekt");
+      const entry = lookupSlug("braveape");
       expect(entry).not.toBeNull();
       expect(entry!.difficulty).toBe("medium");
     });
 
     it("returns entry for valid hard slug", () => {
-      const entry = lookupSlug("gitgud");
+      const entry = lookupSlug("bleakape");
       expect(entry).not.toBeNull();
       expect(entry!.difficulty).toBe("hard");
     });
@@ -75,8 +75,8 @@ describe("gamecodes", () => {
       const slug0 = seedToSlug(0);
       // Find the pool size by checking when it wraps
       let poolSize = 1;
-      while (seedToSlug(poolSize) !== slug0 && poolSize < 500) poolSize++;
-      expect(poolSize).toBeLessThan(500); // should find a wrap point
+      while (seedToSlug(poolSize) !== slug0 && poolSize < 3000) poolSize++;
+      expect(poolSize).toBeLessThan(3000); // should find a wrap point (2700)
       expect(seedToSlug(poolSize)).toBe(slug0);
     });
 

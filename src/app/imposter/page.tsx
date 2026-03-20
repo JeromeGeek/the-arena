@@ -14,16 +14,11 @@ import GameSetupShell, {
 } from "@/components/GameSetupShell";
 
 const categoryEmojis: Record<string, string> = {
-  "Objects": "\u{1F4E6}",
-  "Celebrities": "\u2B50",
-  "Brands": "\u{1F6CD}",
-  "Countries & Cities": "\u{1F30D}",
-  "Movies & TV Shows": "\u{1F3AC}",
-  "Internet Culture": "\u{1F480}",
-  "Music & Bands": "\u{1F3B5}",
-  "Bollywood": "\u{1F1EE}\u{1F1F3}",
-  "Food": "\u{1F355}",
-  "Sports": "\u26BD",
+  "Famous People": "\u2B50",
+  "Movies & Entertainment": "\u{1F3AC}",
+  "Brands & Things": "\u{1F6CD}",
+  "Places & Travel": "\u{1F30D}",
+  "Food & Sports": "\u{1F355}",
 };
 
 // URL-safe slug for category names
