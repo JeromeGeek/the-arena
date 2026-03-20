@@ -32,11 +32,11 @@ test.describe("Home Page — core", () => {
     await expect(page.locator("text=What should we call you?")).not.toBeVisible();
   });
 
-  test("displays all 8 game cards via href links", async ({ page }) => {
+  test("displays all 7 game cards via href links", async ({ page }) => {
     await page.goto("/");
     const hrefs = [
       "/codenames", "/truthordare", "/neverhaveiever",
-      "/imposter", "/charades", "/mafia", "/pictionary", "/headrush",
+      "/imposter", "/charades", "/pictionary", "/headrush",
     ];
     for (const href of hrefs) {
       await expect(page.locator(`a[href="${href}"]`).first()).toBeAttached();
@@ -51,7 +51,6 @@ test.describe("Home Page — navigation", () => {
     ["/neverhaveiever",   /\/neverhaveiever/],
     ["/imposter",         /\/imposter/],
     ["/charades",         /\/charades/],
-    ["/mafia",            /\/mafia/],
     ["/pictionary",       /\/pictionary/],
     ["/headrush",         /\/headrush/],
   ];

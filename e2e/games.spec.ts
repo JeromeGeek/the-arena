@@ -272,57 +272,6 @@ test.describe("Codenames", () => {
 });
 
 /* ══════════════════════════════════════════════════════════
- *  MAFIA
- * ══════════════════════════════════════════════════════════ */
-test.describe("Mafia", () => {
-  test("setup page loads with default players", async ({ page }) => {
-    await page.goto("/mafia");
-    const inputs = page.getByRole("textbox");
-    await expect(inputs.first()).toHaveValue(/Player 1/);
-  });
-
-  test("can add a player", async ({ page }) => {
-    await page.goto("/mafia");
-    await page.fill('input[placeholder*="Add player"]', "Bob");
-    await page.getByRole("button", { name: "+" }).click();
-    await expect(page.locator('input[value="Bob"]')).toBeAttached();
-  });
-
-  test("generates a game and navigates to /mf/", async ({ page }) => {
-    await page.goto("/mafia");
-    // Default starts with 6 players — button: "Night Falls… · 6 Players 🌙"
-    await page.getByRole("button", { name: /Night Falls/i }).click();
-    await page.waitForURL(/\/mf\/.+/);
-    expect(page.url()).toMatch(/\/mf\/.+/);
-  });
-
-  test("game page shows role reveal phase", async ({ page }) => {
-    await page.goto("/mafia");
-    await page.getByRole("button", { name: /Night Falls/i }).click();
-    await page.waitForURL(/\/mf\/.+/);
-    // Role reveal: "Tap Your Name to Peek"
-    await expect(page.locator("text=Tap Your Name to Peek").first()).toBeVisible();
-  });
-
-  test("tapping a player name reveals a role", async ({ page }) => {
-    await page.goto("/mafia");
-    await page.getByRole("button", { name: /Night Falls/i }).click();
-    await page.waitForURL(/\/mf\/.+/);
-    await expect(page.locator("text=Tap Your Name to Peek").first()).toBeVisible();
-    // Tap the first player name button (not yet revealed)
-    const playerBtns = page.locator("button:not([disabled])").filter({ hasNotText: /Night Falls|New Game|Sound/ });
-    await playerBtns.first().click();
-    // Peek overlay appears showing a role
-    const roleVisible =
-      (await page.locator("text=Mafia").count()) +
-      (await page.locator("text=Doctor").count()) +
-      (await page.locator("text=Detective").count()) +
-      (await page.locator("text=Villager").count());
-    expect(roleVisible).toBeGreaterThan(0);
-  });
-});
-
-/* ══════════════════════════════════════════════════════════
  *  SNAP QUIZ (Headrush)
  * ══════════════════════════════════════════════════════════ */
 test.describe("Snap Quiz", () => {

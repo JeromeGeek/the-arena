@@ -56,11 +56,11 @@ test.describe("Mobile Responsiveness", () => {
     await expect(page.locator('a[href="/codenames"]').first()).toBeAttached();
   });
 
-  test("all 8 game setup pages render without horizontal overflow", async ({ page }) => {
+  test("all 7 game setup pages render without horizontal overflow", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     const urls = [
       "/truthordare", "/neverhaveiever", "/imposter", "/charades",
-      "/codenames", "/mafia", "/pictionary", "/headrush",
+      "/codenames", "/pictionary", "/headrush",
     ];
     for (const url of urls) {
       await page.goto(url);
@@ -70,11 +70,10 @@ test.describe("Mobile Responsiveness", () => {
     }
   });
 
-  test("TV viewport (1920×1080) renders all 8 games", async ({ page }) => {
+  test("TV viewport (1920×1080) renders all 7 games", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/");
-    // Check cards by href — h2 titles have transparent fill so Playwright sees them as hidden
-    for (const href of ["/codenames", "/mafia", "/headrush", "/pictionary"]) {
+    for (const href of ["/codenames", "/headrush", "/pictionary", "/charades"]) {
       await expect(page.locator(`a[href="${href}"]`).first()).toBeAttached();
     }
   });

@@ -83,19 +83,6 @@ const games = [
     emoji: "🎬",
   },
   {
-    id: "mafia",
-    title: "MAFIA",
-    subtitle: "Night Falls. Trust No One.",
-    description: "5–15 Players · Mafia · Doctor · Detective. Night falls. Lies spread. Hunt the killers before it's too late.",
-    href: "/mafia",
-    accentFrom: "#EC4899",
-    accentTo: "#BE185D",
-    glowColor: "rgba(236, 72, 153, 0.35)",
-    variant: "mafia" as const,
-    players: "5–15 Players",
-    emoji: "🔪",
-  },
-  {
     id: "inkarena",
     title: "PICTIONARY",
     subtitle: "Draw · Steal · Dominate",
@@ -262,7 +249,6 @@ const mobileEntranceVariants: Record<string, object> = {
   truthordare:   { hidden: { opacity: 0, x: 32 },         visible: { opacity: 1, x: 0 } },
   neverhaveiever:{ hidden: { opacity: 0, y: 28, rotate: -1.5 }, visible: { opacity: 1, y: 0, rotate: 0 } },
   charades:      { hidden: { opacity: 0, rotateY: 25 },   visible: { opacity: 1, rotateY: 0 } },
-  mafia:         { hidden: { opacity: 0 },                visible: { opacity: 1 } },
   inkarena:      { hidden: { opacity: 0, scale: 0.94, y: 16 }, visible: { opacity: 1, scale: 1, y: 0 } },
   headrush:      { hidden: { opacity: 0, y: -20, scale: 0.92 }, visible: { opacity: 1, y: 0, scale: 1 } },
 };
@@ -282,7 +268,7 @@ function MobileGameTile({
 
   const entranceTransition = {
     delay: index * 0.07 + 0.1,
-    duration: game.variant === "mafia" ? 1.2 : 0.55,
+    duration: 0.55,
     ease: [0.22, 1, 0.36, 1] as const,
     type: "tween" as const,
   };
@@ -481,13 +467,11 @@ function GameCard({
             ? { borderLeft: "1px solid rgba(34,197,94,0.22)", borderRight: "1px solid rgba(34,197,94,0.22)" }
             : game.variant === "charades"
               ? { borderTop: "1px solid rgba(251,146,60,0.3)" }
-              : game.variant === "mafia"
-                ? { borderBottom: "1px solid rgba(236,72,153,0.3)", borderTop: "1px solid rgba(190,24,93,0.2)" }
-                : game.variant === "inkarena"
-                  ? { borderTop: "1px solid rgba(255,65,108,0.28)", borderBottom: "1px solid rgba(250,204,21,0.2)" }
-                  : game.variant === "headrush"
-                    ? { borderBottom: "1px solid rgba(250,204,21,0.3)" }
-                    : {};
+              : game.variant === "inkarena"
+                ? { borderTop: "1px solid rgba(255,65,108,0.28)", borderBottom: "1px solid rgba(250,204,21,0.2)" }
+                : game.variant === "headrush"
+                  ? { borderBottom: "1px solid rgba(250,204,21,0.3)" }
+                  : {};
 
   const ambientClass =
     game.variant === "codenames"
@@ -498,13 +482,11 @@ function GameCard({
           ? "ember-flicker"
           : game.variant === "neverhaveiever"
             ? "ripple-pulse"
-            : game.variant === "mafia"
-              ? "blood-vignette"
-              : game.variant === "inkarena"
-                ? "ink-splatter"
-                : game.variant === "headrush"
-                  ? "headrush-pulse"
-                  : "spotlight-sweep";
+            : game.variant === "inkarena"
+              ? "ink-splatter"
+              : game.variant === "headrush"
+                ? "headrush-pulse"
+                : "spotlight-sweep";
 
   if (featured) {
     /* ── FEATURED CARD — large, vertical layout, dominant ── */

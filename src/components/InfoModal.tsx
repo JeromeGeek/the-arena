@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-type GameType = "codenames" | "imposter" | "truthordare" | "neverhaveiever" | "charades" | "mafia" | "inkarena" | "headrush";
+type GameType = "codenames" | "imposter" | "truthordare" | "neverhaveiever" | "charades" | "inkarena" | "headrush";
 
 interface InfoModalProps {
   game: GameType;
@@ -68,17 +68,6 @@ const instructions: Record<GameType, { title: string; steps: string[] }> = {
       "Most points at the end wins! 🏆",
     ],
   },
-  mafia: {
-    title: "How to Play",
-    steps: [
-      "Each player secretly receives a role",
-      "Roles: Mafia 🔪, Doctor 💉, Detective 🔍, Villager 🏘️",
-      "Night: Mafia picks a victim, Doctor protects, Detective investigates",
-      "Day: The town discusses & votes someone out",
-      "Village wins if all Mafia are eliminated",
-      "Mafia wins if they equal or outnumber the Village!",
-    ],
-  },
   inkarena: {
     title: "How to Play",
     steps: [
@@ -115,7 +104,6 @@ export default function InfoModal({ game, size = "md" }: InfoModalProps) {
     truthordare: "#A855F7",
     neverhaveiever: "#22C55E",
     charades: "#F97316",
-    mafia: "#E11D48",
     inkarena: "#FF416C",
     headrush: "#FACC15",
   };

@@ -110,7 +110,7 @@ describe("HomePage", () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the "8 Games Available" badge', async () => {
+    it('renders the "7 Games Available" badge', async () => {
       renderWithUser();
       await flushEffects();
       const links = screen.getAllByRole("link");
@@ -118,12 +118,10 @@ describe("HomePage", () => {
         links
           .map((l) => l.getAttribute("href") ?? "")
           .filter((href) =>
-            ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"].includes(href)
+            ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/pictionary", "/headrush"].includes(href)
           )
       );
-      // Both mobile + desktop layouts render in the DOM simultaneously (CSS hides one per viewport),
-      // but there are exactly 8 unique game destinations.
-      expect(uniqueGameHrefs.size).toBe(8);
+      expect(uniqueGameHrefs.size).toBe(7);
     });
 
     it("renders the footer attribution", async () => {
@@ -148,7 +146,6 @@ describe("HomePage", () => {
       { title: /truth or dare/i, href: "/truthordare", emoji: "🔥" },
       { title: /never have i ever/i, href: "/neverhaveiever", emoji: "🍺" },
       { title: /charades/i, href: "/charades", emoji: "🎬" },
-      { title: /mafia/i, href: "/mafia", emoji: "🔪" },
       { title: /pictionary/i, href: "/pictionary", emoji: "🎨" },
       { title: /snap quiz/i, href: "/headrush", emoji: "🖼️" },
     ] as const;
@@ -217,31 +214,25 @@ describe("HomePage", () => {
       expect(screen.getAllByText(/act it out/i).length).toBeGreaterThanOrEqual(1);
     });
 
-    it("renders mafia subtitle", async () => {
-      renderWithUser();
-      await flushEffects();
-      expect(screen.getAllByText(/night falls/i).length).toBeGreaterThanOrEqual(1);
-    });
-
     it('renders "Enter Arena" CTA on every desktop card', async () => {
       renderWithUser();
       await flushEffects();
       const ctas = screen.getAllByText(/enter arena/i);
-      expect(ctas).toHaveLength(8);
+      expect(ctas).toHaveLength(7);
     });
 
     it("renders player counts on desktop cards", async () => {
       renderWithUser();
       await flushEffects();
       expect(screen.getAllByText(/4\+ players/i).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(/5[–-]15 players/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/2[–-]15 players/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 
   /* ── Navigation links ── */
 
   describe("navigation links", () => {
-    const routes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"];
+    const routes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/pictionary", "/headrush"];
 
     it.each(routes)("has a link to %s", async (route) => {
       renderWithUser();
@@ -255,8 +246,8 @@ describe("HomePage", () => {
       await flushEffects();
       const links = screen.getAllByRole("link");
       const gameLinks = links.filter((l) => routes.includes(l.getAttribute("href") ?? ""));
-      // 8 mobile + 8 desktop = 16
-      expect(gameLinks).toHaveLength(16);
+      // 7 mobile + 7 desktop = 14
+      expect(gameLinks).toHaveLength(14);
     });
   });
 
@@ -269,7 +260,6 @@ describe("HomePage", () => {
       "truthordare",
       "neverhaveiever",
       "charades",
-      "mafia",
       "inkarena",
       "headrush",
     ];
@@ -288,13 +278,13 @@ describe("HomePage", () => {
   /* ── Mobile tile grid ── */
 
   describe("mobile game grid", () => {
-    it("renders 8 mobile tiles", async () => {
+    it("renders 7 mobile tiles", async () => {
       renderWithUser();
       await flushEffects();
-      const gameRoutes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/mafia", "/pictionary", "/headrush"];
+      const gameRoutes = ["/codenames", "/imposter", "/truthordare", "/neverhaveiever", "/charades", "/pictionary", "/headrush"];
       const links = screen.getAllByRole("link").filter((l) => gameRoutes.includes(l.getAttribute("href") ?? ""));
-      // 8 mobile + 8 desktop = 16 total
-      expect(links.length).toBeGreaterThanOrEqual(16);
+      // 7 mobile + 7 desktop = 14 total
+      expect(links.length).toBeGreaterThanOrEqual(14);
     });
 
     it("mobile tiles contain correct player counts", async () => {
