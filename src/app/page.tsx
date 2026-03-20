@@ -1030,12 +1030,12 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Desktop/Tablet Game Cards — hidden on phone, responsive columns */}
+        {/* Desktop/Tablet Game Cards — 2 cols on tablet, 4 cols on desktop, centered incomplete row */}
         <div
-          className="hidden w-full max-w-7xl flex-wrap justify-center gap-2 px-2 pb-6 sm:flex md:gap-3 md:px-4 lg:px-0 xl:gap-3"
+          className="hidden w-full max-w-7xl gap-2 px-2 pb-6 sm:flex sm:flex-wrap sm:justify-center md:gap-3 md:px-4 lg:px-0 xl:gap-3"
         >
           {games.map((game, i) => (
-            <div key={game.id} className="w-[calc(50%-0.25rem)] md:w-[calc(50%-0.375rem)] lg:w-[calc(25%-0.5rem)]">
+            <div key={game.id} className="w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]">
               <GameCard game={game} index={i} reducedMotion={isTV} />
             </div>
           ))}
