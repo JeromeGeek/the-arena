@@ -51,5 +51,28 @@
     { "name": "Charades",        "url": "/charades",      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Pictionary",      "url": "/pictionary",    "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Snap Quiz",       "url": "/headrush",      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Arena Party — Home Screen"
+    },
+    {
+      "src": "/screenshots/imposter-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Imposter — Game Setup"
+    },
+    {
+      "src": "/screenshots/home-wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Arena Party — Desktop View"
+    }
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "host": "the-arena-mu.vercel.app",
+  "name": "Arena Party — Game Night Hub",
+  "shortName": "Arena Party",
+  "themeColor": "#0B0E14",
+  "navigationColor": "#0B0E14",
+  "navigationColorDark": "#0B0E14",
+  "navigationDividerColor": "#0B0E14",
+  "navigationDividerColorDark": "#0B0E14",
+  "backgroundColor": "#0B0E14",
+  "startUrl": "/",
+  "iconUrl": "https://the-arena-mu.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://the-arena-mu.vercel.app/icons/icon-maskable-512.png",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./arena-keystore.jks",
+    "alias": "arena"
+  },
+  "useBrowserOnChromeOS": false,
+  "splashScreenIconUrl": "https://the-arena-mu.vercel.app/icons/icon-512.png",
+  "enableNotifications": false,
+  "shortcuts": [
+    { "name": "Codenames", "shortName": "Codenames", "url": "/codenames", "chosenIconUrl": "https://the-arena-mu.vercel.app/icons/icon-192.png" },
+    { "name": "Imposter", "shortName": "Imposter", "url": "/imposter", "chosenIconUrl": "https://the-arena-mu.vercel.app/icons/icon-192.png" },
+    { "name": "Truth or Dare", "shortName": "TruthOrDare", "url": "/truthordare", "chosenIconUrl": "https://the-arena-mu.vercel.app/icons/icon-192.png" },
+    { "name": "Pictionary", "shortName": "Pictionary", "url": "/pictionary", "chosenIconUrl": "https://the-arena-mu.vercel.app/icons/icon-192.png" }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://the-arena-mu.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "packageId": "com.arenaparty.app",
+  "display": "standalone",
+  "orientation": "any"
+}
