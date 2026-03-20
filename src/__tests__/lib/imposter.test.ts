@@ -85,10 +85,13 @@ describe("imposter", () => {
       expect(category).toBe("Countries & Cities");
     });
 
-    it("is deterministic with seeded random", () => {
+    it("is deterministic with seeded random (fresh session)", () => {
+      // Clear session storage so both calls see the same available pool
+      sessionStorage.clear();
       const rng1 = seededRandom(42);
-      const rng2 = seededRandom(42);
       const game1 = setupImposterGame(players, 1, rng1);
+      sessionStorage.clear();
+      const rng2 = seededRandom(42);
       const game2 = setupImposterGame(players, 1, rng2);
       expect(game1.category).toBe(game2.category);
       expect(game1.secretWord).toBe(game2.secretWord);

@@ -4,6 +4,51 @@ export interface ImposterCategory {
   words: string[];
 }
 
+// ── Session-based used-word tracking ──────────────────────────────────────────
+// Prevents the same word from appearing again for ~50+ rounds per category
+const STORAGE_KEY = "arena-imposter-used";
+
+function getUsedWords(): Record<string, string[]> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function markWordUsed(category: string, word: string) {
+  if (typeof window === "undefined") return;
+  const used = getUsedWords();
+  if (!used[category]) used[category] = [];
+  used[category].push(word);
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(used)); } catch { /* quota */ }
+}
+
+/** Pick a word that hasn't been used this session. Resets if pool exhausted. */
+function pickFreshWord(category: string, words: string[], random: () => number): string {
+  const used = getUsedWords();
+  const usedSet = new Set(used[category] ?? []);
+  const available = words.filter((w) => !usedSet.has(w));
+
+  // If all words used, reset history for this category
+  if (available.length === 0) {
+    if (typeof window !== "undefined") {
+      const u = getUsedWords();
+      delete u[category];
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(u)); } catch { /* quota */ }
+    }
+    const idx = Math.floor(random() * words.length);
+    const word = words[idx];
+    markWordUsed(category, word);
+    return word;
+  }
+
+  const idx = Math.floor(random() * available.length);
+  const word = available[idx];
+  markWordUsed(category, word);
+  return word;
+}
+
 export const categories: ImposterCategory[] = [
   {
     name: "Objects",
@@ -17,6 +62,18 @@ export const categories: ImposterCategory[] = [
       "Selfie Stick", "Ring Light", "VR Headset", "Drone", "Gamepad",
       "Treadmill", "Surfboard", "Skateboard", "Dart Board", "Bowling Ball",
       "Handcuffs", "Treasure Map", "Blueprint", "Stethoscope", "Syringe",
+      // New
+      "Typewriter", "Gramophone", "Metronome", "Kaleidoscope", "Periscope",
+      "Snow Globe", "Lava Lamp", "Bubble Wrap", "Duct Tape", "Swiss Army Knife",
+      "Walkie-Talkie", "Megaphone", "Hearing Aid", "Pacemaker", "Defibrillator",
+      "Corkscrew", "Nutcracker", "Garlic Press", "Cheese Grater", "Rolling Pin",
+      "Hammock", "Bean Bag", "Rocking Chair", "Chandelier", "Grandfather Clock",
+      "Turntable", "Cassette Player", "Floppy Disk", "USB Drive", "Hard Drive",
+      "Smoke Detector", "Carbon Monoxide Detector", "Doorbell Camera", "Smart Speaker", "Robot Vacuum",
+      "Waffle Iron", "Espresso Machine", "Instant Pot", "Air Fryer", "Rice Cooker",
+      "Punching Bag", "Resistance Band", "Foam Roller", "Jump Rope", "Kettlebell",
+      "Lightsaber", "Magic Wand", "Crystal Ball", "Ouija Board", "Dream Catcher",
+      "Monocle", "Top Hat", "Cane", "Pocket Watch", "Music Box",
     ],
   },
   {
@@ -31,6 +88,19 @@ export const categories: ImposterCategory[] = [
       "Sabrina Carpenter", "Charli XCX", "Olivia Rodrigo", "SZA", "Travis Scott",
       "Simone Biles", "LeBron James", "Novak Djokovic", "Carlos Alcaraz",
       "Jeff Bezos", "Mark Zuckerberg", "Tim Cook",
+      // New
+      "Keanu Reeves", "Robert Downey Jr.", "Chris Hemsworth", "Scarlett Johansson", "Leonardo DiCaprio",
+      "Jennifer Lawrence", "Emma Stone", "Gal Gadot", "Jason Momoa", "Henry Cavill",
+      "Will Smith", "Morgan Freeman", "Denzel Washington", "Tom Hanks", "Brad Pitt",
+      "Angelina Jolie", "Sandra Bullock", "Meryl Streep", "Julia Roberts", "Nicole Kidman",
+      "Lady Gaga", "Justin Bieber", "Kanye West", "Shakira", "Adele",
+      "Selena Gomez", "Miley Cyrus", "Katy Perry", "Bruno Mars", "The Weeknd",
+      "Virat Kohli", "MS Dhoni", "Sachin Tendulkar", "Roger Federer", "Serena Williams",
+      "Usain Bolt", "Michael Phelps", "Tiger Woods", "Lewis Hamilton", "Conor McGregor",
+      "Gordon Ramsay", "David Beckham", "Kylie Jenner", "Gigi Hadid", "Bella Hadid",
+      "Barack Obama", "Queen Elizabeth", "Princess Diana", "Nelson Mandela", "Malala Yousafzai",
+      "Albert Einstein", "Stephen Hawking", "Steve Jobs", "Bill Gates", "Warren Buffett",
+      "Dwayne Johnson", "Vin Diesel", "Ice Cube", "Samuel L. Jackson", "Idris Elba",
     ],
   },
   {
@@ -44,11 +114,21 @@ export const categories: ImposterCategory[] = [
       "Samsung", "Sony", "Microsoft", "Intel", "NVIDIA",
       "Uber", "Airbnb", "Tinder", "Snapchat", "Instagram",
       "Zara", "H&M", "Uniqlo", "Levi's", "Ralph Lauren",
-      // Indian brands
       "Tata", "Infosys", "Wipro", "Reliance", "Jio",
       "Flipkart", "Swiggy", "Zomato", "Ola", "BYJU'S",
       "Amul", "Parle", "Haldiram's", "MTR", "Paper Boat",
       "Tanishq", "Titan", "Bajaj", "Hero", "Mahindra",
+      // New
+      "WhatsApp", "YouTube", "TikTok", "Twitter", "LinkedIn",
+      "Pinterest", "Reddit", "Telegram", "Signal", "Discord",
+      "Chanel", "Hermès", "Prada", "Dior", "Versace",
+      "BMW", "Audi", "Mercedes-Benz", "Rolls-Royce", "Bugatti",
+      "Nintendo", "Xbox", "Steam", "Epic Games", "Riot Games",
+      "Walmart", "Target", "Costco", "Whole Foods", "Trader Joe's",
+      "FedEx", "DHL", "UPS", "PayPal", "Visa",
+      "Mastercard", "American Express", "JPMorgan", "Goldman Sachs", "Bloomberg",
+      "CNN", "BBC", "Reuters", "ESPN", "National Geographic",
+      "Lego", "Mattel", "Hot Wheels", "Nerf", "Barbie",
     ],
   },
   {
@@ -64,6 +144,19 @@ export const categories: ImposterCategory[] = [
       "Las Vegas", "Los Angeles", "Chicago", "Miami", "San Francisco",
       "Athens", "Lisbon", "Santorini", "Maldives", "Bali",
       "Antarctica", "Alaska", "Sahara", "Amazon", "Siberia",
+      // New
+      "Berlin", "Munich", "Zurich", "Geneva", "Monaco",
+      "Dublin", "Edinburgh", "Oslo", "Stockholm", "Helsinki",
+      "Moscow", "St. Petersburg", "Beijing", "Kyoto", "Osaka",
+      "Hanoi", "Ho Chi Minh City", "Phnom Penh", "Manila", "Jakarta",
+      "Nairobi", "Lagos", "Cairo", "Marrakech", "Casablanca",
+      "Havana", "Lima", "Bogota", "Santiago", "Cancun",
+      "India", "Japan", "Germany", "Canada", "Switzerland",
+      "Norway", "Sweden", "Denmark", "Finland", "New Zealand",
+      "Thailand", "Vietnam", "Philippines", "Malaysia", "Indonesia",
+      "Kenya", "South Africa", "Nigeria", "Tanzania", "Ethiopia",
+      "Peru", "Colombia", "Argentina", "Chile", "Cuba",
+      "Portugal", "Greece", "Croatia", "Hungary", "Poland",
     ],
   },
   {
@@ -76,11 +169,21 @@ export const categories: ImposterCategory[] = [
       "The Bear", "Severance", "White Lotus", "Succession", "Euphoria",
       "Ted Lasso", "Abbott Elementary", "The Last of Us", "House of the Dragon",
       "Peaky Blinders", "Ozark", "Mindhunter", "Dark", "Money Heist",
-      // Indian
       "Sacred Games", "Mirzapur", "Delhi Crime", "Scam 1992", "Panchayat",
       "The Family Man", "Kota Factory", "Farzi", "Paatal Lok",
       "3 Idiots", "Dangal", "Sholay", "Dilwale Dulhania Le Jayenge", "RRR",
       "Bahubali", "KGF", "Pushpa", "Pathaan", "Animal",
+      // New
+      "The Godfather", "Pulp Fiction", "Fight Club", "The Matrix", "Forrest Gump",
+      "The Shawshank Redemption", "Goodfellas", "Gladiator", "Saving Private Ryan", "Schindler's List",
+      "Jurassic Park", "Harry Potter", "Lord of the Rings", "Star Wars", "Indiana Jones",
+      "The Avengers", "Spider-Man", "Black Panther", "Guardians of the Galaxy", "Iron Man",
+      "Frozen", "Toy Story", "Finding Nemo", "Inside Out", "The Lion King",
+      "The Mandalorian", "Loki", "Wandavision", "Ahsoka", "Andor",
+      "Narcos", "Vikings", "Sherlock", "Black Mirror", "The Crown",
+      "The Witcher", "Cobra Kai", "Yellowstone", "Outer Banks", "Bridgerton",
+      "Better Call Saul", "Mr. Robot", "Fargo", "True Detective", "Westworld",
+      "Lagaan", "Swades", "Dil Chahta Hai", "Gangs of Wasseypur", "Andhadhun",
     ],
   },
   {
@@ -96,6 +199,19 @@ export const categories: ImposterCategory[] = [
       "FOMO", "YOLO", "IYKYK", "POV", "Era",
       "Lowkey", "Highkey", "Slaps", "Hits Different", "Core",
       "Dark Mode", "Spam Liking", "Story Viewer", "Finsta", "Dump Account",
+      // New
+      "L + Ratio", "W", "Cope", "Seethe", "Mald",
+      "Boomer", "Zoomer", "Gen Alpha", "iPad Kid", "Chronically Online",
+      "Side Quest", "Lore Drop", "Plot Armor", "Character Arc", "Canon Event",
+      "Roman Empire", "Aura Points", "Looksmaxxing", "Mewing", "Mogging",
+      "Unhinged", "Feral", "Gaslight Gatekeep Girlboss", "Pick Me", "Not Like Other Girls",
+      "Tea", "Spill", "Snatched", "Iconic", "Periodt",
+      "Doomscrolling", "Doom Posting", "Rage Bait", "Engagement Farming", "Bot Account",
+      "Deepfake", "AI Art", "ChatGPT", "Prompt Engineer", "Digital Nomad",
+      "Speedrun", "Any%", "Glitchless", "World Record", "Let's Go",
+      "Twitch Chat", "Poggers", "KEKW", "Sadge", "Copium",
+      "Stan", "Simp", "Parasocial", "Content Creator", "Influencer",
+      "Clickbait", "Algorithm", "Shadow Banned", "Viral", "Going Viral",
     ],
   },
   {
@@ -111,10 +227,20 @@ export const categories: ImposterCategory[] = [
       "Led Zeppelin", "Pink Floyd", "Rolling Stones", "AC/DC", "Metallica",
       "Radiohead", "Fleetwood Mac", "Elton John", "David Bowie", "Prince",
       "Michael Jackson", "Madonna", "Whitney Houston", "Mariah Carey",
-      // Indian music
       "AR Rahman", "Arijit Singh", "Shreya Ghoshal", "Sonu Nigam",
       "Lata Mangeshkar", "Kishore Kumar", "Mohammed Rafi",
       "Nucleya", "Divine", "Raftaar", "Badshah", "Yo Yo Honey Singh",
+      // New
+      "Imagine Dragons", "Maroon 5", "OneRepublic", "Panic! At The Disco", "Fall Out Boy",
+      "Twenty One Pilots", "Gorillaz", "Tame Impala", "The 1975", "Glass Animals",
+      "Lil Nas X", "Jack Harlow", "Metro Boomin", "21 Savage", "Future",
+      "Megan Thee Stallion", "Ice Spice", "Dua Lipa", "Rosalía", "Anitta",
+      "Green Day", "Blink-182", "Red Hot Chili Peppers", "Foo Fighters", "Weezer",
+      "Guns N' Roses", "U2", "Bon Jovi", "Aerosmith", "Depeche Mode",
+      "Avicii", "Marshmello", "Calvin Harris", "Kygo", "Martin Garrix",
+      "Sunidhi Chauhan", "Neha Kakkar", "Armaan Malik", "Darshan Raval", "Jubin Nautiyal",
+      "Pritam", "Vishal-Shekhar", "Shankar Ehsaan Loy", "Amit Trivedi", "Anu Malik",
+      "Bob Marley", "Bob Dylan", "Jimi Hendrix", "Stevie Wonder", "Aretha Franklin",
     ],
   },
   {
@@ -132,6 +258,17 @@ export const categories: ImposterCategory[] = [
       "3 Idiots", "Dangal", "Lagaan", "Swades", "Dil Chahta Hai",
       "Kabhi Khushi Kabhie Gham", "Kal Ho Na Ho", "Jab We Met",
       "RRR", "Bahubali", "KGF", "Pushpa", "Pathaan", "Animal", "Jawan",
+      // New
+      "Dharmendra", "Dilip Kumar", "Dev Anand", "Raj Kapoor", "Shammi Kapoor",
+      "Mithun Chakraborty", "Anil Kapoor", "Govinda", "Jackie Shroff", "Sunny Deol",
+      "Vidya Balan", "Kangana Ranaut", "Kriti Sanon", "Shraddha Kapoor", "Sara Ali Khan",
+      "Varun Dhawan", "Ayushmann Khurrana", "Rajkummar Rao", "Vicky Kaushal", "Sidharth Malhotra",
+      "Nawazuddin Siddiqui", "Manoj Bajpayee", "Pankaj Tripathi", "Irrfan Khan", "Naseeruddin Shah",
+      "Gangs of Wasseypur", "Andhadhun", "Barfi", "Queen", "Zindagi Na Milegi Dobara",
+      "Rang De Basanti", "Taare Zameen Par", "PK", "Bajrangi Bhaijaan", "Sultan",
+      "Thalapathy Vijay", "Suriya", "Dhanush", "Mahesh Babu", "Nani",
+      "Samantha Ruth Prabhu", "Nayanthara", "Rashmika Mandanna", "Pooja Hegde", "Kiara Advani",
+      "Hera Pheri", "Chak De India", "Munna Bhai MBBS", "Golmaal", "Dhamaal",
     ],
   },
   {
@@ -146,6 +283,18 @@ export const categories: ImposterCategory[] = [
       "Steak", "Paella", "Fish and Chips", "Pretzel", "Waffle",
       "Cotton Candy", "Churro", "Nachos", "Hot Dog", "Popcorn",
       "Milkshake", "Bubble Tea", "Masala Chai", "Lassi", "Espresso",
+      // New
+      "Falafel", "Hummus", "Baklava", "Gyros", "Moussaka",
+      "Pancake", "French Toast", "Bagel", "Donut", "Muffin",
+      "Spaghetti", "Lasagna", "Risotto", "Gnocchi", "Ravioli",
+      "Tom Yum", "Spring Rolls", "Satay", "Nasi Goreng", "Laksa",
+      "Tandoori Chicken", "Paneer Tikka", "Naan", "Paratha", "Idli",
+      "Kulfi", "Rabri", "Mysore Pak", "Kaju Katli", "Ladoo",
+      "Banana Split", "Gelato", "Sorbet", "Pavlova", "Trifle",
+      "Fondue", "Bruschetta", "Carpaccio", "Ceviche", "Tempura",
+      "Beef Wellington", "Lobster", "Caviar", "Truffle", "Foie Gras",
+      "Mango Lassi", "Coconut Water", "Kombucha", "Matcha Latte", "Turkish Coffee",
+      "Avocado Toast", "Acai Bowl", "Granola", "Smoothie Bowl", "Protein Shake",
     ],
   },
   {
@@ -160,6 +309,18 @@ export const categories: ImposterCategory[] = [
       "IPL", "FIFA World Cup", "Olympics", "Tour de France", "Wimbledon",
       "Super Bowl", "NBA Finals", "Champions League", "Indian Premier League",
       "Pro Kabaddi League", "Kho-Kho", "Polo", "Equestrian", "Rowing",
+      // New
+      "UFC", "WWE", "Handball", "Water Polo", "Lacrosse",
+      "Ice Hockey", "Figure Skating", "Snowboarding", "Bobsled", "Curling",
+      "Rock Climbing", "Bouldering", "Parkour", "CrossFit", "Yoga",
+      "Esports", "Chess", "Poker", "Darts", "Snooker",
+      "Motor GP", "NASCAR", "Rally Racing", "Drag Racing", "Go-Karting",
+      "Long Jump", "High Jump", "Shot Put", "Javelin", "Decathlon",
+      "Sumo", "Karate", "Kung Fu", "Capoeira", "Muay Thai",
+      "Canoeing", "Kayaking", "Sailing", "Windsurfing", "Kiteboarding",
+      "Australian Open", "US Open", "French Open", "World Series", "Stanley Cup",
+      "Commonwealth Games", "Asian Games", "Ryder Cup", "Davis Cup", "World Cup",
+      "Cricket World Cup", "T20 World Cup", "Ashes", "IPL Final", "El Clasico", "Grand Slam",
     ],
   },
 ];
@@ -189,7 +350,7 @@ export function setupImposterGame(
   const category = pool.length > 0
     ? pool[Math.floor(random() * pool.length)]
     : categories[Math.floor(random() * categories.length)];
-  const secretWord = category.words[Math.floor(random() * category.words.length)];
+  const secretWord = pickFreshWord(category.name, category.words, random);
 
   // Shuffle players and assign imposters
   const shuffledIndices = Array.from({ length: playerNames.length }, (_, i) => i);
