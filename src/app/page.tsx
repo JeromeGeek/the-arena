@@ -5,6 +5,24 @@ import { useState, useRef, MouseEvent, useCallback, useEffect } from "react";
 import Link from "next/link";
 import InfoModal from "@/components/InfoModal";
 
+/* ─── Lightweight tap sound (no import, inline Web Audio) ─── */
+let _tapCtx: AudioContext | null = null;
+function playTapSound() {
+  try {
+    if (!_tapCtx) _tapCtx = new AudioContext();
+    const osc = _tapCtx.createOscillator();
+    const gain = _tapCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(600, _tapCtx.currentTime);
+    gain.gain.setValueAtTime(0.06, _tapCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, _tapCtx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(_tapCtx.destination);
+    osc.start();
+    osc.stop(_tapCtx.currentTime + 0.08);
+  } catch { /* silent fail */ }
+}
+
 /* ─── Motion Variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -281,7 +299,7 @@ function MobileGameTile({
       transition={entranceTransition}
       className="relative mx-auto w-full max-w-[420px]"
     >
-      <Link href={game.href} className="block">
+      <Link href={game.href} className="block" onClick={playTapSound}>
         <motion.div
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 420, damping: 28 }}
@@ -498,7 +516,7 @@ function GameCard({
         animate={mounted ? "visible" : false}
         className="relative h-full w-full"
       >
-        <Link href={game.href} className="block h-full">
+        <Link href={game.href} className="block h-full" onClick={playTapSound}>
           <motion.div
             className="h-full"
             animate={idleAnimate}
@@ -704,7 +722,7 @@ function GameCard({
       className="relative w-full"
       style={{ minHeight: "clamp(220px, 30vh, 320px)" }}
     >
-      <Link href={game.href} className="absolute inset-0">
+      <Link href={game.href} className="absolute inset-0" onClick={playTapSound}>
         {/* Outer idle breathing animation */}
         <motion.div
           className="h-full"

@@ -68,6 +68,8 @@ export default function TruthOrDareGamePage() {
   const [usedTruths] = useState<Set<number>>(() => new Set());
   const [usedDares] = useState<Set<number>>(() => new Set());
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinName, setSpinName] = useState("");
 
   const players = useMemo(() => parsed?.playerNames ?? [], [parsed]);
   const intensity = parsed?.intensity ?? "spicy";
@@ -107,10 +109,32 @@ export default function TruthOrDareGamePage() {
     setChoice(null);
     setCurrentPrompt(null);
     const nextIndex = (currentPlayerIndex + 1) % players.length;
-    setCurrentPlayerIndex(nextIndex);
     if (nextIndex === 0) setRound((r) => r + 1);
     setTurnCount((t) => t + 1);
-  }, [currentPlayerIndex, players.length, soundEnabled]);
+
+    // Spin animation — cycle through random names before landing on the real one
+    if (players.length > 2) {
+      setIsSpinning(true);
+      const targetName = players[nextIndex];
+      const otherNames = players.filter((_, i) => i !== nextIndex);
+      let spinCount = 0;
+      const totalSpins = 6 + Math.floor(Math.random() * 4); // 6-9 spins
+      const spinInterval = setInterval(() => {
+        setSpinName(otherNames[spinCount % otherNames.length]);
+        spinCount++;
+        if (spinCount >= totalSpins) {
+          clearInterval(spinInterval);
+          setSpinName(targetName);
+          setTimeout(() => {
+            setCurrentPlayerIndex(nextIndex);
+            setIsSpinning(false);
+          }, 400);
+        }
+      }, 120);
+    } else {
+      setCurrentPlayerIndex(nextIndex);
+    }
+  }, [currentPlayerIndex, players, soundEnabled]);
 
   if (!parsed) {
     return (
@@ -202,7 +226,43 @@ export default function TruthOrDareGamePage() {
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {!showPrompt ? (
+          {isSpinning ? (
+            /* ── SPIN PHASE — cycling through names ── */
+            <motion.div
+              key="spin"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex w-full flex-col items-center"
+            >
+              <div className="glass-panel w-full max-w-md rounded-2xl p-6 text-center sm:rounded-3xl sm:p-10">
+                <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-white/30 sm:text-xs">
+                  Spinning…
+                </p>
+                <motion.div
+                  className="mb-4 text-4xl"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                >
+                  🍾
+                </motion.div>
+                <motion.h2
+                  key={spinName}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="text-2xl font-black uppercase tracking-[0.1em] sm:text-4xl"
+                  style={{
+                    fontFamily: "var(--font-syne), var(--font-display)",
+                    background: "linear-gradient(135deg, #A855F7, #7C3AED)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  {spinName}
+                </motion.h2>
+              </div>
+            </motion.div>
+          ) : !showPrompt ? (
             /* ── CHOICE PHASE ── */
             <motion.div
               key="choice"

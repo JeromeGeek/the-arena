@@ -17,7 +17,14 @@ html {
   position: relative;
 }
 
+/* Lightweight page fade-in on navigation */
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 body {
+  animation: page-fade-in 0.3s ease-out;
   background: #080B11;
   color: #e2e8f0;
   font-family: var(--font-sans);

@@ -23,7 +23,6 @@ const roundOptions = [
   { value: 5,  label: "5",  emoji: "🎯" },
   { value: 10, label: "10", emoji: "🔥" },
   { value: 15, label: "15", emoji: "💀" },
-  { value: 20, label: "20", emoji: "☠️" },
 ];
 
 const playerEmojis = [
