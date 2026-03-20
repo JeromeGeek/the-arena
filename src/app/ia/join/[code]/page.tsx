@@ -26,6 +26,7 @@ export default function InkArenaJoinPage() {
   const [roundNumber, setRoundNumber] = useState(1);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [scores, setScores] = useState<number[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeLeftRef = useRef(ROUND_SECONDS);
@@ -68,12 +69,19 @@ export default function InkArenaJoinPage() {
         setTeamCount(tc);
         setRoundNumber((msg.roundNumber as number) ?? 1);
         setIsCorrect(false);
+        if (msg.scores) setScores(msg.scores as number[]);
         clearTimer();
         startTimer((msg.timeLeft as number) ?? ROUND_SECONDS);
         if (phaseRef.current !== "name_entry" && phaseRef.current !== "team_select") {
           setPhase("guessing");
           phaseRef.current = "guessing";
         }
+        return;
+      }
+
+      // Live score sync from TV
+      if (msg.type === "scores_update") {
+        setScores((msg.scores as number[]) ?? []);
         return;
       }
 
@@ -119,6 +127,7 @@ export default function InkArenaJoinPage() {
 
       if (msg.type === "game_over" || msg.type === "game_ended") {
         clearTimer();
+        if (msg.scores) setScores(msg.scores as number[]);
         setPhase("game_over");
         phaseRef.current = "game_over";
         return;
@@ -269,6 +278,24 @@ export default function InkArenaJoinPage() {
               </p>
             </div>
 
+            {/* Live scoreboard */}
+            {scores.length > 0 && (
+              <div className="flex w-full items-center justify-center gap-4">
+                {scores.map((score, i) => {
+                  const col = TEAM_COLORS[i % TEAM_COLORS.length];
+                  return (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full" style={{ background: col.gradient }} />
+                      <span className="text-[10px] uppercase tracking-widest" style={{ color: col.accent }}>
+                        {teamNames[i] ?? DEFAULT_TEAM_NAMES[i]}
+                      </span>
+                      <span className="text-base font-black" style={{ color: col.accent }}>{score}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Timer bar */}
             <div className="w-full">
               <div className="mb-1 flex items-center justify-between">
@@ -328,6 +355,20 @@ export default function InkArenaJoinPage() {
               style={{ fontFamily: "var(--font-syne),var(--font-display)", color: "white" }}>
               {isCorrect ? "Correct!" : "Time's Up"}
             </h2>
+            {/* Scores */}
+            {scores.length > 0 && (
+              <div className="flex items-center gap-4">
+                {scores.map((score, i) => {
+                  const col = TEAM_COLORS[i % TEAM_COLORS.length];
+                  return (
+                    <div key={i} className="text-center">
+                      <p className="text-[10px] uppercase tracking-widest" style={{ color: col.accent }}>{teamNames[i] ?? DEFAULT_TEAM_NAMES[i]}</p>
+                      <p className="text-2xl font-black" style={{ color: col.accent }}>{score}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <p className="text-sm text-white/40">Waiting for next turn…</p>
             <motion.div
               animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
@@ -347,7 +388,25 @@ export default function InkArenaJoinPage() {
               style={{ fontFamily: "var(--font-syne),var(--font-display)" }}>
               Game Over!
             </h2>
-            <p className="text-sm text-white/40">Check the TV for results</p>
+            {/* Final scores */}
+            {scores.length > 0 && (
+              <div className="flex items-center gap-4">
+                {scores.map((score, i) => {
+                  const col = TEAM_COLORS[i % TEAM_COLORS.length];
+                  const maxScore = Math.max(...scores);
+                  const isWinner = score === maxScore;
+                  return (
+                    <div key={i} className="text-center">
+                      <p className="text-[10px] uppercase tracking-widest" style={{ color: col.accent }}>{teamNames[i] ?? DEFAULT_TEAM_NAMES[i]}</p>
+                      <p className="text-3xl font-black" style={{ color: col.accent }}>
+                        {score}{isWinner && " 🏆"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p className="text-sm text-white/40">Check the TV for full results</p>
           </motion.div>
         )}
       </AnimatePresence>

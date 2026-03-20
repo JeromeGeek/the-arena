@@ -79,6 +79,8 @@ export default function InkArenaTVPage() {
   } | null>(null);
   const [paused, setPaused] = useState(false);
   const [connectedCount, setConnectedCount] = useState(0);
+  const [drawerCount, setDrawerCount] = useState(0);
+  const [guesserCount, setGuesserCount] = useState(0);
   const [origin, setOrigin] = useState("");
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
@@ -123,6 +125,8 @@ export default function InkArenaTVPage() {
 
       if (msg.type === "connection_count") {
         setConnectedCount((msg.count as number) ?? 0);
+        setDrawerCount((msg.drawerCount as number) ?? 0);
+        setGuesserCount((msg.guesserCount as number) ?? 0);
         return;
       }
       if (msg.type === "stroke") {
@@ -157,6 +161,8 @@ export default function InkArenaTVPage() {
         setScores((prev) => {
           const next = [...prev];
           next[guessingTeamIdx] = (next[guessingTeamIdx] ?? 0) + pts;
+          // Broadcast updated scores to all devices
+          setTimeout(() => sendMessage(socketRef.current, { type: "scores_update", scores: next }), 50);
           return next;
         });
         setRoundResult({ correct: true, guessingTeamIdx, word, pointsAwarded: pts });
@@ -214,6 +220,9 @@ export default function InkArenaTVPage() {
           });
           setPhase("round_over");
           phaseRef.current = "round_over";
+          // Broadcast time_up + current scores so all devices sync
+          sendMessage(socketRef.current, { type: "time_up" });
+          sendMessage(socketRef.current, { type: "scores_update", scores: scoresRef.current });
           return 0;
         }
         return t - 1;
@@ -251,7 +260,10 @@ export default function InkArenaTVPage() {
         teamCount: cfg?.teamCount ?? 2,
         roundNumber: roundNum,
         timeLeft: ROUND_SECONDS,
+        scores: scoresRef.current,
       });
+      // Also broadcast scores separately so server caches them
+      sendMessage(socketRef.current, { type: "scores_update", scores: scoresRef.current });
     }, 2800);
   }, [usedWords, startTimerFrom]);
 
@@ -261,25 +273,31 @@ export default function InkArenaTVPage() {
     const tc = cfg.teamCount;
     const totalRounds = cfg.totalRounds;
 
-    // Current state: drawingTeamIdx, round, turnInRound
-    const nextTeamIdx = (drawingTeamIdxRef.current + 1) % tc;
-    const isEndOfRound = nextTeamIdx === 0;
-    const nextRound = isEndOfRound ? round + 1 : round;
-    const nextTurn = isEndOfRound ? 0 : turnInRound + 1;
+    // Turn order: all turns for team 0, then all for team 1, etc.
+    // Each team gets `totalRounds` turns. Total turns = tc × totalRounds.
+    // turnInRound tracks overall turn count (0-indexed).
+    const currentTurn = turnInRound;
+    const nextTurn = currentTurn + 1;
+    const totalTurns = tc * totalRounds;
 
-    if (isEndOfRound && round >= totalRounds) {
-      // Game over — find winner (handle ties by listing all max scorers)
+    if (nextTurn >= totalTurns) {
+      // Game over — find winner
       const finalScores = scoresRef.current;
       const maxScore = Math.max(...finalScores);
       const winnerList = finalScores.reduce<number[]>((acc, s, i) => s === maxScore ? [...acc, i] : acc, []);
-      setWinner(winnerList[0]); // primary winner for display; ties shown separately
+      setWinner(winnerList[0]);
       setWinners(winnerList);
       setPhase("game_over");
-      sendMessage(socketRef.current, { type: "game_over", winners: winnerList });
+      sendMessage(socketRef.current, { type: "game_over", winners: winnerList, scores: finalScores });
     } else {
-      startTurn(nextTeamIdx, nextRound, nextTurn);
+      // Each team gets `totalRounds` consecutive turns.
+      // Team index = floor(nextTurn / totalRounds)
+      // Round within that team's block = (nextTurn % totalRounds) + 1
+      const nextTeamIdx = Math.floor(nextTurn / totalRounds);
+      const nextRoundNum = (nextTurn % totalRounds) + 1;
+      startTurn(nextTeamIdx, nextRoundNum, nextTurn);
     }
-  }, [round, turnInRound, startTurn]);
+  }, [turnInRound, startTurn]);
 
   const timerPct = timeLeft / ROUND_SECONDS;
   const drawUrl = origin ? `${origin}/ia/draw/${code}` : "";
@@ -294,8 +312,8 @@ export default function InkArenaTVPage() {
     setWinners(winnerList);
     setPhase("game_over");
     setShowExitConfirm(false);
-    sendMessage(socketRef.current, { type: "game_ended", winners: winnerList });
-    sendMessage(socketRef.current, { type: "game_over", winners: winnerList });
+    sendMessage(socketRef.current, { type: "game_ended", winners: winnerList, scores: finalScores });
+    sendMessage(socketRef.current, { type: "game_over", winners: winnerList, scores: finalScores });
   }, [clearTimer]);
   return (
     <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0B0E14]" style={{ overscrollBehavior: "none" }}>
@@ -320,7 +338,13 @@ export default function InkArenaTVPage() {
                 </p>
               )}
               <p className="mt-1 text-sm text-white/30">
-                {connectedCount > 0 ? `${connectedCount} player${connectedCount !== 1 ? "s" : ""} connected` : "Waiting for players…"}
+                {drawerCount > 0 && guesserCount > 0
+                  ? `✅ Drawer + ${guesserCount} guesser${guesserCount !== 1 ? "s" : ""} ready`
+                  : drawerCount > 0
+                    ? "✅ Drawer connected · ⏳ Waiting for guessers…"
+                    : guesserCount > 0
+                      ? `⏳ Waiting for drawer… · ${guesserCount} guesser${guesserCount !== 1 ? "s" : ""} ready`
+                      : "⏳ Waiting for drawer & guessers…"}
               </p>
             </div>
 
@@ -355,10 +379,10 @@ export default function InkArenaTVPage() {
 
             <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => startTurn(0, 1, 0)}
-              disabled={connectedCount < 1}
+              disabled={drawerCount < 1 || guesserCount < 1}
               className="rounded-2xl px-12 py-4 text-base font-black uppercase tracking-[0.2em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: connectedCount >= 1 ? "0 0 40px rgba(255,65,108,0.4)" : "none" }}>
-              {connectedCount < 1 ? "⏳ Waiting for players…" : "🎨 Start Game"}
+              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: (drawerCount >= 1 && guesserCount >= 1) ? "0 0 40px rgba(255,65,108,0.4)" : "none" }}>
+              {drawerCount < 1 || guesserCount < 1 ? "⏳ Waiting for players…" : "🎨 Start Game"}
             </motion.button>
             <Link href="/" className="text-xs text-white/20 transition-colors hover:text-white/40">← Back to Arena</Link>
           </motion.div>
@@ -373,7 +397,7 @@ export default function InkArenaTVPage() {
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }} className="text-center">
               <p className="mb-2 text-sm uppercase tracking-[0.4em] text-white/40">
-                Round {round} · Turn {turnInRound + 1}/{config?.teamCount ?? 2}
+                {teamName(drawingTeamIdx)} · Turn {round} of {config?.totalRounds ?? 1}
               </p>
               <h2 className="text-6xl font-black uppercase tracking-[0.1em] sm:text-8xl lg:text-9xl"
                 style={{ fontFamily: "var(--font-syne),var(--font-display)", backgroundImage: teamColor(drawingTeamIdx).gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -441,16 +465,17 @@ export default function InkArenaTVPage() {
                     className="h-full w-full rounded-xl border border-white/10 bg-white"
                     style={{ boxShadow: `0 0 60px ${teamColor(drawingTeamIdx).accent}22` }} />
                   {phase === "drawing" && (
-                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 rounded-b-xl bg-black/40 py-1.5 backdrop-blur-sm">
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1.5 rounded-b-xl py-2.5 px-3"
+                      style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.95) 100%)" }}>
                       {currentWord.split("").map((char, i) =>
-                        char === " " ? <span key={i} className="w-3" /> : (
-                          <span key={i} className="flex h-6 w-6 items-center justify-center rounded border border-white/15 text-xs font-bold text-white/40"
-                            style={{ background: "rgba(255,255,255,0.05)" }}>
+                        char === " " ? <span key={i} className="w-4" /> : (
+                          <span key={i} className="flex h-7 w-7 items-center justify-center rounded border border-white/25 text-sm font-bold text-white/60"
+                            style={{ background: "rgba(255,255,255,0.1)" }}>
                             {i === 0 ? char.toUpperCase() : ""}
                           </span>
                         )
                       )}
-                      <span className="ml-1 text-[10px] text-white/25">({currentWord.length})</span>
+                      <span className="ml-2 text-xs font-semibold text-white/40">({currentWord.length} letters)</span>
                     </div>
                   )}
                 </div>

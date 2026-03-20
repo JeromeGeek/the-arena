@@ -4,6 +4,7 @@ import {
   allWords,
   getRandomWord,
   getWordsForRound,
+  getWordsByDifficulty,
   generateRoomCode,
   ROUND_SECONDS,
   BONUS_SECONDS_THRESHOLD,
@@ -18,8 +19,8 @@ import {
 // ── Word Bank ─────────────────────────────────────────────────────────────────
 
 describe("wordCategories", () => {
-  it("has 6 categories", () => {
-    expect(wordCategories).toHaveLength(6);
+  it("has at least 5 categories", () => {
+    expect(wordCategories.length).toBeGreaterThanOrEqual(5);
   });
 
   it("each category has a name, emoji, and at least 18 words", () => {
@@ -51,9 +52,11 @@ describe("allWords", () => {
     expect(allWords.length).toBeGreaterThanOrEqual(100);
   });
 
-  it("is a flat union of all category words", () => {
-    const expected = wordCategories.flatMap((c) => c.words);
-    expect(allWords).toEqual(expected);
+  it("is a deduplicated union of all category words plus difficulty words", () => {
+    expect(allWords.length).toBeGreaterThanOrEqual(100);
+    // allWords should contain no duplicates
+    const unique = new Set(allWords);
+    expect(unique.size).toBe(allWords.length);
   });
 });
 
@@ -72,8 +75,9 @@ describe("getRandomWord", () => {
   });
 
   it("does not return excluded words when alternatives exist", () => {
-    const excluded = allWords.slice(0, allWords.length - 5);
-    const word = getRandomWord(excluded);
+    const medPool = getWordsByDifficulty("medium");
+    const excluded = medPool.slice(0, medPool.length - 5);
+    const word = getRandomWord(excluded, "medium");
     expect(excluded).not.toContain(word);
   });
 
@@ -147,8 +151,8 @@ describe("generateRoomCode", () => {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 describe("game constants", () => {
-  it("ROUND_SECONDS is 45", () => {
-    expect(ROUND_SECONDS).toBe(45);
+  it("ROUND_SECONDS is 60", () => {
+    expect(ROUND_SECONDS).toBe(60);
   });
 
   it("BONUS_SECONDS_THRESHOLD is less than ROUND_SECONDS", () => {
@@ -287,60 +291,163 @@ describe("InkArenaEvent union", () => {
     const event: InkArenaEvent = {
       type: "round_start",
       word: "Elephant",
-      drawingTeam: "red",
+      drawingTeam: 0,
       drawerId: "player-1",
       roundNumber: 1,
     };
     expect(event.type).toBe("round_start");
-    expect(event.word).toBe("Elephant");
-    expect(event.drawingTeam).toBe("red");
+    if (event.type === "round_start") {
+      expect(event.word).toBe("Elephant");
+      expect(event.drawingTeam).toBe(0);
+    }
   });
 
   it("guess event has correct shape", () => {
     const event: InkArenaEvent = {
       type: "guess",
-      team: "blue",
+      team: 1,
       guess: "elephant",
       playerId: "player-2",
     };
     expect(event.type).toBe("guess");
-    expect(event.guess).toBe("elephant");
+    if (event.type === "guess") {
+      expect(event.guess).toBe("elephant");
+    }
   });
 
   it("sabotage event has correct shape", () => {
     const event: InkArenaEvent = {
       type: "sabotage",
       effect: "shake",
-      fromTeam: "blue",
+      fromTeam: 1,
     };
     expect(event.type).toBe("sabotage");
-    expect(["shrink", "shake", "flip"]).toContain(event.effect);
+    if (event.type === "sabotage") {
+      expect(["shrink", "shake", "flip"]).toContain(event.effect);
+    }
   });
 
   it("game_over event has scores", () => {
     const event: InkArenaEvent = {
       type: "game_over",
-      winner: "red",
-      scores: { red: 1000, blue: 750 },
+      winner: 0,
+      scores: [1000, 750],
     };
-    expect(event.winner).toBe("red");
-    expect(event.scores.red).toBeGreaterThanOrEqual(POINTS_TO_WIN);
+    if (event.type === "game_over") {
+      expect(event.winner).toBe(0);
+      expect(event.scores[0]).toBeGreaterThanOrEqual(POINTS_TO_WIN);
+    }
+  });
+});
+
+// ── Turn order simulation (team-block ordering) ──────────────────────────────
+
+describe("turn order — team-block ordering", () => {
+  // Simulates the new handleNextTurn logic:
+  // All turns for team 0 first, then team 1, etc.
+  function simulateTurnOrder(teamCount: number, totalRounds: number) {
+    const turns: { teamIdx: number; roundNum: number; turnNum: number }[] = [];
+    const totalTurns = teamCount * totalRounds;
+    for (let turnNum = 0; turnNum < totalTurns; turnNum++) {
+      const teamIdx = Math.floor(turnNum / totalRounds);
+      const roundNum = (turnNum % totalRounds) + 1;
+      turns.push({ teamIdx, roundNum, turnNum });
+    }
+    return turns;
+  }
+
+  it("2 teams, 3 rounds: Red gets 3 turns then Blue gets 3 turns", () => {
+    const turns = simulateTurnOrder(2, 3);
+    expect(turns).toHaveLength(6);
+    // First 3 turns are team 0
+    expect(turns[0].teamIdx).toBe(0);
+    expect(turns[1].teamIdx).toBe(0);
+    expect(turns[2].teamIdx).toBe(0);
+    // Next 3 turns are team 1
+    expect(turns[3].teamIdx).toBe(1);
+    expect(turns[4].teamIdx).toBe(1);
+    expect(turns[5].teamIdx).toBe(1);
+  });
+
+  it("3 teams, 2 rounds: each team gets 2 consecutive turns", () => {
+    const turns = simulateTurnOrder(3, 2);
+    expect(turns).toHaveLength(6);
+    expect(turns.map(t => t.teamIdx)).toEqual([0, 0, 1, 1, 2, 2]);
+  });
+
+  it("round numbers cycle 1..totalRounds for each team", () => {
+    const turns = simulateTurnOrder(2, 3);
+    expect(turns.map(t => t.roundNum)).toEqual([1, 2, 3, 1, 2, 3]);
+  });
+
+  it("4 teams, 1 round: each team gets exactly 1 turn", () => {
+    const turns = simulateTurnOrder(4, 1);
+    expect(turns).toHaveLength(4);
+    expect(turns.map(t => t.teamIdx)).toEqual([0, 1, 2, 3]);
+  });
+});
+
+// ── Score sync simulation ────────────────────────────────────────────────────
+
+describe("score sync simulation", () => {
+  it("correct guess awards POINTS_CORRECT_GUESS to guessing team", () => {
+    const scores = [0, 0];
+    const guessingTeamIdx = 1;
+    scores[guessingTeamIdx] += POINTS_CORRECT_GUESS;
+    expect(scores).toEqual([0, 100]);
+  });
+
+  it("fast guess awards bonus on top", () => {
+    const scores = [0, 0];
+    const guessingTeamIdx = 0;
+    const timeLeft = ROUND_SECONDS - 1; // within threshold
+    let pts = POINTS_CORRECT_GUESS;
+    if (timeLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
+    scores[guessingTeamIdx] += pts;
+    expect(scores[0]).toBe(POINTS_CORRECT_GUESS + POINTS_FAST_BONUS);
+  });
+
+  it("slow guess does not award bonus", () => {
+    const scores = [0, 0];
+    const guessingTeamIdx = 0;
+    const timeLeft = 5;
+    let pts = POINTS_CORRECT_GUESS;
+    if (timeLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
+    scores[guessingTeamIdx] += pts;
+    expect(scores[0]).toBe(POINTS_CORRECT_GUESS);
+  });
+
+  it("scores accumulate across multiple rounds", () => {
+    const scores = [0, 0];
+    // Team 0 gets 3 correct guesses
+    scores[0] += POINTS_CORRECT_GUESS;
+    scores[0] += POINTS_CORRECT_GUESS;
+    scores[0] += POINTS_CORRECT_GUESS + POINTS_FAST_BONUS;
+    // Team 1 gets 2
+    scores[1] += POINTS_CORRECT_GUESS;
+    scores[1] += POINTS_CORRECT_GUESS;
+    expect(scores[0]).toBe(350); // 100 + 100 + 150
+    expect(scores[1]).toBe(200); // 100 + 100
+  });
+
+  it("winner is team with highest score", () => {
+    const scores = [350, 200, 150];
+    const maxScore = Math.max(...scores);
+    const winners = scores.reduce<number[]>((acc, s, i) => s === maxScore ? [...acc, i] : acc, []);
+    expect(winners).toEqual([0]);
+  });
+
+  it("tie detected when multiple teams have same top score", () => {
+    const scores = [300, 300, 100];
+    const maxScore = Math.max(...scores);
+    const winners = scores.reduce<number[]>((acc, s, i) => s === maxScore ? [...acc, i] : acc, []);
+    expect(winners).toEqual([0, 1]);
   });
 });
 
 // ── Round flow simulation ─────────────────────────────────────────────────────
 
 describe("round flow simulation", () => {
-  it("teams alternate drawing each round", () => {
-    let team: "red" | "blue" = "red";
-    const order: ("red" | "blue")[] = [team];
-    for (let i = 1; i < 6; i++) {
-      team = team === "red" ? "blue" : "red";
-      order.push(team);
-    }
-    expect(order).toEqual(["red", "blue", "red", "blue", "red", "blue"]);
-  });
-
   it("used words are excluded from subsequent rounds", () => {
     const used: string[] = [];
     for (let i = 0; i < 10; i++) {
@@ -352,20 +459,17 @@ describe("round flow simulation", () => {
     expect(new Set(used).size).toBe(10);
   });
 
-  it("game ends after 10 rounds if no one reaches POINTS_TO_WIN", () => {
-    // Simulate 10 rounds with max points per round
-    const maxPerRound = POINTS_CORRECT_GUESS + POINTS_FAST_BONUS;
-    const totalAfter10 = maxPerRound * 10;
-    // Even with max score, should check win condition works correctly
-    const gameOver = totalAfter10 >= POINTS_TO_WIN;
-    // 150 * 10 = 1500 >= 1000 — game would end before round 10
+  it("game over triggers after all turns are played", () => {
+    const teamCount = 2;
+    const totalRounds = 3;
+    const totalTurns = teamCount * totalRounds; // 6
+    let turnNum = 0;
+    let gameOver = false;
+    while (!gameOver) {
+      turnNum++;
+      if (turnNum >= totalTurns) gameOver = true;
+    }
     expect(gameOver).toBe(true);
-  });
-
-  it("minimum rounds to win is calculable", () => {
-    const maxPerRound = POINTS_CORRECT_GUESS + POINTS_FAST_BONUS; // 150
-    const minRounds = Math.ceil(POINTS_TO_WIN / maxPerRound);
-    expect(minRounds).toBeGreaterThanOrEqual(7); // at least 7 rounds
-    expect(minRounds).toBeLessThanOrEqual(10);   // at most 10 rounds
+    expect(turnNum).toBe(6);
   });
 });

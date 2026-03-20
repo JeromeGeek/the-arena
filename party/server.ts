@@ -19,8 +19,28 @@ export default class InkArenaServer implements Party.Server {
   private round: RoundState | null = null;
   // Map connectionId → role: "tv" | "drawer" | "guesser"
   private roles = new Map<string, "tv" | "drawer" | "guesser">();
+  // Latest scores — broadcast to all so guessers stay in sync
+  private scores: number[] = [];
 
   constructor(readonly room: Party.Room) {}
+
+  /** Count how many of each role are connected */
+  private getRoleCounts() {
+    let drawerCount = 0;
+    let guesserCount = 0;
+    for (const role of this.roles.values()) {
+      if (role === "drawer") drawerCount++;
+      if (role === "guesser") guesserCount++;
+    }
+    return { drawerCount, guesserCount };
+  }
+
+  /** Broadcast connection + role counts to everyone */
+  private broadcastCounts() {
+    const count = [...this.room.getConnections()].length;
+    const msg = JSON.stringify({ type: "connection_count", count, ...this.getRoleCounts() });
+    this.room.broadcast(msg);
+  }
 
   onMessage(message: string, sender: Party.Connection) {
     try {
@@ -30,7 +50,12 @@ export default class InkArenaServer implements Party.Server {
       if (msg.type === "register_role") {
         const role = msg.role as "tv" | "drawer" | "guesser";
         this.roles.set(sender.id, role);
-        // Don't broadcast role registration
+        // Send current scores to newly registered guesser so they're in sync
+        if (role === "guesser" && this.scores.length > 0) {
+          sender.send(JSON.stringify({ type: "scores_update", scores: this.scores }));
+        }
+        // Broadcast updated role counts so TV knows drawer/guesser joined
+        this.broadcastCounts();
         return;
       }
 
@@ -47,18 +72,25 @@ export default class InkArenaServer implements Party.Server {
           startedAt: Date.now(),
         };
       }
-      if (msg.type === "correct_guess" || msg.type === "time_up") {
+      if (msg.type === "correct_guess") {
         if (this.round) this.round.phase = "round_over";
+      }
+      if (msg.type === "time_up") {
+        if (this.round) this.round.phase = "round_over";
+      }
+      // TV broadcasts score updates — store and relay to all
+      if (msg.type === "scores_update") {
+        this.scores = (msg.scores as number[]) ?? [];
       }
       if (msg.type === "game_over") {
         if (this.round) this.round.phase = "game_over";
       }
       if (msg.type === "game_ended") {
-        // TV force-ended the game mid-session
         this.round = null;
       }
       if (msg.type === "lobby_reset") {
         this.round = null;
+        this.scores = [];
       }
     } catch {
       // ignore parse errors
@@ -69,13 +101,12 @@ export default class InkArenaServer implements Party.Server {
   }
 
   onConnect(conn: Party.Connection) {
-    const allConns = [...this.room.getConnections()];
-    const count = allConns.length;
-    const countMsg = JSON.stringify({ type: "connection_count", count });
+    // Broadcast updated counts to everyone
+    this.broadcastCounts();
 
-    // Tell everyone the new connection count (including the new connection itself)
-    this.room.broadcast(countMsg);
-    conn.send(countMsg);
+    // Also send to the new connection directly (broadcast may exclude sender in some setups)
+    const count = [...this.room.getConnections()].length;
+    conn.send(JSON.stringify({ type: "connection_count", count, ...this.getRoleCounts() }));
 
     // If a round was active and TV/drawer reconnects, resume
     if (this.round && this.round.phase === "drawing") {
@@ -108,8 +139,8 @@ export default class InkArenaServer implements Party.Server {
     const role = this.roles.get(conn.id) ?? "guesser";
     this.roles.delete(conn.id);
 
-    const count = [...this.room.getConnections()].length;
-    this.room.broadcast(JSON.stringify({ type: "connection_count", count }));
+    // Broadcast updated counts (connection + roles)
+    this.broadcastCounts();
 
     if (!this.round || this.round.phase !== "drawing") return;
 
