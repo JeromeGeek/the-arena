@@ -20,7 +20,7 @@ import {
 import { createInkSocket, sendMessage } from "@/lib/partykit";
 import type PartySocket from "partysocket";
 
-type Phase = "lobby" | "team_reveal" | "drawing" | "round_over" | "game_over";
+type Phase = "lobby" | "team_reveal" | "drawing" | "round_over" | "team_handoff" | "game_over";
 
 function renderStroke(ctx: CanvasRenderingContext2D, stroke: DrawStroke) {
   if (stroke.type === "clear") {
@@ -279,21 +279,23 @@ export default function InkArenaTVPage() {
     }, 5000);
   }, [usedWords, startTimerFrom]);
 
+  // Track next turn info for handoff screen
+  const [nextTeamIdxForHandoff, setNextTeamIdxForHandoff] = useState(0);
+  const [nextTurnForHandoff, setNextTurnForHandoff] = useState(0);
+  const [nextRoundForHandoff, setNextRoundForHandoff] = useState(1);
+
   const handleNextTurn = useCallback(() => {
     const cfg = configRef.current;
     if (!cfg) return;
     const tc = cfg.teamCount;
     const totalRounds = cfg.totalRounds;
 
-    // Turn order: all turns for team 0, then all for team 1, etc.
-    // Each team gets `totalRounds` turns. Total turns = tc × totalRounds.
-    // turnInRound tracks overall turn count (0-indexed).
     const currentTurn = turnInRound;
     const nextTurn = currentTurn + 1;
     const totalTurns = tc * totalRounds;
 
     if (nextTurn >= totalTurns) {
-      // Game over — find winner
+      // Game over
       const finalScores = scoresRef.current;
       const maxScore = Math.max(...finalScores);
       const winnerList = finalScores.reduce<number[]>((acc, s, i) => s === maxScore ? [...acc, i] : acc, []);
@@ -302,12 +304,21 @@ export default function InkArenaTVPage() {
       setPhase("game_over");
       sendMessage(socketRef.current, { type: "game_over", winners: winnerList, scores: finalScores });
     } else {
-      // Each team gets `totalRounds` consecutive turns.
-      // Team index = floor(nextTurn / totalRounds)
-      // Round within that team's block = (nextTurn % totalRounds) + 1
       const nextTeamIdx = Math.floor(nextTurn / totalRounds);
       const nextRoundNum = (nextTurn % totalRounds) + 1;
-      startTurn(nextTeamIdx, nextRoundNum, nextTurn);
+      const currentTeamIdx = Math.floor(currentTurn / totalRounds);
+
+      if (nextTeamIdx !== currentTeamIdx) {
+        // Switching teams — show handoff screen, wait for button press
+        setNextTeamIdxForHandoff(nextTeamIdx);
+        setNextTurnForHandoff(nextTurn);
+        setNextRoundForHandoff(nextRoundNum);
+        setPhase("team_handoff");
+        phaseRef.current = "team_handoff";
+      } else {
+        // Same team, next round — go directly
+        startTurn(nextTeamIdx, nextRoundNum, nextTurn);
+      }
     }
   }, [turnInRound, startTurn]);
 
@@ -611,10 +622,61 @@ export default function InkArenaTVPage() {
               onClick={handleNextTurn}
               className="rounded-2xl px-10 py-3 text-sm font-black uppercase tracking-[0.2em] text-white"
               style={{
-                backgroundImage: teamColor((drawingTeamIdx + 1) % (config?.teamCount ?? 2)).gradient,
-                boxShadow: `0 0 30px ${teamColor((drawingTeamIdx + 1) % (config?.teamCount ?? 2)).accent}44`,
+                backgroundImage: teamColor(drawingTeamIdx).gradient,
+                boxShadow: `0 0 30px ${teamColor(drawingTeamIdx).accent}44`,
               }}>
               Next Turn →
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* TEAM HANDOFF — shown when switching from one team to the next */}
+      <AnimatePresence mode="wait">
+        {phase === "team_handoff" && (
+          <motion.div key="handoff" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6">
+
+            {/* Scores so far */}
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              {scores.map((score, i) => {
+                const col = teamColor(i);
+                return (
+                  <div key={i} className="text-center">
+                    <p className="text-xs uppercase tracking-widest" style={{ color: col.accent }}>{teamName(i)}</p>
+                    <p className="text-3xl font-black" style={{ color: col.accent }}>{score}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 22 }}
+              className="text-center">
+              <p className="mb-2 text-sm uppercase tracking-[0.4em] text-white/40">Pass the phone to</p>
+              <h2 className="text-5xl font-black uppercase tracking-[0.1em] sm:text-7xl lg:text-8xl"
+                style={{ fontFamily: "var(--font-syne),var(--font-display)", backgroundImage: teamColor(nextTeamIdxForHandoff).gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                {teamName(nextTeamIdxForHandoff)}
+              </h2>
+              <p className="mt-2 text-lg text-white/50">
+                {config?.totalRounds ?? 1} round{(config?.totalRounds ?? 1) !== 1 ? "s" : ""} to play
+              </p>
+            </motion.div>
+
+            <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.3, duration: 0.5 }}
+              className="h-1 w-64 rounded-full sm:w-96" style={{ backgroundImage: teamColor(nextTeamIdxForHandoff).gradient }} />
+
+            <motion.button
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+              whileTap={{ scale: 0.95 }} 
+              onClick={() => startTurn(nextTeamIdxForHandoff, nextRoundForHandoff, nextTurnForHandoff)}
+              className="rounded-2xl px-12 py-4 text-base font-black uppercase tracking-[0.2em] text-white"
+              style={{
+                backgroundImage: teamColor(nextTeamIdxForHandoff).gradient,
+                boxShadow: `0 0 40px ${teamColor(nextTeamIdxForHandoff).accent}55`,
+              }}>
+              🎨 Start {teamName(nextTeamIdxForHandoff)}&apos;s Turns
             </motion.button>
           </motion.div>
         )}
