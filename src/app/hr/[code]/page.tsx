@@ -83,9 +83,7 @@ function Syne({ children, className = "", style }: { children: React.ReactNode; 
 }
 
 // ── Blur-reveal image ─────────────────────────────────────────────────────────
-function BlurImage({ image, blurPx, revealMs, revealed }: { image: SnapImage; blurPx: number; revealMs: number; revealed: boolean }) {
-  // Logo images often have transparent backgrounds — give them a white canvas
-  // so they're visible against the dark game background.
+function BlurImage({ image, blurPx, revealMs, revealed, onLoad }: { image: SnapImage; blurPx: number; revealMs: number; revealed: boolean; onLoad?: () => void }) {
   const isLogo = image.url.includes("/logos/") || image.category === "logos";
   return (
     <div
@@ -101,6 +99,7 @@ function BlurImage({ image, blurPx, revealMs, revealed }: { image: SnapImage; bl
         transition={revealed ? { duration: revealMs / 1000, ease: "easeOut" } : { duration: 0 }}
         className="absolute inset-0 h-full w-full object-contain"
         style={isLogo ? { padding: "12%" } : undefined}
+        onLoad={onLoad}
       />
     </div>
   );
@@ -153,6 +152,7 @@ export default function SnapQuizGamePage() {
   const [countdown, setCountdown]           = useState(3);
   const [countdownActive, setCountdownActive] = useState(false);
   const [lastScorer, setLastScorer]         = useState<number | null>(null);
+  const [imageLoaded, setImageLoaded]       = useState(false);
 
   const barControls      = useAnimationControls();
   const revealTimerRef   = useRef<NodeJS.Timeout | null>(null);
@@ -188,6 +188,7 @@ export default function SnapQuizGamePage() {
     setRevealed(false);
     setShowHint(false);
     setLastScorer(null);
+    setImageLoaded(false);
   }, []);
 
   const endImage = useCallback(() => {
@@ -215,9 +216,9 @@ export default function SnapQuizGamePage() {
     return () => clearTimeout(t);
   }, [countdownActive, countdown, soundEnabled]);
 
-  // ── Auto-reveal timer ─────────────────────────────────────────────────────
+  // ── Auto-reveal timer — only starts after image has loaded ──────────────
   useEffect(() => {
-    if (phase !== "revealing") return;
+    if (phase !== "revealing" || !imageLoaded) return;
 
     const elapsed   = elapsedMsRef.current;
     const remaining = Math.max(revealMs - elapsed, 0);
@@ -245,7 +246,7 @@ export default function SnapQuizGamePage() {
       barControls.stop();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, imgIndex, activeTeam]);
+  }, [phase, imgIndex, activeTeam, imageLoaded]);
 
   // ── "Passed" flash — auto-advance to revealing after 1.2s ────────────────
   useEffect(() => {
@@ -303,16 +304,19 @@ export default function SnapQuizGamePage() {
     if (answeringTeam === null) return;
     if (soundEnabled) playSnapWrong();
     const team = answeringTeam;
+    const wasPassed = passedTeams.length > 0;
     setVerdictResult("wrong");
     setPhase("verdict");
     setTimeout(() => {
-      setScores((prev) => { const n = [...prev]; n[team] = (n[team] ?? 0) + POINTS_WRONG; return n; });
+      // Only apply -10 penalty if the original team got it wrong (not after a pass)
+      if (!wasPassed) {
+        setScores((prev) => { const n = [...prev]; n[team] = (n[team] ?? 0) + POINTS_WRONG; return n; });
+      }
       setVerdictResult(null);
       setAnsweringTeam(null);
-      // Wrong answer ends the image — no second chances for other teams
       endImage();
     }, 1200);
-  }, [answeringTeam, soundEnabled, endImage]);
+  }, [answeringTeam, passedTeams.length, soundEnabled, endImage]);
 
   const handleNext = useCallback(() => {
     const nextIdx = imgIndex + 1;
@@ -322,11 +326,14 @@ export default function SnapQuizGamePage() {
       return;
     }
     const isEndOfRound   = nextIdx % IMAGES_PER_ROUND === 0;
-    const nextActiveTeam = (activeTeam + 1) % teams.length;
+    // If the current image was passed, the passing team still "owns" the next image
+    // (they shouldn't lose their turn for passing). Otherwise, rotate normally.
+    const wasPassed = passedTeams.length > 0;
+    const nextActiveTeam = wasPassed ? passedTeams[0] : (activeTeam + 1) % teams.length;
     resetForNewImage(nextIdx, nextActiveTeam);
     if (isEndOfRound && soundEnabled) setTimeout(() => playSnapRoundBreak(), 300);
     setPhase(isEndOfRound ? "roundbreak" : "revealing");
-  }, [imgIndex, totalImages, activeTeam, teams.length, soundEnabled, resetForNewImage]);
+  }, [imgIndex, totalImages, activeTeam, passedTeams, teams.length, soundEnabled, resetForNewImage]);
 
   // ── Invalid code guard ────────────────────────────────────────────────────
   if (!parsed || !currentImage) {
@@ -561,7 +568,7 @@ export default function SnapQuizGamePage() {
           <motion.div key={imgIndex} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="relative h-full w-full">
 
-            <BlurImage image={currentImage} blurPx={blurPx} revealMs={revealMs} revealed={revealed} />
+            <BlurImage image={currentImage} blurPx={blurPx} revealMs={revealMs} revealed={revealed} onLoad={() => setImageLoaded(true)} />
 
             {/* Vignette */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
