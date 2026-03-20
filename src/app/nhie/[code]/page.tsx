@@ -139,7 +139,7 @@ export default function NHIEGamePage() {
           href="/"
           className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 transition-colors hover:text-white/60 sm:text-xs sm:tracking-[0.3em]"
         >
-          ← The Arena
+          ← Arena Party
         </Link>
         <div className="flex flex-col items-center">
           <h1

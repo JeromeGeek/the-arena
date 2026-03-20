@@ -55,7 +55,7 @@ export default function GameSetupShell({
           className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors hover:text-white/60"
         >
           <span className="transition-transform group-hover:-translate-x-0.5">←</span>
-          <span>The Arena</span>
+          <span>Arena Party</span>
         </Link>
         <p
           className="text-[11px] font-bold uppercase tracking-[0.35em] text-white/40"

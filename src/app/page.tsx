@@ -194,7 +194,7 @@ function WelcomeModal({ onDone }: { onDone: (name: string) => void }) {
             className="text-shimmer mb-1 text-2xl font-black uppercase tracking-[0.15em] sm:mb-2 sm:text-3xl xl:text-5xl xl:tracking-[0.2em]"
             style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
           >
-            The Arena
+            Arena Party
           </h2>
           <p className="mb-5 text-sm text-white/40 sm:mb-8 xl:mb-10 xl:text-xl">
             What should we call you?
@@ -1010,7 +1010,7 @@ export default function HomePage() {
             className="text-shimmer text-2xl font-extrabold uppercase tracking-[0.12em] sm:text-3xl sm:font-black sm:tracking-[0.25em] md:text-4xl md:tracking-[0.3em] lg:text-5xl"
             style={{ fontFamily: "var(--font-syne), var(--font-display)" }}
           >
-            The Arena
+            Arena Party
           </h1>
 
           {/* Tagline */}

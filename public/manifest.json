@@ -1,7 +1,7 @@
 {
-  "name": "The Arena — Party Game Hub",
-  "short_name": "The Arena",
-  "description": "A cinematic command center for tactical party games. Codenames, Truth or Dare, Never Have I Ever, Imposter, Charades, Mafia, Pictionary & Snap Quiz.",
+  "name": "Arena Party — Game Night Hub",
+  "short_name": "Arena Party",
+  "description": "A cinematic party game hub. Play Codenames, Imposter, Truth or Dare, Never Have I Ever, Charades, Pictionary & Snap Quiz — all in one place.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -63,7 +63,7 @@
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "The Arena Home Screen"
+      "label": "Arena Party Home Screen"
     }
   ]
 }

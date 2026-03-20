@@ -24,26 +24,26 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "The Arena — Party Game Hub",
+  title: "Arena Party — Game Night Hub",
   description:
-    "A cinematic party game hub. Play Codenames, Imposter, Truth or Dare, Never Have I Ever, Charades, Mafia & Ink Arena — all in one place.",
+    "A cinematic party game hub. Play Codenames, Imposter, Truth or Dare, Never Have I Ever, Charades, Pictionary & Snap Quiz — all in one place.",
   manifest: "/manifest.json",
-  keywords: ["party games", "codenames", "imposter", "truth or dare", "never have i ever", "charades", "mafia", "game night"],
+  keywords: ["party games", "codenames", "imposter", "truth or dare", "never have i ever", "charades", "game night"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "The Arena",
+    title: "Arena Party",
   },
   openGraph: {
-    title: "The Arena — Party Game Hub",
-    description: "6 tactical party games. One cinematic hub. Enter The Arena.",
+    title: "Arena Party — Game Night Hub",
+    description: "7 tactical party games. One cinematic hub. Enter the Arena.",
     type: "website",
-    siteName: "The Arena",
+    siteName: "Arena Party",
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Arena — Party Game Hub",
-    description: "6 tactical party games. One cinematic hub. Enter The Arena.",
+    title: "Arena Party — Game Night Hub",
+    description: "7 tactical party games. One cinematic hub. Enter the Arena.",
   },
   other: {
     "mobile-web-app-capable": "yes",

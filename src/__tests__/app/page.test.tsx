@@ -94,11 +94,11 @@ describe("HomePage", () => {
       expect(screen.getByText(/welcome back/i)).toBeInTheDocument();
     });
 
-    it('renders the "The Arena" heading', async () => {
+    it('renders the "Arena Party" heading', async () => {
       renderWithUser();
       await flushEffects();
       expect(
-        screen.getByRole("heading", { level: 1, name: /the arena/i })
+        screen.getByRole("heading", { level: 1, name: /arena party/i })
       ).toBeInTheDocument();
     });
 

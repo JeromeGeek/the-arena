@@ -1,5 +1,5 @@
 /**
- * 🔊 The Arena — Sound Effects Engine
+ * 🔊 Arena Party — Sound Effects Engine
  *
  * All sounds are synthesized via the Web Audio API.
  * Zero audio files. Works offline (PWA-friendly).
