@@ -152,24 +152,23 @@ export const mediumWords: string[] = [
   "Ferris Wheel", "Treehouse", "Sandcastle", "Snowman", "Scarecrow", "Trampoline", "Hammock", "Hot Air Balloon", "Space Station", "Ghost Town",
 ];
 
-// Hard: abstract concepts, emotions, social ideas — genuinely difficult to illustrate
+// Hard: tricky to draw but still visual — requires creativity, not impossible
 export const hardWords: string[] = [
-  // Science & physics
-  "Gravity", "Black Hole", "Dark Matter", "Wormhole", "Quantum Leap", "Singularity", "Multiverse", "Antimatter", "Relativity", "Entropy",
-  "Bioluminescence", "Photosynthesis", "Natural Selection", "Continental Drift", "Tectonic Plates", "Magnetosphere", "Nuclear Fission", "The Big Bang", "Evolution", "Nanotechnology",
-  // Emotions & psychology
-  "Nostalgia", "Wanderlust", "Serendipity", "Epiphany", "Déjà vu", "Paranoia", "Euphoria", "Melancholy", "Schadenfreude", "Existential Crisis",
-  "Procrastination", "Imposter Syndrome", "Burnout", "FOMO", "Gaslighting", "Stockholm Syndrome", "Dunning-Kruger Effect", "Mid-life Crisis", "Cognitive Dissonance", "Analysis Paralysis",
-  // Society & politics
-  "Democracy", "Inflation", "Bureaucracy", "Propaganda", "Revolution", "Surveillance", "Censorship", "Gentrification", "Colonialism", "Anarchy",
-  "Cancel Culture", "Globalisation", "Supply Chain", "Carbon Footprint", "Herd Immunity", "Overpopulation", "Echo Chamber", "Fake News", "Virtue Signalling", "Class Warfare",
-  // Technology & internet culture
-  "Artificial Intelligence", "Cryptocurrency", "Virtual Reality", "Climate Change", "Genetic Engineering", "Deep Fake", "Surveillance State", "Digital Detox", "Algorithm", "Crowdfunding",
-  "Catfishing", "Phishing", "Ghosting", "Going Viral", "Influencer", "Flash Mob", "Information Overload", "Social Media Addiction", "Mansplaining", "The Metaverse",
-  // Abstract concepts
-  "Time Travel", "Parallel Universe", "Space Colonisation", "The American Dream", "Utopia", "Dystopia", "Paradox", "Irony", "Sarcasm", "Morality",
-  // More abstract & philosophical
-  "Free Will", "Consciousness", "Capitalism", "Nihilism", "The Butterfly Effect", "Murphy's Law", "Cognitive Bias", "Mob Mentality", "Cultural Appropriation", "Identity Crisis",
+  // Scenes & situations
+  "Earthquake", "Avalanche", "Shipwreck", "Car Crash", "Traffic Jam", "Prison Break", "Bank Robbery", "Wedding", "Funeral", "Birthday Party",
+  "Job Interview", "First Date", "Camping Trip", "Road Trip", "School Exam", "Graduation", "Surgery", "Court Trial", "Circus Act", "Fashion Show",
+  // Compound concepts (drawable with creativity)
+  "Sleepwalking", "Sunburn", "Brain Freeze", "Food Fight", "Pillow Fight", "Snowball Fight", "Arm Wrestling", "Thumb War", "Tug of War", "Treasure Hunt",
+  "Hide and Seek", "Musical Chairs", "Hot Potato", "Red Carpet", "Photobomb", "Stage Fright", "Writer's Block", "Rush Hour", "Black Market", "Time Bomb",
+  // Tricky objects & animals
+  "Chandelier", "Grandfather Clock", "Cuckoo Clock", "Mousetrap", "Quicksand", "Treadmill", "Wrecking Ball", "Bulldozer", "Crane", "Forklift",
+  "Stingray", "Porcupine", "Chameleon", "Praying Mantis", "Venus Flytrap", "Cactus Garden", "Coral Reef", "Deep Sea Diver", "Loch Ness Monster", "Bigfoot",
+  // Actions & expressions
+  "Snoring", "Hiccups", "Yawning", "Tripping", "Fainting", "Blushing", "Winking", "Crying", "Laughing", "Screaming",
+  "Whispering", "Gossiping", "Eavesdropping", "Daydreaming", "Nightmare", "Insomnia", "Jetlag", "Hangover", "Allergies", "Braces",
+  // Pop culture (drawable)
+  "Selfie", "Photobooth", "Karaoke", "Flash Mob", "Paparazzi", "Red Carpet Walk", "Award Ceremony", "Concert Crowd", "Mosh Pit", "Music Festival",
+  "Food Truck", "Drive-In Movie", "Escape Room", "Haunted House", "Corn Maze", "Theme Park", "Water Park", "Zoo", "Aquarium", "Museum",
 ];
 
 

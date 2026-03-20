@@ -34,6 +34,7 @@ export default function DrawerPage() {
   const [roundNumber, setRoundNumber] = useState(0);
   const [paused, setPaused] = useState(false);
   const [waitingForRound, setWaitingForRound] = useState(true);
+  const [countdown, setCountdown] = useState(0);
   const [playerName] = useState(() => `Drawer-${Math.floor(Math.random() * 1000)}`);
 
   const activeColor = isEraser ? "#FFFFFF" : color;
@@ -44,12 +45,26 @@ export default function DrawerPage() {
     const socket = createInkSocket(code, (data) => {
       const msg = data as Record<string, unknown>;
 
-      const handleRoundBegin = (payload: { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number }) => {
+      const handleRoundBegin = (payload: { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number; countdown?: number }) => {
         setCurrentWord(payload.word);
         setDrawingTeamIdx(payload.drawingTeamIdx ?? 0);
         if (payload.teamNames) setTeamNames(payload.teamNames);
         setRoundNumber(payload.roundNumber);
-        setWaitingForRound(false);
+        // If countdown provided, show it and wait for drawing_start
+        const cd = payload.countdown ?? 0;
+        if (cd > 0) {
+          setCountdown(cd);
+          setWaitingForRound(false);
+          const cdInterval = setInterval(() => {
+            setCountdown((c) => {
+              if (c <= 1) { clearInterval(cdInterval); return 0; }
+              return c - 1;
+            });
+          }, 1000);
+        } else {
+          setCountdown(0);
+          setWaitingForRound(false);
+        }
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext("2d");
@@ -58,12 +73,17 @@ export default function DrawerPage() {
       };
 
       if (msg.type === "round_start") {
-        handleRoundBegin(msg as { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number });
+        handleRoundBegin(msg as { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number; countdown?: number });
       }
 
       // Late-joiner catchup from server
       if (msg.type === "round_catchup") {
         handleRoundBegin(msg as { word: string; drawingTeamIdx: number; teamNames?: string[]; roundNumber: number });
+      }
+
+      // TV says countdown is over, start drawing
+      if (msg.type === "drawing_start") {
+        setCountdown(0);
       }
 
       if (msg.type === "correct_guess" || msg.type === "time_up" || msg.type === "round_over") {
@@ -158,7 +178,7 @@ export default function DrawerPage() {
   }, []);
 
   const handlePointerDown = useCallback((e: PointerEvent<HTMLCanvasElement>) => {
-    if (waitingForRound) return;
+    if (waitingForRound || countdown > 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     isDrawingRef.current = true;
     const { x, y } = getCoords(e);
@@ -214,13 +234,21 @@ export default function DrawerPage() {
       className="flex h-[100dvh] flex-col bg-[#0B0E14] select-none overflow-hidden"
       style={{ touchAction: "none", userSelect: "none", overscrollBehavior: "none" }}
     >
-      {/* Header — compact single line */}
+      {/* Header — team name + word */}
       <div
         className="flex shrink-0 items-center justify-between px-4 py-2"
         style={{ borderBottom: `1px solid ${teamColor}22` }}
       >
         <div className="flex items-center gap-3">
-          {currentWord && !waitingForRound ? (
+          {/* Team badge */}
+          <div className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+            style={{ background: `${teamColor}18`, border: `1px solid ${teamColor}33` }}>
+            <div className="h-2 w-2 rounded-full" style={{ background: teamGradient }} />
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: teamColor }}>
+              {teamNames[drawingTeamIdx] ?? DEFAULT_TEAM_NAMES[drawingTeamIdx]}
+            </span>
+          </div>
+          {currentWord && !waitingForRound && countdown === 0 ? (
             <>
               <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">Draw:</span>
               <span
@@ -230,6 +258,8 @@ export default function DrawerPage() {
                 {currentWord}
               </span>
             </>
+          ) : !waitingForRound && countdown > 0 ? (
+            <span className="text-sm font-semibold text-white/40">Get ready…</span>
           ) : (
             <span className="text-sm text-white/40">Waiting for your turn…</span>
           )}
@@ -252,6 +282,24 @@ export default function DrawerPage() {
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[rgba(11,14,20,0.92)]">
               <p className="text-4xl">✏️</p>
               <p className="mt-3 text-sm text-white/50">Waiting for your turn…</p>
+            </div>
+          )}
+          {!waitingForRound && countdown > 0 && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[rgba(11,14,20,0.95)]">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full" style={{ background: teamGradient }} />
+                <span className="text-sm font-black uppercase tracking-widest" style={{ color: teamColor }}>
+                  {teamNames[drawingTeamIdx] ?? DEFAULT_TEAM_NAMES[drawingTeamIdx]}
+                </span>
+              </div>
+              <p className="text-lg font-semibold text-white/60">Your word is:</p>
+              <p className="text-3xl font-black uppercase tracking-wider" style={{ color: teamColor, fontFamily: "var(--font-syne), var(--font-display)" }}>
+                {currentWord}
+              </p>
+              <p className="mt-2 text-sm text-white/40">Drawing starts in…</p>
+              <p className="text-5xl font-black tabular-nums" style={{ color: teamColor }}>
+                {countdown}
+              </p>
             </div>
           )}
           {paused && (

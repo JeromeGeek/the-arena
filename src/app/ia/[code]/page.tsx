@@ -83,6 +83,7 @@ export default function InkArenaTVPage() {
   const [guesserCount, setGuesserCount] = useState(0);
   const [origin, setOrigin] = useState("");
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [revealCountdown, setRevealCountdown] = useState(0);
 
   const pausedRef = useRef(false);
   const timeLeftRef = useRef(ROUND_SECONDS);
@@ -248,23 +249,34 @@ export default function InkArenaTVPage() {
     setRoundResult(null);
     setPhase("team_reveal");
     phaseRef.current = "team_reveal";
+    // Start a 5-second countdown for passing the phone
+    setRevealCountdown(5);
+    const cdInterval = setInterval(() => {
+      setRevealCountdown((c) => {
+        if (c <= 1) { clearInterval(cdInterval); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    // Send round_start immediately so drawer phone sees the team + countdown
+    sendMessage(socketRef.current, {
+      type: "round_start",
+      word,
+      drawingTeamIdx: teamIdx,
+      teamNames: cfg?.teamNames ?? DEFAULT_TEAM_NAMES.slice(0, cfg?.teamCount ?? 2),
+      teamCount: cfg?.teamCount ?? 2,
+      roundNumber: roundNum,
+      timeLeft: ROUND_SECONDS,
+      scores: scoresRef.current,
+      countdown: 5, // 5 seconds to pass the phone
+    });
+    sendMessage(socketRef.current, { type: "scores_update", scores: scoresRef.current });
+    // After 5 seconds, start drawing
     setTimeout(() => {
       setPhase("drawing");
       phaseRef.current = "drawing";
       startTimerFrom(ROUND_SECONDS);
-      sendMessage(socketRef.current, {
-        type: "round_start",
-        word,
-        drawingTeamIdx: teamIdx,
-        teamNames: cfg?.teamNames ?? DEFAULT_TEAM_NAMES.slice(0, cfg?.teamCount ?? 2),
-        teamCount: cfg?.teamCount ?? 2,
-        roundNumber: roundNum,
-        timeLeft: ROUND_SECONDS,
-        scores: scoresRef.current,
-      });
-      // Also broadcast scores separately so server caches them
-      sendMessage(socketRef.current, { type: "scores_update", scores: scoresRef.current });
-    }, 2800);
+      sendMessage(socketRef.current, { type: "drawing_start" });
+    }, 5000);
   }, [usedWords, startTimerFrom]);
 
   const handleNextTurn = useCallback(() => {
@@ -415,9 +427,19 @@ export default function InkArenaTVPage() {
                 {teamName(drawingTeamIdx)}
               </h2>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-                className="mt-3 text-2xl uppercase tracking-[0.3em] text-white/60">
-                Enters the Arena
+                className="mt-3 text-xl uppercase tracking-[0.3em] text-white/50">
+                Pass the phone to the drawer
               </motion.p>
+              {revealCountdown > 0 && (
+                <motion.p
+                  key={revealCountdown}
+                  initial={{ scale: 1.4, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="mt-4 text-5xl font-black tabular-nums sm:text-7xl"
+                  style={{ color: teamColor(drawingTeamIdx).accent }}>
+                  {revealCountdown}
+                </motion.p>
+              )}
             </motion.div>
             <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.4, duration: 0.6 }}
               className="h-1 w-64 rounded-full sm:w-96" style={{ backgroundImage: teamColor(drawingTeamIdx).gradient }} />
