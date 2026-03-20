@@ -301,7 +301,27 @@ export default function InkArenaTVPage() {
 
   const timerPct = timeLeft / ROUND_SECONDS;
   const drawUrl = origin ? `${origin}/ia/draw/${code}` : "";
-  const joinUrl = origin ? `${origin}/ia/join/${code}` : "";
+
+  /** TV-side "We Got It!" — awards points to guessing team, same logic as guesser phone */
+  const handleTVCorrectGuess = useCallback((guessingTeamIdx: number) => {
+    if (phaseRef.current !== "drawing") return;
+    clearTimer();
+    const tLeft = timeLeftRef.current;
+    const word = currentWordRef.current;
+    let pts = POINTS_CORRECT_GUESS;
+    if (tLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
+    setScores((prev) => {
+      const next = [...prev];
+      next[guessingTeamIdx] = (next[guessingTeamIdx] ?? 0) + pts;
+      setTimeout(() => sendMessage(socketRef.current, { type: "scores_update", scores: next }), 50);
+      return next;
+    });
+    setRoundResult({ correct: true, guessingTeamIdx, word, pointsAwarded: pts });
+    setPhase("round_over");
+    phaseRef.current = "round_over";
+    // Tell drawer the round ended
+    sendMessage(socketRef.current, { type: "correct_guess", guessingTeamIdx, timeLeft: tLeft, word });
+  }, [clearTimer]);
 
   const handleForceEnd = useCallback(() => {
     clearTimer();
@@ -338,13 +358,9 @@ export default function InkArenaTVPage() {
                 </p>
               )}
               <p className="mt-1 text-sm text-white/30">
-                {drawerCount > 0 && guesserCount > 0
-                  ? `✅ Drawer + ${guesserCount} guesser${guesserCount !== 1 ? "s" : ""} ready`
-                  : drawerCount > 0
-                    ? "✅ Drawer connected · ⏳ Waiting for guessers…"
-                    : guesserCount > 0
-                      ? `⏳ Waiting for drawer… · ${guesserCount} guesser${guesserCount !== 1 ? "s" : ""} ready`
-                      : "⏳ Waiting for drawer & guessers…"}
+                {drawerCount > 0
+                  ? "✅ Drawer connected · Ready to start!"
+                  : "⏳ Scan the QR code with one phone to draw"}
               </p>
             </div>
 
@@ -363,26 +379,21 @@ export default function InkArenaTVPage() {
               </div>
             )}
 
-            {/* QR codes */}
-            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-              <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">✏️ Drawer</p>
-                {drawUrl && <div className="rounded-lg bg-white p-1.5"><QRCodeSVG value={drawUrl} size={100} /></div>}
+            {/* Single QR code — drawer only */}
+            <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-5 w-full">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">📱 Scan to Draw</p>
+                {drawUrl && <div className="rounded-lg bg-white p-2"><QRCodeSVG value={drawUrl} size={140} /></div>}
                 <p className="break-all text-center text-[9px] text-white/25 leading-tight">{drawUrl || "Loading…"}</p>
-              </div>
-              <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">🎯 Guesser</p>
-                {joinUrl && <div className="rounded-lg bg-white p-1.5"><QRCodeSVG value={joinUrl} size={100} /></div>}
-                <p className="break-all text-center text-[9px] text-white/25 leading-tight">{joinUrl || "Loading…"}</p>
               </div>
             </div>
 
             <motion.button whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => startTurn(0, 1, 0)}
-              disabled={drawerCount < 1 || guesserCount < 1}
+              disabled={drawerCount < 1}
               className="rounded-2xl px-12 py-4 text-base font-black uppercase tracking-[0.2em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: (drawerCount >= 1 && guesserCount >= 1) ? "0 0 40px rgba(255,65,108,0.4)" : "none" }}>
-              {drawerCount < 1 || guesserCount < 1 ? "⏳ Waiting for players…" : "🎨 Start Game"}
+              style={{ background: "linear-gradient(135deg,#FF416C,#FF4B2B)", boxShadow: drawerCount >= 1 ? "0 0 40px rgba(255,65,108,0.4)" : "none" }}>
+              {drawerCount < 1 ? "⏳ Waiting for drawer…" : "🎨 Start Game"}
             </motion.button>
             <Link href="/" className="text-xs text-white/20 transition-colors hover:text-white/40">← Back to Arena</Link>
           </motion.div>
@@ -495,7 +506,7 @@ export default function InkArenaTVPage() {
               )}
             </AnimatePresence>
 
-            {/* Timer */}
+            {/* Timer + "We Got It!" buttons */}
             {phase === "drawing" && (
               <div className="shrink-0 border-t border-white/8 px-4 py-2 sm:px-8">
                 <div className="flex items-center gap-3">
@@ -508,6 +519,29 @@ export default function InkArenaTVPage() {
                       animate={{ width: `${timerPct * 100}%` }} transition={{ duration: 0.9, ease: "linear" }}
                       style={{ backgroundImage: timeLeft <= 10 ? "linear-gradient(90deg,#FF416C,#FF4B2B)" : teamColor(drawingTeamIdx).gradient }} />
                   </div>
+                </div>
+
+                {/* "We Got It!" buttons — one per NON-drawing team */}
+                <div className="mt-2 flex gap-2">
+                  {scores.map((_, i) => {
+                    if (i === drawingTeamIdx) return null;
+                    const col = teamColor(i);
+                    return (
+                      <motion.button
+                        key={i}
+                        whileTap={{ scale: 0.93 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        onClick={() => handleTVCorrectGuess(i)}
+                        className="flex-1 rounded-xl py-3 text-sm font-black uppercase tracking-widest text-white"
+                        style={{
+                          backgroundImage: col.gradient,
+                          boxShadow: `0 0 24px ${col.accent}44`,
+                        }}
+                      >
+                        ✅ {teamName(i)} Got It!
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             )}

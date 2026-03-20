@@ -15,7 +15,6 @@ const DIFFICULTY_OPTIONS: { value: DrawDifficulty; label: string; desc: string; 
 export default function PictionaryPage() {
   const router = useRouter();
   const [teamCount, setTeamCount] = useState(2);
-  const [teamNames, setTeamNames] = useState<string[]>([...DEFAULT_TEAM_NAMES]);
   const [difficulty, setDifficulty] = useState<DrawDifficulty>("medium");
   const [rounds, setRounds] = useState(3);
 
@@ -24,7 +23,7 @@ export default function PictionaryPage() {
     sessionStorage.setItem(
       `ink-arena:${code}`,
       JSON.stringify({
-        teamNames: teamNames.slice(0, teamCount).map((n, i) => n.trim() || DEFAULT_TEAM_NAMES[i]),
+        teamNames: DEFAULT_TEAM_NAMES.slice(0, teamCount),
         teamCount,
         difficulty,
         totalRounds: rounds,
@@ -38,7 +37,7 @@ export default function PictionaryPage() {
     <GameSetupShell
       title="PICTIONARY"
       emoji="🎨"
-      flavour="One phone draws live to TV · Guess fast · Dominate"
+      flavour="One phone draws to TV · Shout the answer · Score"
       accentFrom="#FF416C"
       accentTo="#FACC15"
       emojiAnimate={{ rotate: [0, -8, 8, -4, 4, 0] }}
@@ -66,37 +65,18 @@ export default function PictionaryPage() {
             </motion.button>
           ))}
         </div>
-      </div>
 
-      {/* Team Names */}
-      <div className="mb-6">
-        <SetupLabel>Team Names</SetupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        {/* Team colour badges */}
+        <div className="mt-3 flex justify-center gap-2">
           {Array.from({ length: teamCount }, (_, i) => {
             const col = TEAM_COLORS[i];
             return (
-              <div
-                key={i}
-                className="rounded-2xl border px-4 py-3"
-                style={{ borderColor: col.border, background: col.bg }}
-              >
-                <div
-                  className="mx-auto mb-2 h-2.5 w-2.5 rounded-full"
-                  style={{ background: col.gradient, boxShadow: `0 0 10px ${col.accent}88` }}
-                />
-                <input
-                  value={teamNames[i]}
-                  onChange={(e) => {
-                    const updated = [...teamNames];
-                    updated[i] = e.target.value;
-                    setTeamNames(updated);
-                  }}
-                  onFocus={(e) => { e.target.select(); setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 350); }}
-                  className="w-full bg-transparent text-center text-sm font-black uppercase tracking-widest outline-none placeholder:text-white/20"
-                  style={{ color: col.accent }}
-                  placeholder={DEFAULT_TEAM_NAMES[i]}
-                  maxLength={16}
-                />
+              <div key={i} className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1"
+                style={{ borderColor: col.border, background: col.bg }}>
+                <div className="h-2 w-2 rounded-full" style={{ background: col.gradient }} />
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: col.accent }}>
+                  {DEFAULT_TEAM_NAMES[i]}
+                </span>
               </div>
             );
           })}
@@ -166,10 +146,10 @@ export default function PictionaryPage() {
           style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
         >
           <ul className="space-y-2.5 text-xs leading-relaxed text-white/50">
-            <li><span className="mr-2">🖥️</span><strong className="text-white/70">TV / big screen</strong> — open this game URL here</li>
-            <li><span className="mr-2">✏️</span><strong className="text-white/70">Drawer</strong> — scan the QR code, draw on their phone</li>
-            <li><span className="mr-2">🎯</span><strong className="text-white/70">Guessers</strong> — scan the other QR, tap "We got it!" when correct</li>
-            <li><span className="mr-2">🔄</span><strong className="text-white/70">Turns</strong> — each team draws once per round, then rotate</li>
+            <li><span className="mr-2">🖥️</span><strong className="text-white/70">TV</strong> — shows the canvas, scores & "We Got It!" button</li>
+            <li><span className="mr-2">📱</span><strong className="text-white/70">One phone</strong> — scan the QR to draw live on the TV</li>
+            <li><span className="mr-2">🗣️</span><strong className="text-white/70">Guessers</strong> — shout the answer! Press "We Got It!" on the TV</li>
+            <li><span className="mr-2">🔄</span><strong className="text-white/70">Turns</strong> — Red Team goes first, then Blue, etc.</li>
           </ul>
         </div>
       </div>

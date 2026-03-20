@@ -575,7 +575,7 @@ describe("Score Broadcast Message", () => {
       type: "round_start" as const,
       word: "Cat",
       drawingTeamIdx: 1,
-      teamNames: ["Red", "Blue"],
+      teamNames: ["Red Team", "Blue Team"],
       teamCount: 2,
       roundNumber: 2,
       timeLeft: ROUND_SECONDS,
@@ -595,12 +595,12 @@ describe("Score Broadcast Message", () => {
     expect(msg.winners).toEqual([0]);
   });
 
-  it("correct_guess message includes timeLeft for bonus calc", () => {
+  it("TV correct_guess message includes timeLeft for bonus calc", () => {
     const msg = {
       type: "correct_guess" as const,
       guessingTeamIdx: 1,
-      playerName: "Alice",
       timeLeft: 55,
+      word: "Cat",
     };
     expect(msg.guessingTeamIdx).toBe(1);
     expect(msg.timeLeft).toBe(55);
@@ -610,7 +610,99 @@ describe("Score Broadcast Message", () => {
   });
 });
 
-// ── 11. Edge Cases ────────────────────────────────────────────────────────────
+// ── 11. Simplified Flow — TV + 1 phone ───────────────────────────────────────
+
+describe("Simplified Flow — TV + 1 drawer phone", () => {
+  it("setup uses DEFAULT_TEAM_NAMES (no custom names)", () => {
+    expect(DEFAULT_TEAM_NAMES[0]).toBe("Red Team");
+    expect(DEFAULT_TEAM_NAMES[1]).toBe("Blue Team");
+    expect(DEFAULT_TEAM_NAMES[2]).toBe("Purple Team");
+    expect(DEFAULT_TEAM_NAMES[3]).toBe("Green Team");
+  });
+
+  it("TeamConfig stores default names for 2 teams", () => {
+    const config: TeamConfig = {
+      teamNames: DEFAULT_TEAM_NAMES.slice(0, 2),
+      teamCount: 2,
+      difficulty: "medium",
+      totalRounds: 3,
+      scores: [0, 0],
+    };
+    expect(config.teamNames).toEqual(["Red Team", "Blue Team"]);
+  });
+
+  it("TeamConfig stores default names for 4 teams", () => {
+    const config: TeamConfig = {
+      teamNames: DEFAULT_TEAM_NAMES.slice(0, 4),
+      teamCount: 4,
+      difficulty: "hard",
+      totalRounds: 2,
+      scores: [0, 0, 0, 0],
+    };
+    expect(config.teamNames).toEqual(["Red Team", "Blue Team", "Purple Team", "Green Team"]);
+  });
+
+  it("TV handles correct guess directly (no guesser phone needed)", () => {
+    // Simulate TV-side handleTVCorrectGuess logic
+    const scores = [0, 0];
+    const drawingTeamIdx = 0;
+    const guessingTeamIdx = 1; // non-drawing team
+    const timeLeft = 55;
+    expect(guessingTeamIdx).not.toBe(drawingTeamIdx);
+    let pts = POINTS_CORRECT_GUESS;
+    if (timeLeft > ROUND_SECONDS - BONUS_SECONDS_THRESHOLD) pts += POINTS_FAST_BONUS;
+    scores[guessingTeamIdx] += pts;
+    expect(scores).toEqual([0, 150]);
+  });
+
+  it("only non-drawing teams can score (drawing team has no button)", () => {
+    const teamCount = 3;
+    const drawingTeamIdx = 1;
+    const buttonTeams = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
+    expect(buttonTeams).toEqual([0, 2]);
+    expect(buttonTeams).not.toContain(drawingTeamIdx);
+  });
+
+  it("with 2 teams, exactly 1 'We Got It' button shows", () => {
+    const teamCount = 2;
+    const drawingTeamIdx = 0;
+    const buttons = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toBe(1);
+  });
+
+  it("with 4 teams, 3 'We Got It' buttons show", () => {
+    const teamCount = 4;
+    const drawingTeamIdx = 2;
+    const buttons = Array.from({ length: teamCount }, (_, i) => i).filter((i) => i !== drawingTeamIdx);
+    expect(buttons).toHaveLength(3);
+    expect(buttons).toEqual([0, 1, 3]);
+  });
+
+  it("always starts with team 0 (Red Team)", () => {
+    // First turn is always startTurn(0, 1, 0)
+    const firstTeamIdx = 0;
+    expect(firstTeamIdx).toBe(0);
+    expect(DEFAULT_TEAM_NAMES[firstTeamIdx]).toBe("Red Team");
+  });
+
+  it("drawer role registration message shape", () => {
+    const msg = { type: "register_role" as const, role: "drawer" as const };
+    expect(msg.type).toBe("register_role");
+    expect(msg.role).toBe("drawer");
+  });
+
+  it("start button gated on drawerCount only (no guesser needed)", () => {
+    // Simulate lobby gate logic
+    const drawerCount = 0;
+    expect(drawerCount < 1).toBe(true); // disabled
+
+    const drawerConnected = 1;
+    expect(drawerConnected < 1).toBe(false); // enabled
+  });
+});
+
+// ── 12. Edge Cases ────────────────────────────────────────────────────────────
 
 describe("Edge Cases", () => {
   it("single round, 2 teams = 2 total turns", () => {
