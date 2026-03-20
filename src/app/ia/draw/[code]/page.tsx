@@ -35,6 +35,7 @@ export default function DrawerPage() {
   const [paused, setPaused] = useState(false);
   const [waitingForRound, setWaitingForRound] = useState(true);
   const [countdown, setCountdown] = useState(0);
+  const countdownRef = useRef(0);
   const [playerName] = useState(() => `Drawer-${Math.floor(Math.random() * 1000)}`);
 
   const activeColor = isEraser ? "#FFFFFF" : color;
@@ -54,15 +55,19 @@ export default function DrawerPage() {
         const cd = payload.countdown ?? 0;
         if (cd > 0) {
           setCountdown(cd);
+          countdownRef.current = cd;
           setWaitingForRound(false);
           const cdInterval = setInterval(() => {
             setCountdown((c) => {
-              if (c <= 1) { clearInterval(cdInterval); return 0; }
-              return c - 1;
+              const next = c <= 1 ? 0 : c - 1;
+              countdownRef.current = next;
+              if (next === 0) clearInterval(cdInterval);
+              return next;
             });
           }, 1000);
         } else {
           setCountdown(0);
+          countdownRef.current = 0;
           setWaitingForRound(false);
         }
         const canvas = canvasRef.current;
@@ -84,6 +89,7 @@ export default function DrawerPage() {
       // TV says countdown is over, start drawing
       if (msg.type === "drawing_start") {
         setCountdown(0);
+        countdownRef.current = 0;
       }
 
       if (msg.type === "correct_guess" || msg.type === "time_up" || msg.type === "round_over") {
@@ -178,7 +184,7 @@ export default function DrawerPage() {
   }, []);
 
   const handlePointerDown = useCallback((e: PointerEvent<HTMLCanvasElement>) => {
-    if (waitingForRound || countdown > 0) return;
+    if (waitingForRound || countdownRef.current > 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     isDrawingRef.current = true;
     const { x, y } = getCoords(e);
