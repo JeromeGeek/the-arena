@@ -1032,11 +1032,12 @@ export default function HomePage() {
 
         {/* Desktop/Tablet Game Cards — hidden on phone, responsive columns */}
         <div
-          className="hidden w-full max-w-7xl grid-cols-2 gap-2 px-2 pb-6 sm:grid md:grid-cols-2 md:gap-3 md:px-4 lg:grid-cols-4 lg:gap-2 lg:px-0 xl:gap-3"
-          style={{ gridTemplateRows: "auto auto" }}
+          className="hidden w-full max-w-7xl flex-wrap justify-center gap-2 px-2 pb-6 sm:flex md:gap-3 md:px-4 lg:px-0 xl:gap-3"
         >
           {games.map((game, i) => (
-            <GameCard key={game.id} game={game} index={i} reducedMotion={isTV} />
+            <div key={game.id} className="w-[calc(50%-0.25rem)] md:w-[calc(50%-0.375rem)] lg:w-[calc(25%-0.5rem)]">
+              <GameCard game={game} index={i} reducedMotion={isTV} />
+            </div>
           ))}
         </div>
       </div>
